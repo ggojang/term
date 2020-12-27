@@ -1,0 +1,23 @@
+<div style="display:flex;padding-bottom:2px;">
+<!--  <div>
+-->
+    <div style="padding-right:5px;">
+      <!-- 트리 화살표 -->
+      <a class="glyphicon" ng-class="node.descendantCount === 0 ? 'glyphicon-minus':(!node.open ? 'glyphicon-chevron-right':(node.loading ? 'glyphicon-refresh icon-spin':'glyphicon-chevron-down'))" ng-click="vm.getChildren(node)"></a>
+      <!-- 컨셉 정의 상태 : Fully Defined | Primitive -->
+      <span class="badge alert-warning" ng-bind-html="vm.getDefinitionStatusFlagValue(node.definitionStatus.id)">
+		<md-tooltip md-direction="top">{{ ::vm.getDefinitionStatusName(node.definitionStatus.id) }}</md-tooltip>
+      </span>
+    </div>
+    <div>
+      <!-- 컨셉 대표 용어 -->
+      <a style="white-space:pre-wrap" ui-sref="snomedctBrowser.concept({conceptId: node.conceptId})" ng-bind="vm.termBeautifier(node.term)"></a>
+      <!-- 자식을 포함한 자손 수 -->
+      <span ng-if="node.descendantCount > 0" ng-bind-html="'(' + (node.descendantCount | number) + ')'"></span>
+    </div>
+</div>
+  <ul style="padding-left: 10px;" ng-init="node.open = (node.conceptId === '138875005' ? true:false); node.loading=false" ng-show="node.open">
+    <li style="white-space: nowrap;" ng-repeat="node in node.children | orderBy:'term'" ng-include="'resources/template/snomedctBrowser/childrenTree.html'"></li>
+  </ul>
+<!-- </div>
+-->

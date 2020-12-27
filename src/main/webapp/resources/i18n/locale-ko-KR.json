@@ -1,0 +1,167 @@
+{
+	"directives.language-select.Language": "한국어",
+
+	"menu.browser": "브라우저",
+	"menu.snomedctbrowser": "SNOMEDCT 브라우저",
+	"menu.refseteditor": "레퍼런스세트 에디터",
+	"menu.descriptioneditor": "용어 에디터",
+	"menu.concepteditor": "컨셉 에디터",
+	"menu.loincbrowser": "LOINC 브라우저",
+	"menu.icd10browser": "ICD10 브라우저",
+	"menu.mapbrowser": "매핑 브라우저",
+
+	"general.list.update": "업데이트 내역",
+	"general.settings": "설정",
+	"general.logout": "로그아웃",
+	"general.name": "이름",
+
+	"reject": "동의안함",
+	"accept": "동의함",
+
+	"issues": "이슈",
+	"userreport": "사용자 보고서",
+	"update": "업데이트",
+
+	"license.header": "인포클리닉 SNOMED CT 브라우저® 라이센스 계약",
+	"license.content.header": "인포클리닉 SNOMED CT 브라우저®를 사용하기 위해서는, 다음의 라이센스 계약에 동의해주시기 바랍니다. :",
+	"license.content.body.one": "인포클리닉 SNOMED CT 브라우저®는 International Health Terminology Standards Development Organization (IHTSDO)의 허락 하에 사용되는 SNOMED Clinical Terms® (SNOMED CT®)를 포함하고 있습니다. 모든 저작권은 유효합니다. SNOMED CT®는 미국병리학회에서 만들어졌습니다.  'SNOMED'와 'SNOMED CT', 'SNOMED Clinical Terms'는 IHTSDO (www.ihtsdo.org)의 상표로 등록되어 있습니다.",
+	"license.content.body.two": "IHTSDO Affiliate가 아닌 최종사용자는 IHTSDO에서 발행한 SNOMED CT 라이센스 조건 중 다음의 서브-라이센스 제한에 동의하고  따름으로써 인포클리닉 SNOMED CT 브라우저®를 사용하여 SNOMED CT를 액세스할 수 있습니다.",
+	"license.content.body.three": "가) 서브-라이센스는 이 소프트웨어(또는 서비스)를 이용하여 용어를 검색하고 평가하는 목적을 위해 SNOMED CT®를 액세스하는 것만 허용됩니다.",
+	"license.content.body.four": "나) 서브-라이센스는 IHTSDO Affiliate 라이센스에 정의된 SNOMED CT 'Data Creation System' 또는 'Data Analysis System'을 구성하는 시스템의 일부로써 이 소프트웨어를 사용하는 것을 허용하지 않습니다. 이것은 서브-라이센스가 어떠한 형식의 기록시스템, 데이터베이스, 문서에 SNOMED CT 식별자를 추가하거나 복사하는데 인포클리닉 SNOMED CT 브라우저®를 사용하지 않아야 한다는 것을 의미합니다.",
+	"license.content.body.five": "다) 서브-라이센스는 SNOMED CT 컨텐츠 또는 파생물들을 번역하거나 수정하는 것을 허용하지 않습니다.",
+	"license.content.body.six": "라) 서브-라이센스는 SNOMED CT 컨텐츠 또는 파생물들을 배포하고나 공유하는 것을 허용하지 않습니다.",
+
+	"search.match": "일치형태",
+	"search.state": "활성상태",
+	"search.message.placeholder": "용어/코드 입력(2자이상)",
+	"search.message.type": "최소 두글자 입력",
+	"search.message.matchesfound" : "개의 일치하는 항목 찾음.",
+	"search.message.notfound" : "검색결과가 없습니다.",
+	"search.message.in*seconds": "{{seconds}}초 소요 되었음.",
+	"search.message.fulltext": "완전 일치",
+	"search.message.partial": "부분 일치",
+	"search.message.regex": "정규식",
+	"search.options.fulltext": "완전",
+	"search.options.partial": "부분",
+	"search.options.regex": "정규식",
+	"search.state.active": "활성",
+	"search.state.inactive": "비활성",
+	"search.state.both": "활성 & 비활성",
+	"search.more.list": "더 보기",
+
+	"tooltip.search.main": "용어의 일부분으로 검색 예: blo pre => blood pressure",
+
+	"browser.diagram": "다이어그램",
+	"browser.parent": "부모 컨셉",
+	"browser.children": "자식 컨셉",
+	"browser.detail": "상세 내역",
+	"browser.history": "이력",
+	"browser.definition": "정의",
+	"browser.description": "용어",
+	"browser.refsets": "레퍼런스 세트",
+	"browser.qualifier": "수식어",
+	"browser.concept": "컨셉",
+	"browser.postexpr": "후조합 표현식",
+	"browser.explore": "탐색",
+	"browser.parentchild": "부모/자식 컨셉",
+
+	"browser.active": "활성 상태",
+	"browser.effectiveTime": "유효시간",
+	"browser.count.descendant": "자손 수",
+	"browser.count.children": "자식 수",
+	"browser.type.characteristic": "Characteristic Type",
+	"browser.module": "모듈",
+	"browser.target.map": "매핑 대상",
+	
+	"browser.message.noqualifiers": "수식어가 없습니다.",
+	"browser.message.noparents": "부모 컨셉이 없습니다.",
+	"browser.message.nochildren": "자식 컨셉이 없습니다.",
+
+	"snomedct.referenceset.members": "레퍼런스 세트의 멤버",
+
+	"value": "값",
+	"Map group": "그룹",
+	"Map priority": "우선순위",
+	"Map rule": "규칙",
+	"Map advice": "권고",
+	"Map target": "대상",
+	"Map category value": "카테고리",
+	"Scheme value": "값",
+	"SNOMED CT source code to target map code correlation value": "상호 관계",
+	"Concept inactivation value": "Concept 비활성화 값",
+	"Association target component": "Association 대상 컴포넌트",
+
+	"id": "아이디",
+	"active": "활성화",
+	"effectiveTime": "적용일자",
+	"definitionStatus": "정의 상태",
+	"term": "용어",
+	"reason": "사유",
+
+	"Attribute description": "속성 설명",
+	"Attribute type": "속성 타입",
+	"Attribute order": "속성 순서",
+	"description": "설명",
+	"type": "타입",
+	"order": "순서",
+
+	"terminology.fsn": "Fully Specified Name : IHTSDO에서 지정한 용어",
+	"terminology.preferred": "Preferred : 선호 용어",
+	"terminology.synonym": "Synonym : 동의어",
+	"terminology.fullyDefinedConcept": "Fully Defined Concept : 필요/충분조건 모두를 만족하는 컨셉",
+	"terminology.PrimitiveConcept": "Primitive Concept : 필요조건은 만족하지만 충분조건은 만족하지 못하는 컨셉",
+
+	"unit.seconds": "초",
+
+	"filter.semanticTag": "시맨틱태그",
+	"sort.orderBy" : "정렬",
+	"sort.ascending": "오름",
+	"sort.descending": "내림",
+	"sort.length": "길이",
+	"sort.score": "점수",
+	"sort.alphabetical": "알파벳",
+
+	"dashboard.update.content": "인포클리닉 SNOMED CT Browser 베타 오픈",
+
+	"close": "닫기",
+	"saveAsPng": "PNG로 저장",
+
+	"referencesetList": "레퍼런스세트 목록",
+	"fieldList": "필드 목록",
+	"memberList": "멤버 목록",
+	"editingSpace": "저작 공간",
+
+	"infoclinic.edition": "인포클리닉",
+	"international.edition": "국제배포판",
+
+	"medication": "투약/약물처치",
+	"lab": "검사실",
+	
+	"concept.panel.left.tit" : "CONCEPT HIERARCHY TREE",
+	"concept.panel.center.tab1.tit" : "CONCEPT FORM",
+	"concept.panel.center.tab1.cont.tit1" : "Focus Concept",
+	"concept.panel.center.tab1.cont.tit2" : "Refinement",
+	"concept.panel.center.tab1.cont.tit3" : "Description",
+	"concept.panel.center.tab2.tit" : "INFERENCE VISUALIZATION",
+	"concept.panel.right.top" : "CONCEPT DEFINITION",
+	"concept.panel.right.bottom" : "ATTRIBUTE RANGE",
+	
+	"concept.dialog.concept.tit" : "Search concept",
+	"concept.dialog.parent.tit" : "Parent concept",
+	"concept.dialog.concept.btn.ok" : "OK",
+	"concept.dialog.concept.btn.cancel" : "Cancel",
+	
+	"concept.search.error" : "3자이상 입력해주세요.",
+	
+	"concept.locale.name.us" : "영어",
+	"concept.locale.name.kr" : "한국어",
+	
+	"concept.refine.parent.input" : "상속된 속성 값을 포함한 하위 값만 선택할 수 있습니다.",
+	"concept.refine.add.input" : "선택된 속성의 값으로 올수 있는 모든 값 중 선택할 수 있습니다.",
+	"concept.refine.add.row" : "우클릭 메뉴를 통해 새로운 속성을 추가할 수 있습니다.",
+	
+	
+	
+	"loinc.panel": "패널",
+	"loinc.message.nopanel": "패널정보가 없습니다."
+}

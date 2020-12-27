@@ -1,0 +1,35 @@
+<div ng-controller="RefsetSearchController as rss">
+	<md-content>
+        <md-tabs md-border-bottom>
+        	<md-tab label="Search">
+        		<!-- 도구상자 영역 시작 -->
+			<div style="height:40px;text-align:center;background-color:#f5f5f5;padding:5px">
+				<!-- 검색어 입력창 시작 -->
+				<label for="re_srch" style="display:none;">검색어:</label>
+				<input id="re_srch" type="text" class="form-control input-sm"  placeholder="code/term"  ng-model="rss.srch" ng-keyup="rss.onKeyup($event)" />
+				<!-- 검색어 입력창 끝 -->
+			</div>
+			<!-- 도구상자 영역 끝 -->
+			
+			<!-- 추가버튼 영역 시작 -->
+			<div id="re-srch-selected" ng-show="rss.treeSelected">
+				<button type="button" class="btn btn-default btn-xs" ng-click="rss.addMember()">Add Concepts</button>
+			</div>
+			<!-- 추가버튼 영역 종료 -->
+			
+			<!-- 검색결과 영역 시작 -->
+			<div id="re-srch-list">
+				<div>정의상태/용어타입 {{ ::rss.model.conceptId }}|{{ ::rss.model.term }} / {{ ::rss.model.fsn }}</div>
+				<div class="treeTable">
+					<div class="tr" ng-repeat="n in rss.tree" ng-class="{'disabled': n.disabled}" ng-include="'resources/template/checkableTree.html'"></div>
+				</div>
+			</div>
+			<!-- 검색결과 영역 끝 -->
+		
+			<div class="loading-indicator" ng-if="rss.treeLoading">
+				<div class="spinner"></div>
+			</div>
+        	</md-tab>
+        </md-tabs>
+</div>
+

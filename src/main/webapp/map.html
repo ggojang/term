@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-72575572-5"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-72575572-5');
+</script>
+
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="resources/css/map.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+  <script src="resources/js/map.js"></script>
+
+</head>
+<body>
+<div class="layout">
+  <div id="title">
+    <H3 >Mapping Support Tool to SNOMED CT (9 Mar 2020 including SARS-CoV-2 codes) by InfoClinic</H3>
+  </div>
+  <div class="main">
+    <div class="sidebar">
+      <fieldset>
+        <script>
+          document.write("<legend>Semantic Tag (" + semanticTags.length + ")<\/legend>");
+        </script>
+        <form>
+          <label><input type="radio" name="radioSelect" id="all" value="all" onClick="radioButton('all');" /> All&nbsp&nbsp</label>
+          <label><input type="radio" name="radioSelect" id="none" value="none" onClick="radioButton('none');" /> None</label>
+          </br>
+          <label><input type="radio" name="radioSelect" id="diagnosis" value="diagnosis" checked onClick="radioButton('diagnosis');" /> For diagnosis</label>
+          </br>
+          <label><input type="radio" name="radioSelect" id="procedure" value="procedure" onClick="radioButton('procedure');" /> For procedure</label>
+        </form>
+        </br>
+        <script>
+          $.each(semanticTags, function(index,item) {
+          //for (i=0; i<semanticTags.length; i++) {
+            if (index==0 || index==1 || index==4) {
+              document.write(
+                "<input type=\"checkbox\" name=\"sem_tag\" id=\"sem_tag" + (index+1) + "\""
+		+ " value=\'" + item + "\'"
+                + " checked onClick=\"checkBox(\'sem_tag" + (index+1) + "\');\"> " + item 
+              );	
+            } else {
+              document.write(
+                "<input type=\"checkbox\" name=\"sem_tag\" id=\"sem_tag" + (index+1) + "\""
+		 + " value=\'" + item + "\'"
+                + " onClick=\"checkBox(\'sem_tag" + (index+1) + "\');\"> " + item 
+              );
+            }
+            document.write("</br>");
+	    if ( index == 4 ) 
+	      document.write("</br>");
+          //}
+        })
+        </script>
+      </fieldset>
+    </div>
+    <div class="content">
+        <label id="label_term" >Term:&nbsp<input id="term" type="text" placeholder="Enter the string... (at lease 2 characters)" onKeyDown="onKeyDown()"></label>
+        <br />
+
+        <table id="results_partial">
+          <tr>
+            <p class="note">[Usage] Check "Semantic Tag" -> Type "Term" which you want to map [and Enter] -> The Closest terms of SNOMED CT will be displayed (Up to 40 terms)</p>
+          </tr>
+          <tr>
+            <p class="note">[Note 1] Available browser : Chrome, Safari</p>
+          </tr>
+          <tr>
+            <p class="note">[Note 2 to Chrome User] if you got  a CORS error, you need to install Chrome extension ("Allow-Control-Allow-Origin:*") at <a href="https://chrome.google.com/webstore/category/extensions">https://chrome.google.com/webstore/category/extensions</a></p>
+          </tr>
+        </table>
+
+
+    </div>
+  </div>
+</div>
+</body>
+</html>
+

@@ -1,0 +1,42 @@
+<md-dialog aria-label="InfoClinic SNOMED CT Browser License Agreement"  ng-cloak>
+  <form>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"license.header" | translate}}</h2>
+        <span flex></span>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <div class="md-dialog-content">
+        <h4>{{"license.content.header" | translate}}</h4>
+        <p>
+          {{"license.content.body.one" | translate}}
+        </p>
+        <p>
+          {{"license.content.body.two" | translate}}
+        </p>
+        <p>
+          {{"license.content.body.three" | translate}}
+        </p>
+        <p>
+          {{"license.content.body.four" | translate}}
+        </p>
+        <p>
+          {{"license.content.body.five" | translate}}
+        </p>
+        <p>
+          {{"license.content.body.six" | translate}}  
+        </p>
+      </div>
+    </md-dialog-content>
+    <md-dialog-actions layout="row">
+      <span flex></span>
+      <md-button ng-click="cancel()">
+       {{"reject" | translate}}  
+      </md-button>
+      <md-button ng-click="answer('Accept')" style="margin-right:20px;">
+        {{"accept" | translate}}  
+      </md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

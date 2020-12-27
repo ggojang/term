@@ -1,0 +1,148 @@
+
+<div class="panel" ng-repeat="refset in vm.component.referencesets | groupBy:'type.id'">
+	<div class="panel-heading">
+		<i class="glyphicon glyphicon-paperclip"></i>
+		{{ refset[0].type.name }}
+	</div>
+
+	<div ng-if="vm.otherRefsetPredicate(refset[0].type.id)">
+		<table class="table table-line">
+			<thead>
+				<tr>
+					<th ng-repeat="(key, value) in refset[0].extra">{{key | translate }}</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr bindonce ng-repeat="r in refset | filter:{active:true}">
+					<td ng-repeat="f in r.extra">
+						<span ng-if="!vm.isUndefined(f.name)" ng-bind="f.name"></span>
+						<span ng-if="vm.isUndefined(f.name)" ng-bind="f.id">
+						</span>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<!-- Referenceset Descriptor -->
+	<div ng-if="refset[0].type.id === '900000000000456007'">
+		<table
+			class="table table-line">
+			<thead>
+				<tr>
+					<th ng-repeat="(key, value) in refset[0].extra">{{ key | translate }}</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr bindonce ng-repeat="r in refset | filter:{active:true} | orderBy:vm.orderByAttributeOrder">
+					<td ng-repeat="f in r.extra">
+						<span ng-if="!vm.isUndefined(f.name)" ng-bind="f.name"></span>
+						<span ng-if="vm.isUndefined(f.name)" ng-bind="f.id">
+						</span>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<!-- Attribute Value -->
+	<div ng-if="refset[0].type.id === '900000000000480006'">
+		<table class="table table-line">
+			<thead>
+				<tr>
+					<th>{{ "general.name" | translate }}</th>
+					<th ng-repeat="(key, value) in refset[0].extra">{{key | translate}}</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr bindonce ng-repeat="r in refset | filter:{active:true}">
+					<td>{{r.referencedComponent.id}}:{{r.referencedComponent.name}}</td>
+					<td ng-repeat="f in r.extra">
+						<span ng-if="!vm.isUndefined(f.name)" ng-bind="f.name"></span>
+						<span ng-if="vm.isUndefined(f.name)" ng-bind="f.id">
+						</span>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<!-- Simple Map / Association-->
+	<div ng-if="refset[0].type.id === '900000000000496009' || refset[0].type.id === '900000000000521006'">
+		<table class="table table-line">
+			<thead>
+				<tr>
+					<th>{{ "general.name" | translate }}</th>
+					<th ng-repeat="(key, value) in refset[0].extra">{{key | translate}}</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr bindonce ng-repeat="r in refset | filter:{active:true}">
+					<td ng-bind-html="vm.termBeautifier(r.refset.name)"></td>
+					<td ng-repeat="f in r.extra">
+						<span ng-if="!vm.isUndefined(f.name)" ng-bind="f.name"></span>
+						<span ng-if="vm.isUndefined(f.name)" ng-bind="f.id">
+						</span>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<!-- Map correlation and origin type reference set-->
+	<div ng-if="refset[0].type.id === '705111002'">
+		<table class="table table-line">
+			<thead>
+				<tr>
+					<th>{{ "general.name" | translate }}</th>
+					<th>{{ "Map target" | translate }}</th>
+					<th>Attribute</th>
+					<th>Correlation</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr bindonce ng-repeat="r in refset | filter:{active:true}">
+					<td ng-bind-html="vm.termBeautifier(r.refset.name)"></td>
+					<td>
+						<div ng-if="!vm.isUndefined(r.extra['Map target'].id)" code-tooltip data-code-system="'LOINC'" data-code="r.extra['Map target'].id"></div>
+						<span ng-if="vm.isUndefined(r.extra['Map target'].name)" ng-bind="r.extra['Map target'].name"></span>
+					</td>
+					<td>
+						<span ng-bind-html="vm.termBeautifier(r.extra['Concept model attribute'].name)"></span>
+					</td>
+					<td>
+						<span ng-bind-html="vm.termBeautifier(r.extra['SNOMED CT source code to target map code correlation value'].name)"></span>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<!-- Complex Map / Extended Map -->
+	<div ng-if="(refset[0].type.id === '447250001' || refset[0].type.id === '609331003')" ng-repeat="r in refset | groupBy:'refset.id'">
+		{{r[0].refset.name}}
+		<table class="table table-line">
+			<thead>
+				<tr>
+					<th width="50px">{{ "Map group" | translate }}</th>
+					<th width="60px">{{ "Map priority" | translate }}</th>
+					<th width="30%">{{ "Map rule" | translate }}</th>
+					<th width="40%">{{ "Map advice" | translate }}</th>
+					<th>{{ "Map target" | translate }}</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr bindonce ng-if="rr.active" ng-repeat="rr in r | orderBy:[vm.groupPredicate,vm.orderByMapPriority]">
+					<td ng-bind="rr.extra['Map group'].id" width="50px"></td>
+					<td ng-bind="rr.extra['Map priority'].id" width="60px"></td>
+					<td ng-bind="rr.extra['Map rule'].id" width="30%"></td>
+					<td ng-bind="rr.extra['Map advice'].id" width="40%"></td>
+					<td>
+						<div ng-if="refset[0].type.id === '609331003'" code-tooltip data-code-system="'ICD10'" data-code="rr.extra['Map target'].id"></div>
+						<div ng-if="refset[0].type.id === '447250001'" ng-bind="rr.extra['Map target'].id"></div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>

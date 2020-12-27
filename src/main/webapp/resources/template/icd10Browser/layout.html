@@ -1,0 +1,34 @@
+<div class="icd10b-wrap">
+	<!-- Navigation -->
+	<nav class="main-nav" role="navigation">
+		<md-content layout-fill>
+			<md-tabs md-border-bottom>
+				<md-tab label="{{ 'browser.explore' | translate }}">
+					<md-tab-content ng-include="'resources/template/icd10Browser/explorer2.html'"></md-tab-content>
+				</md-tab>
+			</md-tabs>
+		</md-content>
+	</nav>
+	<!-- Navigation END -->
+	
+	<!-- Main -->
+	<section class="main-content" role="main">
+		<md-content layout-fill>
+			<md-tabs md-border-bottom>
+				<md-tab label="{{ 'browser.detail' | translate }}">
+					<md-tab-content layout-fill ui-view>
+						<div class="lb-intro">
+							<h3 style="color:#009" >International Statistical Classification of Diseases and Related Health Problems 10th Revision<h3>
+							<br>
+							<h4>ICD10 2016</h4>
+							<br>
+							<h5>Released: 2014-10-14</h5>
+						</div>
+					</md-tab-content>
+				</md-tab>
+			</md-tabs>
+		</md-content>
+	</section>
+	<!-- Main END -->
+	
+</div>

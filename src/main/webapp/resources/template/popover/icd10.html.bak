@@ -1,0 +1,14 @@
+<div>
+  <ul>
+    <li>Code : {{codetVm.code}}</li>
+    <li>Preferred : {{codetVm.preferredName}}</li>
+    <li ng-if="codetVm.motalities">
+      Motality :
+      <span ng-repeat="m in codetVm.motalities">{{m}}</span>
+    </li>
+    <li ng-if="codetVm.mobidities">
+      Mobidity :
+      <span ng-repeat="m in codetVm.mobidities">{{m}}</span>
+    </li>
+  </ul>
+</div>

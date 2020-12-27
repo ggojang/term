@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <title>STOM Help</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+                
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+                    
+        <!--
+            <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+         
+            <script src="js/help.js"></script>
+        -->
+        
+        <link rel="stylesheet" type="text/css" href="./css/snomedct.css">
+        
+        <!--[if lt IE 9]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body>
+
+<!-- 제일 상위 div 중앙정렬방법과 글자자동넘김 :
+ 1. <div id="page" style="white-space:normal;position:relative;margin-left:-400px;left:50%;width:800px;height:80px;">
+ 2. <div id="page" style="white-space:normal;width:800px;height:80px;margin:auto;">
+ -->
+
+<div id="page" style="white-space:normal;height:80px;margin:auto;">
+
+<div class="container">
+    <div id="top_menu" class="well">
+        <h2>1. Top Menu</h2>
+    </div>
+</div>
+<div class="container-fluid">
+    <p style="text-align:center;">
+        <img src="content/helpicon/top_menu.png" width="100%" alt="Top_Menu" />
+    </p>
+    <ul>
+        <li>
+            <b>InfoClinic Logo</b>
+        </li>
+        <br />
+        <li>
+            <b>Browser</b> : Choose SNOMED CT Browser/LOINC Browser. Initiate Browser if it already is choosed.
+        </li>
+        <br />
+        <li>
+            <b>Version</b> : SNOMED CT Edition applied to InfoClinic SNOMED CT Browser (e.g International Edition 2017.01.31)
+        </li>
+        <br />
+        <li>
+            <b>Langauge Selection</b> : Select user language (Hanguel/English) (e.g English)
+        </li>
+    </ul>
+</div>
+
+<div class="container">
+    <div id="explore" class="well">
+        <h2>2. Explore</h2>
+    </div>
+</div>
+<div class="container-fluid">
+    <h3 id="search">1) Code/Text Search</h3>
+
+    <!-- 이미지 중간 정렬 방법 : 1) p tag에 style="text-align:center;" 2) style="display:block; margin-left:auto; margin-right:auto;" -->
+    <p style="text-align:center;">
+        <img src="content/helpicon/explore_top_en.png" width="50%" alt="Explorer_Top" />
+    </p>
+    <ul>
+        <li>
+            Search with SNOMED CT code(SNOMED CT ID, SCTID) or Human-readable SNOMED CT Description
+        </li>
+        <br />
+        <li>
+            SNOMED CT Descriptions are separated with Fully Specified Name(FSN, F), Preferred Term(PT, P), Synonym(S) but most FSNs are the same to Preferred Terms and Preferred Terms are also one of Synonyms so results are displayed with FSNs and Synonyms without Preferred terms.
+        </li>
+        <br />
+        <li>
+            Description for search is case-insentive and has at lease 2 characters.
+        </li>
+        <p>note) If search area is empty, SNOMED CT polyhierarchy structure is displayed.</p>
+    </ul>
+
+    <h3 id="match">2) Match</h3>
+    <ul>
+        <li>
+            <b>Full text matching</b> : Search for SNOMED CT Descriptions that match exactly the string you are looking for
+        </li>
+        <li>
+            <b>Partial matching</b> : Search for SNOMED CT Descriptions that partially match the string (default)
+        </li>
+        <li>
+            <b>Regular Expressions</b> : Support Elastic Search regular expression (<a style="font-size:15px;" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-regexp-query.html" target="_blank">ElasticSearch's Regular Expression</a>)</p>
+        </li>
+    </ul>
+
+    <h3 id="status">3) Status</h3>
+    <ul>
+        <li>
+            <b>Active</b> : Search SNOMED CT Concepts that are active (default)
+        </li>
+        <li>
+            <b>Inactive</b> : Search SNOMED CT Concepts that are inactive
+        </li>
+        <li>
+            <b>Active and Inactive</b> : Search SNOMED CT Concepts that are active and inactive, i.e all concepts</p>
+        </li>
+    </ul>
+
+    <div>
+        <h3 id="results">4) Search Results</h3>
+        <p> Display the number and semantic tag results below search area.</p>
+    <div class="col-sm-6 col-md-6 col-lg-6" style="width:50%;padding:20px 10px 0px 0px;float:left">
+        <ul>
+            <li>
+                <b>Semantic Tag</b> : Display the number of semantic tags included in the retrieved result, and selects the desired semantic tag when the button is clicked.
+            </li>
+            <br />
+            <li>
+                <b>Left-side</b> : Display all SNOMED CT terms (regardless of FSN and synonym) that match the retrieved string
+            </li>
+            <br />
+            <li>
+                <b>Right-side</b> : display the FSN of the SNOMED CT descriptions on the left side
+            </li>
+            <br />
+            <li>
+                <b>Click Description</b> : Click on a Description that is the result of a search and display the concept of the description in the middle "DETAIL" area
+            </li>
+        </ul>
+        <p>Notation
+        </p>
+        <ul>
+            <li>
+                <img src="content/helpicon/icon_FSN.png" height="20" /> : Fully Specified Name (FSN)
+            </li>
+            <li>
+                <img src="content/helpicon/icon_synonym.png" height="20" /> : Synonym
+            </li>
+            <li>
+                <img src="content/helpicon/icon_fullydefined.png" height="20" /> : Fully defined concept
+            </li>
+            <li>
+                <img src="content/helpicon/icon_primitive.png" height="20" /> : primitive concept
+            </li>
+        </ul>
+    </div>
+    <div class="col-sm-6 col-md-6 col-lg-6">
+        <img src="content/helpicon/explore_en.png" width="75%" />
+    </div>
+    </div>
+
+    <div>
+        <h3 id="tag">5) Semantic Tag</h3>
+        <div class="col-sm-6 col-md-6 col-lg-6">
+            <ul>
+                <li>
+                    display the semantic tag associated with the retrieved result
+                </li>
+                <li>
+                display the number of search results belonging to each semantic tag
+                </li>
+                <li>
+                Users can select the desired semantic tag (duplicate selection possible)
+                </li>
+            </ul>
+        </div>
+        <div class="col-sm-6 col-md-6 col-lg-6" >
+            <img src="content/helpicon/semantictag_en.png" width="75%" />
+        </div>
+    </div>
+
+    <div>
+    <h3 id="structure">6) Hierarchical Structure</h3>
+    <p>If the "Code / Text Search" part is empty, display the SNOMED CT polyhierarchy as a tree</p>
+    <div class="col-sm-6 col-md-6 col-lg-6">
+        <ul>
+            <li>
+                &ldquo;&gt;&rdquo; : Tree unfold
+            </li>
+            <li>
+                &ldquo;V&rdquo; : Tree fold
+            </li>
+        </ul>
+    </div>
+    <div class="col-sm-6 col-md-6 col-lg-6">
+        <img src="content/helpicon/hierarchy.png" width="75%" />
+    </div>
+    </div>
+</div>
+
+<div class="container">
+    <div id="overview" class="well">
+        <h2>3. Overview</h2>
+    </div>
+</div>
+<div class="container-fluid">
+    <p>Display the details of the selected term in the center of the screen.</p>
+    <p style="text-align:center;">
+        <img src="content/helpicon/detail_menu_en.png" height="50px"/>
+        </p>
+        <ul>
+            <li>
+                <b>Stated</b> : Definitions written by content authors in SNOMED CT International
+            </li>
+            <br />
+            <li>
+                <b>Inferred</b> : Inferred definition based on Stated (default)
+            </li>
+        </ul>
+
+    <h3 id="definition">1) Defining Relationship</h3>
+    <p>SNOMED CT defines Concepts according to the description logic.</p>
+    <ul>
+        <li>
+            <b>Defining Relationship</b> : The definition of a Concept is defined as parents(direct parent, IS-A relationship) and Attribute Relationship that is more refined than a parent's.
+        </li>
+    </ul>
+
+    <p style="text-align:center;">
+        <img src="content/helpicon/definition_en.png" width="75%" />
+    </p>
+
+    <h3 id="diagram">2) Diagram</h3>
+    <ul>
+        <li>
+            Display Defining Relationship in the form defined by SNOMED International in diagram form (Users can be saved in PNG format)
+        </li>
+    </ul>
+
+    <p style="text-align:center;">
+        <img src="content/helpicon/diagram.png" width="60%" />
+    </p>
+
+
+    <h3 id="expression">3) Post-Coordinated Expression</h3>
+    <ul>
+        <li>
+            Display Defining Relationship to SNOMED CT Composition Grammar
+        </li>
+    </ul>
+
+    <h3 id="description">4) Description</h3>
+    
+    <p>Display SNOMED CT Descriptions by language (Default is English)</p>
+
+    <p style="text-align:center;">
+        <img src="content/helpicon/description_en.png" width="75%" />
+    </p>
+
+<br />
+<br />
+<b>1) DescriptionId</b> : Unique Identifier of the Description(ID)
+<br />
+<br />
+<b>2) Type</b> : Description Type defined by SNOMED CT
+<br /> 
+<ul>
+<li>
+F : Fully Specified Name
+</li>
+<li>
+P : Preferred Term
+</li>
+<li>
+S : Synonym
+</li>
+</ul>
+<b>3) Term</b> : Human-readable strings
+<br />
+<br />
+<b>4) Acceptabiity</b> : Specify Descriptions Type to be actually used among the terms included in SNOMED CT Description
+<ul>
+    <li>
+        <img src="content/helpicon/icon_unfilled_star.png" height="20" /> : Specify FSN among Synonyms
+    </li>
+    <li>
+        <img src="content/helpicon/icon_filled_star.png" height="20" /> : Specify PT among Synonyms
+    </li>
+    <li>
+        <img src="content/helpicon/icon_check.png" height="20" /> : Specify Synonym
+    </li>
+</ul>
+
+<h3  id="referenceset">5) Reference Set</h3>
+<p>Display the contents of Reference Set distributed by SNOMED International</p>
+
+<p style="text-align:center;">
+    <img src="content/helpicon/referenceset_en.png" width="75%" />
+</p>
+
+<ul>
+<li>
+<b>CTV3/SNOMED RT</b> : Simple Map Type Reference Set
+</li>
+<li>
+<b>ICD-9CM</b> : Complex Map Type Reference Set
+</li>
+<li>
+<b>ICD-10</b> : Extend Map Type Reference Set
+</li>
+</ul>
+
+<h3 id="history">6) History</h3>
+<p>Displays the History of changes in the SNOMED CT Concept and Descriptions viewed</p>
+
+<p style="text-align:center;">
+    <img src="content/helpicon/history_en.png" width="75%" />
+</p>
+</div>
+
+<div class="container">
+    <div id="right" class="well">
+        <h2>4. Parent/Children Concept &amp; Qualifier</h2>
+    </div>
+</div>
+<div class="container-fluid">
+    <div>
+    <p>Display Qualifier and Parent/Children Concept in the tab on the right side of the screen according to selection from Attribute Relationship of Defining Relationship </p>
+        <div class="col-sm-6 col-md-6 col-lg-6">
+            <h3 id="parent">1) Parent Concept</h3>
+            <p>Display Parent Concept of selected Concept in the "DETAIL" "area.</p>
+            <ul>
+                <li>
+                    &ldquo;&gt;&rdquo; : Tree unfold
+                </li>
+                <li>
+                    &ldquo;V&rdquo; : Tree fold
+                </li>
+            </ul>
+            <h3 id="children">2) Children Concept</h3>
+            <p>Display Children Concept of selected Concept in the "DETAIL' area.</p>
+            <ul>
+                <li>
+                    &ldquo;&gt;&rdquo; : Tree unfold
+                </li>
+                <li>
+                    &ldquo;V&rdquo; : Tree fold
+                </li>
+            </ul>
+        </div>
+    <div class="col-sm-6 col-md-6 col-lg-6">
+        <img src="content/helpicon/parentchild_en.png" width="75%" />
+    </div>
+</div>
+
+<div>
+    <h3 id="qualifier">3) Qualifier</h3>
+    <div class="col-sm-6 col-md-6 col-lg-6">
+        <ul>
+            <li>
+                Selecting a Attribute Relationship in the Defining Relationship output in the "OVERVIEW" area and displays the Domain and Range relation according to the concept's semantic tag
+            </li>
+            <br />
+            <li>
+                SNOMED CT provides a method to add qualifiers besides the attributes (eg, associated morphology, finding site, etc.) used in Defining Relationship but the concept of SNOMED CT is classified to Semantic Tag and Semantic Tag has defined Domain and Range (e.g. Finding Site(Domain) : Appendix structure (anatomical site(Range)).           </li>
+        </ul>
+    </div>
+    <div class="col-sm-6 col-md-6 col-lg-6">
+        <img src="content/helpicon/qualifier_en.png" width="100%" />
+    </div>
+</div>
+</div>
+
+<hr />
+
+</div>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<property name="LOG_HOME" value="/home/devstudy/resources/terminology-tool/logs" />
+
+	<!-- 
+	<property name="LOG_HOME" value="/home/devstudy/resources/terminology-tool/logs" />
+	 -->
+	<!-- Appender : 로그 메시지가 출력될 대상을 결정하는 요소 -->
+	<!-- Console Appender : 로그 정보를 콘솔로 출력하는 기능 -->
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern> %d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    
+    <!-- File Appender : 로그 정보를 파일로 출력하는 기능 -->
+    <!-- RollingFile Appender : 로그 정보를 조건(파일크기, 시간 등)에 따라 파일로 출력하는 기능 -->
+    <!-- DBAppender : 로그 정보를 데이터베이스에 Insert하는 기능 -->
+    <!--  
+    <appender name="fileForConceptEditor" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    	<file>${LOG_HOME}/concept.editor.txt</file>
+    	<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+    		<fileNamePattern>${LOG_HOME}/concept.editor-%d{yyyy-MM-dd}.%i.txt</fileNamePattern>
+    		<timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+    			<maxFileSize>100MB</maxFileSize>
+    		</timeBasedFileNamingAndTriggeringPolicy>
+    	</rollingPolicy>
+    	<encoder>
+            <pattern> %d{HH:mm:ss.SSS} [%thread] %-5level %logger[%method:%line] - %msg%n</pattern>
+        </encoder>
+    </appender>
+    -->
+    <appender name="SIFT" class="ch.qos.logback.classic.sift.SiftingAppender">
+    	<discriminator>
+    		<key>userKey</key>
+    		<defaultValue>unknown</defaultValue>
+    	</discriminator>
+    	<sift>
+    		<appender name="FILE-${userKey}" class="ch.qos.logback.core.FileAppender">
+    			<file>${LOG_HOME}/${userKey}.log</file>
+    			<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+		    		<fileNamePattern>${LOG_HOME}/${userKey}-%d{yyyy-MM-dd}.%i.txt</fileNamePattern>
+		    		<timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+		    			<maxFileSize>100MB</maxFileSize>
+		    		</timeBasedFileNamingAndTriggeringPolicy>
+		    	</rollingPolicy>
+    			<encoder>
+		       	<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger[%method:%line] ~- %msg%n</pattern>
+		       </encoder>
+    		</appender>
+    	</sift>
+    </appender>
+	
+	<!-- Logger : 로깅 수행, 속성에 따라 출력 할 레벨 설정, 출력할 메시지를 Appender에 전달 -->
+	
+	<logger name="org.springframework" level="INFO" additivity="false">
+		<appender-ref ref="STDOUT" />
+	</logger>
+	
+	
+	<!-- SQL문만을 로그로 남기며, PreparedStatement일 경우 관련된 argument 값으로 대체된 SQL문이 보여진다. 
+	
+    <logger name="jdbc.sqlonly" level="DEBUG"/>
+    <logger name="jdbc.resultsettable" level="DEBUG"/>
+ 
+    -->
+    
+    <!-- SQL문과 해당 SQL을 실행시키는데 수행된 시간 정보(milliseconds)를 포함한다. --> 
+    <!--  <logger name="jdbc.sqltiming" level="DEBUG" />-->
+	
+	<logger name="co.infoclinic.term" level="DEBUG" additivity="false">
+		<appender-ref ref="STDOUT" /> 
+	</logger>
+	
+	<logger name="co.infoclinic.term.common.owl" level="INFO" additivity="false">
+		<appender-ref ref="SIFT" />
+		<appender-ref ref="STDOUT" />
+	</logger>
+	
+	<logger name="org.semanticweb.elk" level="INFO" additivity="false">
+		<appender-ref ref="SIFT" />
+		<appender-ref ref="STDOUT" />
+	</logger>
+	
+	<!-- 최상위 Logger, 모든 INFO레벨 이상의 로그를 STDOUT으로 출력 -->
+	<root level="DEBUG">  
+    	<appender-ref ref="STDOUT" />
+  	</root>
+  	
+	
+	<!-- logback 정상종료 
+	<shutdownHook/>
+	-->
+</configuration>

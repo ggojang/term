@@ -1,0 +1,714 @@
+(function() {
+
+	'use strict';
+
+	angular.module('app.common').factory('apiservice', ApiService);
+
+	ApiService.$inject = [ '$q', '$http', 'CONFIG', 'userservice' ];
+	function ApiService($q, $http, CONFIG, userservice) {
+		
+		var apiUrl = CONFIG.apiUrl;
+		
+		var sctUrl = apiUrl + '/snomedct',
+			
+			sctRefsetUrl = sctUrl + '/refset',
+			sctRefsetMbrUrl = sctRefsetUrl + '/member';
+		
+
+		return {
+			get: get,
+			post: post,
+			/* ---------------------------------------- */
+			/* READ */
+			/* ---------------------------------------- */
+
+			searchByWord : searchByWord,
+			
+			getSuggestResultList : getSuggestResultList,
+			
+			getNarrowSuggestResultList : getNarrowSuggestResultList,
+
+			getConcept : getConcept,
+
+			getDescriptionList : getDescriptionList,
+
+			getRelationshipList : getRelationshipList,
+
+			getParentList : getParentList,
+
+			getChildren : getChildren,
+
+			getComponent : getComponent,
+
+			getDefiningAttributeList : getDefiningAttributeList,
+
+			getReferencesetMemberList : getReferencesetMemberList,
+
+			getDescriptorList : getDescriptorList,
+
+			getHistory : getHistory,
+
+			getRelationshipAndDefiningAttributeList : _getRelationshipAndDefiningAttributeList,
+
+			getCode : getCode,
+			
+			getConceptAndChildren : getConceptAndChildren,
+			
+			getPathList : getPathList,
+			
+			getMrcmValueList : getMrcmValueList, 
+
+			/* ---------------------------------------- */
+			/* CREATE, UPDATE, DELETE */
+			/* ---------------------------------------- */
+
+			createDescription : createDescription,
+
+			updateDescription : updateDescription,
+
+			deleteDescription : deleteDescription,
+
+			createReferenceset : _createRefset,
+
+			addRefsetMember : _addRefsetMember,
+
+			addLangRefset : _addLangRefset,
+
+			deleteLangRefset : _deleteLangRefset,
+
+			addRefsetMemberList : _addRefsetMemberList,
+
+			updateRefsetMemberList : _updateRefsetMemberList,
+
+			deleteRefsetMemberList : _deleteRefsetMemberList,
+
+			saveDescriptorList : _saveDescriptorList
+		};
+
+		/* ---------------------------------------- */
+		/* Implements */
+		/* ---------------------------------------- */
+
+		function get(oper) {
+			var url = apiUrl + oper;
+			
+			return $http.get(url);
+		};
+		
+		function post(oper, data, cfg) {
+			var url = apiUrl + oper;
+			var config = [];
+			
+			if (typeof config !== 'undefined' ) {
+				angular.merge(config, cfg);
+			};
+			
+			return $http.post(url, data, config);
+		};
+		
+		/* ---------------------------------------- */
+		/* READ Service */
+		/* ---------------------------------------- */
+
+		function searchByWord(options, page, size) {
+			var deferred = $q.defer(), url = apiUrl + '/search/SNOMEDCT', paramList = '?';
+
+			paramList += 'version=v' + userservice.effectiveTime;
+			
+			if (page >= 0) {
+				paramList += '&page=' + page;
+			}
+
+			if (size >= 0) {
+				paramList += '&size=' + size;
+			}
+
+			if (!angular.equals(options, {})) {
+				angular.forEach(options, function(option, name) {
+					paramList += ('&' + name + '=' + option);
+				});
+			}
+
+			url += paramList;
+
+			$http({
+				method : 'GET',
+				url : url
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		
+		/**
+		 * @name getSuggestResultList
+		 * @desc
+		 * @param string q
+		 * @param numeric size
+		 */
+		function getSuggestResultList(q, size) {
+			var deferred = $q.defer(), url = apiUrl + '/search/suggest/SNOMEDCT' + '?version=v' + userservice.effectiveTime + '&q=' + q + '&size=' + size;
+
+			$http({
+				method : 'GET',
+				url : url
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+		
+		function getNarrowSuggestResultList(id, q, size) {
+			var deferred = $q.defer(), url = apiUrl + '/search/suggest/SNOMEDCT?version=v' + userservice.effectiveTime + '&rangeid=' + id + '&q=' + q + '&size=' + size;
+
+			$http({
+				method : 'GET',
+				url : url
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		}
+
+		function getConcept(conceptId, effectiveTime) {
+			var deferred = $q.defer(), url = apiUrl + '/entity/SNOMEDCT/' + conceptId + '?version=v' + effectiveTime;
+
+			$http({
+				method : 'GET',
+				url : url
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		/**
+		 * @name getDescriptionList
+		 * @desc Description 목록을 반환하는 메소드
+		 * @param {string} componentId 컴포넌트 식별자(concept, description, relationship)
+		 * @param {string} effectiveTime 유효시간
+		 * @param {boolean} langGroup language referenceset 그룹 여부
+		 * @param {Object} opts typeId 유형(fsn:900000000000003001, prf:900000000000548007, syn:900000000000013009, def:900000000000550004)
+		 */
+		function getDescriptionList(componentId, effectiveTime, opts) {
+			var deferred = $q.defer(), url = apiUrl + '/descriptions/SNOMEDCT/' + componentId;
+			url +=  '?version=v' + effectiveTime;
+			
+			for (var k in opts) {
+				if (opts.hasOwnProperty(k)) {
+					url += '&' + k + '=' + opts[k];
+				}
+			}
+			
+			$http({
+				method : 'GET',
+				url : url
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function getRelationshipList(code, effectiveTime, stated) {
+			var deferred = $q.defer(), url = apiUrl + '/associations/SNOMEDCT/'+ code;
+			
+			url += '?version=v' + effectiveTime + '&stated=' + (stated ? 1:0);
+
+			$http({
+				method : 'GET',
+				url : url
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function getParentList(conceptId, effectiveTime) {
+			var deferred = $q.defer(), url = apiUrl + '/parents/SNOMEDCT/' + conceptId + '?version=v' + effectiveTime;
+
+			$http({
+				method : 'GET',
+				url : url
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function getChildren(conceptId, effectiveTime) {
+			var deferred = $q.defer(), url = apiUrl + '/children/SNOMEDCT/' + conceptId  + '?version=v' + effectiveTime;
+
+			$http({
+				method : 'GET',
+				url : url
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function getComponent(conceptId, effectiveTime, stated) {
+			var deferred = $q.defer();
+
+			$q.all([
+					getConcept(conceptId, effectiveTime),
+					getDescriptionList(conceptId, effectiveTime, {langgroup:0}),
+					getRelationshipList(conceptId, effectiveTime, stated),
+					getReferencesetMemberList(conceptId, effectiveTime),
+					getHistory(conceptId, effectiveTime),
+					getDefiningAttributeList(conceptId)
+			])
+			.then(function(response) {
+				deferred.resolve(response);
+			}, function(error) {
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		
+		/**
+		 * @name getDefiningAttributeList
+		 * @param {string} conceptId SNOMED CT Concept Id
+		 */
+		function getDefiningAttributeList(conceptId) {
+			var deferred = $q.defer(), url = apiUrl + '/allow/attributes/SNOMEDCT/' + conceptId  + '?version=v' + userservice.effectiveTime;
+
+			$http({
+				method : 'GET',
+				url : url
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		
+		
+		function getReferencesetMemberList(referencedComponentId,effectiveTime) {
+			var deferred = $q.defer(), url = apiUrl + '/members/SNOMEDCT' + '?version=v' + effectiveTime + '&refcpntid=' + referencedComponentId;
+
+			$http({
+				method : 'GET',
+				url : url
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+		
+
+		function getDescriptorList(referencesetId, effectiveTime, isActive) {
+			var deferred = $q.defer(), url = apiUrl + '/descriptors/SNOMEDCT/' + referencesetId + '?version=v' + effectiveTime;
+			
+			$http({
+				method : 'GET',
+				url : url
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		
+		/**
+		 * @name getHistory
+		 * @param {string} componentId SNOMEDCT Component Id
+		 * @param {string} effectiveTime SNOMEDCT Release Date; v + yyyyMMdd 
+		 */
+		function getHistory(componentId, effectiveTime) {
+			var deferred = $q.defer(), url = apiUrl + '/histories/SNOMEDCT/' + componentId  + '?version=v' + effectiveTime;
+
+			$http({
+				method : 'GET',
+				url : url
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function _getRelationshipAndDefiningAttributeList(conceptId, effectiveTime, stated) {
+			var deferred = $q.defer();
+
+			$q.all([
+				getRelationshipList(conceptId, effectiveTime, stated),
+				getDefiningAttributeList(conceptId)
+			])
+			.then(function(response) {
+				deferred.resolve(response);
+			}, function(error) {
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function getCode(codeSystem, code) {
+			var deferred = $q.defer(), url = apiUrl;
+			if ('LOINC' === codeSystem) {
+				/* change entity to paths by Yu 2018.01.07
+				// url += '/paths/LOINC/' + code; 
+				// replace by Yu. 2018.03.03
+				*/
+                                url += '/LP/LOINC/' + code;
+
+ 			} else if ('ICD10' === codeSystem) {
+ 				url += '/rubric/ICD10/' + code;
+ 			} else {
+ 				url = '';
+ 			}
+			
+			$http({
+				method : 'GET',
+				url : url
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		
+		function getConceptAndChildren(conceptId, effectiveTime) {
+			var deferred = $q.defer();
+
+			$q.all([
+			  getConcept(conceptId, effectiveTime),
+			  getChildren(conceptId, effectiveTime)
+			]).then(function(response) {
+				deferred.resolve(response);
+			}, function(error) {
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+		
+		
+		/**
+		 * @name getPathList
+		 * @desc Entity의 경로 목록 조회
+		 */
+		function getPathList(conceptId, effectiveTime) {
+			var deferred = $q.defer(), url = apiUrl + '/paths/SNOMEDCT/' + conceptId  + '?version=v' + effectiveTime;
+		
+			$http({
+				method : 'GET',
+				url : url
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+		
+			return deferred.promise;
+		};
+		
+		
+		/**
+		 * @name getMrcmValueList
+		 * @param {string} attrId SNOMEDCT Attribute Id
+		 * @param {string} q term의 일부; 아이디 미지원
+		 */
+		function getMrcmValueList(attrId, q, size) {
+			var deferred = $q.defer(), url = apiUrl + '/allow/invalues/SNOMEDCT/' + attrId;
+			
+			url += '?version=v' + userservice.effectiveTime + '&q=' + q + '&size=' + size;
+
+			$http({
+				method : 'GET',
+				url : url
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+		
+			return deferred.promise;
+		}
+
+		/* ---------------------------------------- */
+		/* CREATE, UPDATE, DELETE */
+		/* ---------------------------------------- */
+
+		function createDescription(description) {
+			var deferred = $q.defer(), url = apiUrl + '/descriptions/SNOMEDCT';
+
+			$http({
+				method : 'POST',
+				url : url,
+				data : description
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function updateDescription(description) {
+			var deferred = $q.defer(), url = apiUrl + '/descriptions/SNOMEDCT/' + description.id;
+
+			$http({
+				method : 'PUT',
+				url : url,
+				data : description
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function deleteDescription(id, description) {
+			var deferred = $q.defer(), url = apiUrl + '/descriptions/SNOMEDCT/' + id;
+
+			$http({
+				method : 'DELETE',
+				url : url,
+				data : description,
+				headers : {
+					'Content-Type' : 'application/json'
+				}
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function _createRefset(refset) {
+			var deferred = $q.defer(), url = sctRefsetUrl + '/item';
+
+			$http({
+				method : 'POST',
+				url : url,
+				data : refset
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function _addRefsetMember(member) {
+			var deferred = $q.defer(), url = sctRefsetMbrUrl + '/member';
+
+			$http({
+				method : 'POST',
+				url : url,
+				data : member
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function _addLangRefset(langRefset) {
+			var deferred = $q.defer(), url = sctRefsetMbrUrl + '/item';
+
+			$http({
+				method : 'POST',
+				url : url,
+				data : langRefset
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function _deleteLangRefset(id, langRefset) {
+			var deferred = $q.defer(), url = sctRefsetMbrUrl + '/item/' + id;
+
+			$http({
+				method : 'DELETE',
+				url : url,
+				data : langRefset,
+				headers : {
+					'Content-Type' : 'application/json'
+				}
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function _addRefsetMemberList(members) {
+			var deferred = $q.defer(), url = sctRefsetMbrUrl + '/members';
+			
+			$http({
+				method : 'POST',
+				url : url,
+				data : members
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function _updateRefsetMemberList(memberList) {
+			var deferred = $q.defer(), url = sctRefsetMbrUrl + '/members';
+
+			$http({
+				method : 'PUT',
+				url : url,
+				data : memberList
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function _deleteRefsetMemberList(memberList) {
+			var deferred = $q.defer(), url = sctRefsetMbrUrl + '/members';
+
+			$http({
+				method : 'DELETE',
+				url : url,
+				data : memberList,
+				headers : {
+					'Content-Type' : 'application/json'
+				}
+			}).then(function(response) {
+				// Success handler
+				deferred.resolve(response.data);
+			}, function(error) {
+				// Error handler
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+
+		function _saveDescriptorList(refsetId, effectiveTime, data) {
+			var deferred = $q.defer();
+
+			$q.all([
+				data.c.length > 0 ? _addRefsetMemberList(data.c) : '',
+				data.u.length > 0 ? _updateRefsetMemberList(data.u) : '',
+				data.d.length > 0 ? _deleteRefsetMemberList(data.d) : '' 
+			]).then(
+				function(response) {
+					return getDescriptorList(refsetId, effectiveTime);
+				}).then(function(response) {
+				deferred.resolve(response);
+			}, function(error) {
+				deferred.reject(error);
+			});
+
+			return deferred.promise;
+		};
+	};
+
+})();
