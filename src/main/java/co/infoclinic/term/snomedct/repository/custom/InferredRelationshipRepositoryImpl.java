@@ -112,7 +112,28 @@ public class InferredRelationshipRepositoryImpl implements InferredRelationshipR
 		dto.setCharacteristicType(new Value(r.getCharacteristicTypeId(), charTypeName));
 		dto.setModifier(new Value(r.getModifierId(), modifierName));
 		
-		dto.setDestination(conceptSvc.getConcept(r.getDestinationId(), effectiveTime));
+		// For Concrete Value, 2021.09.05 by Yu
+		if (r.getDestinationId().substring(0, 1).equals("#")) {
+			
+			ConceptViewDTO c_tmp = new ConceptViewDTO();
+			Value str_tmp = new Value();
+			str_tmp.setId("Concrete Value");
+			str_tmp.setName("Concrete Value");
+					
+			c_tmp.setEffectiveTime(r.getEffectiveTime());
+			c_tmp.setActive(r.isActive());
+			c_tmp.setConceptId("Concrete Value");
+			c_tmp.setTerm(r.getDestinationId().substring(1));
+			c_tmp.setSemanticTag(null);
+			c_tmp.setModule(str_tmp);
+			c_tmp.setDefinitionStatus(str_tmp);
+			c_tmp.setChildrenCount(0);
+			c_tmp.setDescendantCount(0);
+			
+			dto.setDestination(c_tmp);
+		} else {
+			dto.setDestination(conceptSvc.getConcept(r.getDestinationId(), effectiveTime));
+		}
 		dto.setType(conceptSvc.getConcept(r.getTypeId(), effectiveTime));
 		
 		return dto;
