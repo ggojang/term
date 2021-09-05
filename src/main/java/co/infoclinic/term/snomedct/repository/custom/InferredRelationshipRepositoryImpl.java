@@ -13,6 +13,7 @@ import org.springframework.data.jpa.repository.JpaContext;
 
 import co.infoclinic.term.common.model.dto.Value;
 import co.infoclinic.term.common.utils.SNOMEDCTUtils;
+import co.infoclinic.term.snomedct.model.dto.ConceptViewDTO;
 import co.infoclinic.term.snomedct.model.dto.RelationshipViewDTO;
 import co.infoclinic.term.snomedct.model.entity.InferredRelationship;
 import co.infoclinic.term.snomedct.service.ConceptService;
