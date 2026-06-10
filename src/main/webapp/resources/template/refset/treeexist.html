@@ -1,0 +1,35 @@
+<div>
+  <div>
+    <!-- 트리 화살표 -->
+    <a
+      class="glyphicon"
+      ng-class="node.descendantCount == 0 ? 'glyphicon-minus':(!node.open ? 'glyphicon-chevron-right':(node.loading ? 'glyphicon-refresh icon-spin':'glyphicon-chevron-down'))"
+      ng-click="node.descendantCount == 0 ? null:vm.getChildren(node)">
+    </a>
+    <!-- 컨셉 정의 상태 : Fully Defined | Primitive -->
+    <span class="badge alert-warning" ng-bind-html="node.definitionStatus == 'Defined' ? '≡':'&nbsp;&nbsp;'">
+			<md-tooltip md-direction="top">
+        {{ node.definitionStatus.id }}
+      </md-tooltip>
+		</span>
+    <!-- 컨셉 대표 용어 -->
+    <a
+      ng-style="vm.existIds.indexOf(node.conceptId) > -1 ? '':{'opacity':'0.3'}"
+      ui-sref="refset.view({ release: 'int', code: node.conceptId, name: node.term })"
+      ng-bind="node.term"></a>
+      <!-- ng-click="vm.selectRefset(node.conceptId, node.term)" -->
+    <!-- 자식을 포함한 자손 수 -->
+    <span
+      ng-if="node.descendantCount > 0"
+      ng-bind-html="'(' + node.descendantCount + ')'"></span>
+  </div>
+  <ul
+    style="padding-left:10px"
+    ng-init="node.open= (node.open ? true:false); node.loading=false"
+    ng-show="node.open">
+    <li
+      ng-repeat="node in node.children | orderBy:'term'"
+      ng-include="'resources/template/refset/treeexist.html'">
+    </li>
+  </ul>
+</div>

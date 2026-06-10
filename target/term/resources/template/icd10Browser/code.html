@@ -1,0 +1,268 @@
+
+<div id="lb-code">
+	<ic-loading loading="eVm.loading" target="#lb-code"></ic-loading>
+
+	<div style="font-weight:bold;color:#009" ng-if="eVm.pcode.classKind === 'chapter'">
+                <h3>
+                        <span>Chapter {{eVm.pcode.code}}</span>
+			<br>
+                        <span>{{eVm.pcode.label}}</span>
+                </h3>
+        </div>
+
+	<div style="font-weight:bold;color:#009" ng-if="eVm.pcode.classKind !== 'chapter'" ng-repeat="ancestors in eVm.ancestors">
+		<h3>
+		<div ng-if="ancestors.classKind === 'chapter'">
+			<span>Chapter {{ancestors.code}}</span>
+			<br>
+			<span>{{ancestors.label}}</span>
+			<br><br>
+		</div>
+		</h3>
+		<h4>
+		<div ng-if="ancestors.classKind !=='chapter'">
+			<span>{{ancestors.code}} </span>
+			<span>{{ancestors.label}}</span>
+			<br><br>
+		</div>
+		</h4>
+	</div>
+
+	<div style="font-weight:bold;color:#009" ng-if="eVm.pcode.classKind === 'block'">
+		<h4>
+			<span>{{eVm.pcode.code}}</span>
+			<span>{{eVm.pcode.label}}</span>
+		</h4>
+	</div>
+  	<hr>
+	<!--
+                <p>{{eVm.pcode}}</p>
+		<br>
+                <p>{{eVm.ancestors}}</p>
+                <br>
+		<p>{{eVm.siblings}}</p>
+		<br>
+		<p>{{eVm.rubric}}</p>
+	-->	
+<!--
+	<div class="well well-sm" >
+		<ul class="breadcrumb" ng-repeat="kinds in eVm.rubrics.kinds">
+			<li>{{ kinds.kind }}</li>
+			<li class="active">{{ kinds.label }}</li>
+		</ul>
+	</div>
+-->	
+	<div ng-if="eVm.pcode.classKind !== 'category'">
+		<div style="font-size:10pt" ng-repeat="(kind1, kind2) in eVm.rubrics.kinds | groupBy:'kind'">
+			
+			<div ng-if="kind1 === 'preferred' || kind1 === 'preferredLong' || kind1 === 'definition' || kind1 === 'note' || kind1 === 'inclusion' || kind1 === 'exclusion' || kind1 === 'introduction' || kind1 === 'coding-hint' || kind1 === 'text' || kind1 === 'text1' || kind1 === 'footnote' || kind1 === 'modifier' || kind1 === 'modifier1'">
+				<!--
+				<div ng-if="kind1 === 'preferred'">
+                                	<dl>
+                                                <dt style="font-weight:bold;float:left">Preferred:</dt>
+                                                <dd style="margin-left:5em" ng-repeat="kind3 in kind2">
+                                                      	<span ng-bind-html=" trustAsHtml(kind3.label) "></span>
+                                              		<span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })">({{kind3.ref}})</span>
+						</dd>
+                                     	</dl>
+                                        <br>
+                            	</div>
+				-->	
+				<div ng-if="kind1 === 'note'">
+					<dl>
+						<dt style="font-weight:bold;font-style:italic;float:left">Note</dt>
+						<dd style="margin-left:5em" ng-repeat="kind3 in kind2">
+							<span ng-bind-html=" trustAsHtml(kind3.label) "></span>
+							<span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })">({{kind3.ref}})</span>
+						</dd>
+					</dl>
+					<br>
+				</div>
+                               
+				<div ng-if="kind1 === 'inclusion'">
+					<dl>
+						<dt style="font-weight:bold;font-style:italic;float:left">Incl.</dt>
+						<dd style="margin-left:5em" ng-repeat="kind3 in kind2">
+                                                        <span ng-bind-html=" trustAsHtml(kind3.label) "></span>
+                                                	<span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })">({{(kind3.ref)}})</span>
+						</dd>
+					</dl>
+					<br>
+				</div>
+                                	
+				<div ng-if="kind1 === 'exclusion'">
+					<dl>
+						<dt style="font-weight:bold;font-style:italic;float:left">Excl.</dt>
+						<dd style="margin-left:5em" ng-repeat="kind3 in kind2">
+                                                        <span ng-bind-html=" trustAsHtml(kind3.label) "></span>
+                                                	<span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })">({{kind3.ref}})</span>
+						</dd>
+					</dl>
+					<br>
+				</div>
+				<div ng-if="kind1 === 'footnote'">
+                                        <dl>
+                                                <dt style="float:left">[Footnote: </dt>
+                                                <dd style="margin-left:5em" ng-repeat="kind3 in kind2">
+                                                        <span ng-bind-html="trustAsHtml(kind3.label)"></span>
+							<span>]</span>
+                                                </dd>
+                                        </dl>
+                                        <br>
+                                </div>
+
+				<div ng-if="kind1 === 'introduction' || kind1 === 'definition' || kind1 === 'coding-hint' || kind1 === 'text' || kind1 === 'text1'">
+					<div ng-repeat="kind3 in kind2">
+						<span ng-switch on="kind3.paraType">
+							<span ng-switch-when="headingIntro" style="font-weight:bold">
+                                        			<span ng-bind-html="trustAsHtml(kind3.label)"></span>
+								<span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })">({{kind3.ref}})</span>
+							</span>
+							<span ng-switch-when="chpt-cont2-l2">
+								<span style="margin-left:5em" ng-bind-html="trustAsHtml(kind3.label)"></span>
+                                                		<span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })">({{kind3.ref}})</span>
+							</span>
+							<span ng-switch-default>
+								<span style="maargin-left:5em" ng-bind-html="trustAsHtml(kind3.label)"></span>
+								<span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })">({{kind3.ref}})</span>
+							</span>
+						</span>
+							<span ng-if="kind3.paraType !== 'termList2' && kind3.paraType !== 'chpt-term2'">
+                                                	 <br>
+                                                </span>
+							
+						<br>
+                                       	</div>
+					<br>
+				</div>
+				<div ng-if="kind1 === 'modifier' || kind1 === 'modifier1'">
+                                        <dl>
+                                                <dt style="font-weight:bold;font-style:italic;float:left"></dt>
+                                                <dd style="margin-left:5em" ng-repeat="kind3 in kind2">
+                                                        <span ng-if="kind3.paraType === 'preferred'">
+                                                                <span style="font-weight:bold">{{kind3.modCode}}</span>
+                                                                <span ng-bind-html=" trustAsHtml(kind3.label) "></span>
+                                                                <span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })">({{kind3.ref}})</span>
+                                                        </span>
+                                                </dd>
+                                        </dl>
+                                        <br>
+                                </div>
+			</div>
+		</div>
+	</div>
+
+	<div ng-if="eVm.pcode.classKind === 'category'">
+		<div ng-repeat="siblings in eVm.siblings.siblings">
+			<h4>
+                                <div ng-if="siblings.usageKind === 'dagger'" style="background-color:black;color:white;float:left"><a name="#{{siblings.code}}" style="color:white">{{siblings.code}}&#x2020;&emsp;</a></div>
+				<div ng-if="siblings.usageKind === 'aster'" style="background-color:black;color:white;float:left"><a name="#{{siblings.code}}" style="color:white">{{siblings.code}}*&emsp;&nbsp;</a></div>
+                                <div ng-if="siblings.usageKind !== 'dagger' && siblings.usageKind !== 'aster'" style="background-color:black;color:white;float:left"><a name="#{{siblings.code}}" style="color:white">{{siblings.code}}&emsp;&nbsp;&nbsp;</a></div>
+
+				<div style="border-bottom:1px solid black;">
+					<span style="background-color:white;color:black;margin-left:0.4em;">{{siblings.kinds[0].label}}</span> 
+					<!--
+					<span ng-if="siblings.kinds[0].ref !== ''">({{siblings.kinds[0].ref}})</span>
+                			
+					<span ng-if="siblings.kinds[0].ref !== ''" ng-bind-html="trustAsHtml(siblings.kinds[0].ref)"></span>
+					-->
+					<span ng-if="siblings.kinds[0].ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : siblings.kinds[0].ref })">({{siblings.kinds[0].ref}})</span>
+				</div>
+			</h4>
+			<br>
+			<div style="font-size:10pt" ng-repeat="(kind1, kind2) in siblings.kinds | groupBy:'kind'">
+				<div ng-if="kind1 === 'preferred' || kind1 === 'preferredLong' || kind1 === 'definition' || kind1 === 'note' || kind1 === 'inclusion' || kind1 === 'exclusion' || kind1 === 'introduction' || kind1 === 'coding-hint' || kind1 === 'text' || kind1 === 'text1' || kind1 === 'footnote' || kind1 === 'modifier' || kind1 === 'modifier1'">
+					<!--
+					<div ng-if="kind1 === 'preferred'">
+                                        	<dl>
+                                                	<dt style="font-weight:bold;float:left">Preferred:</dt>
+                                                	<dd style="margin-left:5em" ng-repeat="kind3 in kind2">
+                                                        	<span ng-bind-html=" trustAsHtml(kind3.label) "></span>
+								<span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })">({{kind3.ref}})</span>
+							</dd>
+                                        	</dl>
+                                        	<br>
+                                	</div>
+					-->
+					<div ng-if="kind1 === 'note'">
+                                        	<dl>
+                                                	<dt style="font-weight:bold;font-style:italic;float:left">Note</dt>
+                                                	<dd style="margin-left:5em" ng-repeat="kind3 in kind2">
+								<span ng-bind-html=" trustAsHtml(kind3.label) "></span>
+								<span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })">({{kind3.ref}})</span>
+							</dd>
+                                        	</dl>
+                                        	<br>
+                                	</div>
+                                	<div ng-if="kind1 === 'inclusion'">
+                                        	<dl>
+                                                	<dt style="font-weight:bold;font-style:italic;float:left">Incl.</dt>
+                                                	<dd style="margin-left:5em" ng-repeat="kind3 in kind2">
+                                                        	<span ng-bind-html=" trustAsHtml(kind3.label) "></span>
+								<span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })" ng-bind-html="(trustAsHtml(kind3.ref))"></span>
+							</dd>
+                                        	</dl>
+                                        	<br>
+                                	</div>
+                                	<div ng-if="kind1 === 'exclusion'">
+                                        	<dl>
+                                                	<dt style="font-weight:bold;font-style:italic;float:left">Excl.</dt>
+                                                	<dd style="margin-left:5em" ng-repeat="kind3 in kind2">
+                                                       		<span ng-bind-html=" trustAsHtml(kind3.label) "></span>
+								<span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })">({{kind3.ref}})</span>
+							</dd>
+                                        	</dl>
+                                        	<br>
+                                	</div>
+
+					<div ng-if="kind1 === 'modifier' || kind1 === 'modifier1'">
+                                                <dl>
+                                                        <dt style="font-weight:bold;font-style:italic;float:left"></dt>
+                                                        <dd style="margin-left:5em" ng-repeat="kind3 in kind2">
+								<span ng-if="kind3.paraType === 'preferred'">
+									<span style="font-weight:bold">{{kind3.modCode}}</span>
+                                                                	<span ng-bind-html=" trustAsHtml(kind3.label) "></span>
+                                                                	<span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })">({{kind3.ref}})</span>
+                                                        	</span>
+							</dd>
+                                                </dl>
+                                                <br>
+                                        </div>
+					<div ng-if="kind1 === 'footnote'">
+                                        	<dl>
+                                                	<dt style="float:left">[Footnote: </dt>
+                                                	<dd style="margin-left:5em" ng-repeat="kind3 in kind2">
+                                                        	<span ng-bind-html="trustAsHtml(kind3.label)"></span>
+								<span>]</span>
+                                                	</dd>
+                                        	</dl>
+                                        <br>
+                                	</div>
+                                	<div ng-if="kind1 === 'introduction' || kind1 === 'definition' || kind1 === 'coding-hint' || kind1 === 'text' || kind1 === 'text1'" >
+                                        	<div ng-repeat="kind3 in kind2">
+                                        		<span ng-switch on="kind3.paraType">
+                                                        	<span ng-switch-when="headingIntro" style="font-weight:bold">
+                                                                	<span ng-bind-html="trustAsHtml(kind3.label)"></span>
+									<span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })">({{kind3.ref}})</span>
+								</span>
+                                                        	<span ng-switch-when="chpt-cont2-l2">
+                                                                	<span style="margin-left:5em" ng-bind-html="trustAsHtml(kind3.label)"></span>
+									<span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })">({{kind3.ref}})</span>
+								</span>
+                                                        	<span ng-switch-default>
+                                                                	<span style="maargin-left:5em" ng-bind-html="trustAsHtml(kind3.label)"></span>
+									<span ng-if="kind3.ref !== ''" style="color:#009" ui-sref="icd10Browser.code({ ver : '2016', code : kind3.ref })">({{kind3.ref}})</span>
+								</span>
+                                                	</span>
+							</span>
+                                                		<span ng-if="kind3.paraType !== 'termList2' && kind3.paraType !== 'chpt-term2' ">
+                                                         	<br>
+                                                	</span>
+						</div>
+						<br>
+                                	</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

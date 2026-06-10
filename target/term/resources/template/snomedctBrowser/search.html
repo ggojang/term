@@ -1,0 +1,101 @@
+<!-- Controller : search.controller.js -->
+<!-- 옵션 및 검색 창 -->
+<div layout-gt-xs="row">
+	<md-input-container>
+	  <label>{{ "search.match" | translate }}</label>
+	  <md-select ng-model="vm.options.match">
+	    <md-option value="fulltext">{{ "search.message.fulltext" | translate }}</md-option>
+		<md-option value="partial">{{ "search.message.partial" | translate }}</md-option>
+		<md-option value="regex">{{ "search.message.regex" | translate }}</md-option>
+	  </md-select>
+	</md-input-container>
+	<md-input-container>
+	  <label>{{ "search.state" | translate }}</label>
+	<md-select ng-model="vm.options.state">
+    	<md-option value = "active">{{ "search.state.active" | translate }}</md-option>
+		<md-option value = "inactive">{{ "search.state.inactive" | translate }}</md-option>
+		<md-option value = "both">{{ "search.state.both" | translate }}</md-option>
+	  </md-select>
+	</md-input-container>
+		<md-input-container class="md-block" flex-gt-xs>
+	    <label>{{ 'search.message.placeholder' | translate }}</label>
+	    <input ng-model="vm.options.word" ng-keydown="vm.check($event)">
+	  </md-input-container>
+</div>
+
+<!-- 검색 결과 상태 메시지 -->
+<div style="overflow:hidden;padding:5px 10px;height:34px;line-height:22px;border-bottom:1px solid #e1e2e3">
+	<!-- Tree Message -->
+	<span ng-if="vm.tree.totalCount > 0 && vm.options.word.length === 0">{{vm.tree.totalCount | number:0}}</span>
+	
+	<!-- Search Message -->
+  	<span ng-if="vm.options.word.length > 0 && vm.totalSize === 0">{{ "search.message.notfound" | translate }}</span>
+  	<span ng-if="vm.totalSize > 0 && vm.options.word.length > 0">{{vm.totalSize | number:0}}{{ "search.message.matchesfound" | translate }}</span>
+
+	<button type="button" class="btn btn-default btn-xs pull-right" ng-click="vm.toggle()" ng-if="vm.options.word.length > 0 && vm.totalSize > 0 || vm.loading">{{ "filter.semanticTag" | translate }}<span class="badge" style="margin-left:4px;margin-bottom:2px;font-size:11px;line-height:1.1" ng-bind-html="vm.options.tagList.length === 0? vm.tagList.length:(vm.options.tagList.length + '/' + vm.tagList.length)"></span></button>
+</div>
+
+<!-- 트리 및 검색결과 -->
+<div id="search-result">
+	<uib-tabset>
+		<!-- 트리 -->
+		<uib-tab active="vm.options.word.length === 0">
+			<!-- Taxonomy 트리뷰 -->
+			<div ng-controller="BrowserTaxonomyController as vm">
+				<ic-loading loading="vm.loading" target="#search-result"></ic-loading>
+				<ul id="tree-root" style="padding:0;padding-left:5px">
+					<li ng-repeat="node in vm.tree" ng-include="'resources/template/snomedctBrowser/childrenTree.html'"></li>
+				</ul>
+			</div>
+		</uib-tab>
+		<!-- 검색결과 -->
+		<uib-tab active="vm.options.word.length > 0">
+			<ic-loading loading="vm.loading" target="#search-result"></ic-loading>
+	
+			<md-sidenav md-component-id="left">
+				<md-content>
+					<md-list>
+						<md-subheader>{{ "filter.semanticTag" | translate }}</md-subheader> 
+						<md-divider></md-divider>
+						<md-list-item flex="100" ng-repeat="semTag in vm.tagList">
+							<md-checkbox ng-checked="vm.isCheckedTag(semTag.name, vm.options.tagList)" ng-click="vm.selectTag(semTag.name, vm.options.tagList)">
+								<span>{{semTag.count}}</span>
+								{{semTag.name}}
+							</md-checkbox>
+						</md-list-item>
+					</md-list>
+				</md-content>
+			</md-sidenav>
+			<!--검색 결과-->
+			 <div style="padding:5px;">
+			 	<div class="list-group" style="margin:0;padding:0;padding-bottom:10px;">
+					<a class="list-group-item" ng-class="{'danger': !l.conceptActive || !l.descriptionActive}" ng-repeat="l in vm.list" style="padding:0;color:inherit" ui-sref="snomedctBrowser.concept({conceptId: l.conceptId})">
+						<div class="row" style="margin:0;padding:10px 5px 5px 5px;">
+							<div class="col-xs-1" style="padding:0">
+								<span class="badge alert-warning icon-cd-mini icon-cd" ng-class="{'icon-cd-fsn': l.typeId === '900000000000003001', 'icon-cd-synonym': l.typeId === '900000000000013009', 'icon-cd-definition': l.typeId === '900000000000550004'}" ng-bind-html="vm.getDefinitionStatusFlagValue(l.definitionStatusId)">
+									<md-tooltip md-direction="top">{{ vm.getDefinitionStatusName(l.definitionStatusId) + ', ' + vm.getDescriptionType(l.typeId) }}</md-tooltip>
+								</span>
+							</div>
+							<div class="col-xs-5" style="padding:0;padding-left:5px">
+								<span style="font-weight:600">{{ l.term }}</span>
+							</div>
+							
+							<div class="col-xs-1" style="padding:0">
+								<span class="badge alert-warning icon-cd-mini icon-cd icon-cd-fsn" ng-bind-html="vm.getDefinitionStatusFlagValue(l.definitionStatusId)">
+									<md-tooltip md-direction="top">{{ vm.getDefinitionStatusName(l.definitionStatusId) + ', ' + vm.getDescriptionType('900000000000003001') }}</md-tooltip>
+								</span>
+							</div>
+							
+							<div class="col-xs-5" style="padding:0;padding-left:5px">
+								<span>{{ l.fsn }}</span>
+							</div>
+						</div>
+					</a>
+				</div>
+				
+			 	<button type="button" class="btn btn-sm btn-success" style="width:100%" ng-if="vm.loadedSize < vm.totalSize" ng-click="vm.more()">More List ({{vm.loadedSize}}/{{vm.totalSize}})</button>
+			 </div>
+		</uib-tab> 
+	</uib-tabset>
+</div>
+

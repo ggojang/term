@@ -1,0 +1,7 @@
+<div>
+	<a ui-sref="loincBrowser.entity({ ver: 'v2.67', code: p.code })">{{ p.code }}<span class="tab">&#9;</span> {{ p.name }}</a>
+</div>
+<ul>
+	<li ng-repeat="p in p.children | orderBy:'sequence'" ng-include="'resources/template/loincBrowser/panelTree.html'"></li>
+</ul>
+								

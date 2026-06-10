@@ -1,0 +1,101 @@
+
+<!-- Relationship View -->
+<div>
+	<!-- IS-A Relationship -->
+	<div class="cdr-isa-relationship" ng-if="rv.isaRels.length > 0">
+		<div ng-repeat="item in rv.isaRels" style="margin-bottom:5px;">
+			<div>
+				<span class="badge alert-warning">
+					&nbsp;&nbsp;
+	      			<md-tooltip md-direction="top">{{rv.getDefinitionStatusName(item.type.definitionStatus.id)}}</md-tooltip>
+				</span>
+			    <a ui-sref="snomedctBrowser.concept({conceptId: item.type.conceptId})">
+			      <span style="color:gray">{{item.type.conceptId}}</span>
+			    </a>
+		      	<span ng-bind-html="'| ' + rv.termBeautifier(item.type.term) + ' |'"></span>
+			</div>
+			<div style="padding-left:40px">
+				<span style="font-size:125%">&nbsp;&#61&nbsp;</span>
+		  		<span class="badge alert-warning" ng-bind-html="::rv.getDefinitionStatusFlagValue(item.destination.definitionStatus.id)">
+		        	<md-tooltip md-direction="top">{{rv.getDefinitionStatusName(item.destination.definitionStatus.id)}}</md-tooltip>
+		  		</span>
+		      	<a ui-sref="snomedctBrowser.concept({conceptId: item.destination.conceptId})" style="color:gray">{{item.destination.conceptId}}</a>
+		      	<span ng-bind-html="'| ' + item.destination.term + ' |'"></span>
+			</div>
+		</div>
+	</div>
+	<!-- IS-A Relationship END -->
+	
+	<!-- Defining Relationships -->
+	<div class="cdr-other-relationship" ng-if="rv.defGroupRels.length > 0 || rv.defNonGroupRels.length > 0">
+
+		<!-- Group -->
+		<div class="cdr-group" ng-repeat="rel in rv.defGroupRels">
+			<div class="sctb-rel-group" ng-click="rv.onClick($event, rel.data, rv.defNonGroupRels)" ng-class="rv.selectedGroupNum === rel.type ? 'selected':''">
+				<div class="sctb-rel-groupbox">
+					<div class="rel-groupbox-define">
+						<div class="attrval" ng-repeat="item in rel.data">
+							<div>
+								<span class="badge alert-warning" ng-bind-html="::rv.getDefinitionStatusFlagValue(item.type.definitionStatus.id)">
+				          			<md-tooltip md-direction="top">{{rv.getDefinitionStatusName(item.type.definitionStatus.id)}}</md-tooltip>
+								</span>
+				        		<a ui-sref="snomedctBrowser.concept({conceptId: item.type.conceptId})" style="color:gray">{{item.type.conceptId}}</a>
+				          		<span ng-bind-html="'| ' + rv.termBeautifier(item.type.term) + ' |'"></span>
+							</div>
+							<div style="padding-left:40px">
+								<span style="font-size:125%">&#61</span>
+					        	<span class="badge alert-warning" ng-bind-html="::rv.getDefinitionStatusFlagValue(item.destination.definitionStatus.id)">
+					          		<md-tooltip md-direction="top">{{rv.getDefinitionStatusName(item.destination.definitionStatus.id)}}</md-tooltip>
+					    		</span>
+					        	<a ui-sref="snomedctBrowser.concept({conceptId: item.destination.conceptId})" style="color:gray">{{item.destination.conceptId}}</a>
+					          	<span ng-bind-html="'| ' + item.destination.term + ' |'"></span>
+							</div>
+							
+						</div>
+					</div>
+					<div class="rel-groupbox-checkstate">
+						<input type="radio" name="sctb-r-g-radios" ng-model="rv.selectedGroupNum" ng-value="rel.type" ng-checked="rv.selectedGroupNum === rel.type" ng-change="rv.selectedGroupNum === rel.type ? rv.onChange(rel.data):''">
+						<!-- <span class="glyphicon" ng-class="rv.selectedGroupNum === rel.type ? 'glyphicon-ok':''"></span> -->
+						<span class="glyphicon glyphicon-ok" ng-style="rv.selectedGroupNum === rel.type ? {}:{opacity:0.1}"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Group END -->
+
+		<!-- Ungroup -->
+		<div class="cdr-ungroup" ng-if="rv.defNonGroupRels.length > 0">
+			<div class="sctb-rel-group">
+				<div class="sctb-rel-groupbox" >
+					<div class="rel-groupbox-define">
+						<div class="attrval" ng-repeat="rel in rv.defNonGroupRels">
+							<div>
+								<span class="badge alert-warning" ng-bind-html="::rv.getDefinitionStatusFlagValue(rel.type.definitionStatus.id)">
+				          			<md-tooltip md-direction="top">{{rv.getDefinitionStatusName(rel.type.definitionStatus.id)}}</md-tooltip>
+								</span>
+				        		<a ui-sref="snomedctBrowser.concept({conceptId: rel.type.conceptId})" style="color:gray">{{rel.type.conceptId}}</a>
+				          		<span ng-bind-html="'| ' + rv.termBeautifier(rel.type.term) + ' |'"></span>
+							</div>
+							<div style="padding-left:40px">
+								<span style="font-size:125%">&#61</span>
+					        	<span class="badge alert-warning" ng-bind-html="::rv.getDefinitionStatusFlagValue(rel.destination.definitionStatus.id)">
+					          		<md-tooltip md-direction="top">{{rv.getDefinitionStatusName(rel.destination.definitionStatus.id)}}</md-tooltip>
+					    		</span>
+					        	<a ui-sref="snomedctBrowser.concept({conceptId: rel.destination.conceptId})" style="color:gray">{{rel.destination.conceptId}}</a>
+					          	<span ng-bind-html="'| ' + rel.destination.term + ' |'"></span>
+							</div>
+							
+						</div>
+					</div>
+					<div class="rel-groupbox-checkstate">
+						<input type="radio" name="sctb-r-g-radios" checked>
+						<span class="glyphicon glyphicon-ok"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Ungroup END -->
+	</div>
+	<!-- Defining Relationships END -->
+	
+</div>

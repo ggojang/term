@@ -1,0 +1,79 @@
+<div ng-controller="ConceptTab2Controller" ng-cloak="" style="padding:15px 10px;">
+	<ul class="ce-cv" ng-if="inferredData != null">
+		<li>
+			<div class="ce-cv-clazz ce-cv-clazz-main" ng-init="mainShow=true;mainCls='glyphicon-chevron-up'">
+				<b class="text-primary">{{inferredData.equalClasses[inferredData.equalClasses.length-1].conceptId}}</b> <span class="glyphicon text-primary" aria-hidden="true" ng-class="mainCls" ng-click="mainShow = !mainShow;mainCls = mainCls=='glyphicon-chevron-up' ? 'glyphicon-chevron-down' : 'glyphicon-chevron-up'"></span>
+				<ul ng-show="mainShow">
+					<li>
+						<span class="text-primary">{{inferredData.equalClasses[inferredData.equalClasses.length-1].term}}</span>
+						<ul ng-if="inferredData.equalClasses[inferredData.equalClasses.length-1].attrs.length > 0">
+							<li><b class="text-muted">Attributes</b></li>
+							<li ng-repeat="attr in inferredData.equalClasses[inferredData.equalClasses.length-1].attrs">
+								({{attr.name.conceptId}}) {{attr.name.term}} <b class="text-muted">=</b> ({{attr.value.conceptId}}) {{attr.value.term}}
+							</li>
+						</ul>
+					</li>
+				</ul>
+			</div>
+			<div class="ce-cv-clazz" ng-init="equalShow=true;equalCls='glyphicon-chevron-up'">
+				<b class="text-muted">Equivalent Classes</b> <span class="glyphicon text-muted" aria-hidden="true" ng-class="equalCls" ng-click="equalShow = !equalShow;equalCls = equalCls=='glyphicon-chevron-up' ? 'glyphicon-chevron-down' : 'glyphicon-chevron-up'"></span>
+				<ul ng-if="inferredData.equalClasses != null" ng-show="equalShow">
+					<li ng-if="$index < (inferredData.equalClasses.length - 1)" ng-repeat="clazz in inferredData.equalClasses">
+						<span class="text-muted">({{clazz.conceptId}})</span> {{clazz.term}}
+						<ul ng-if="clazz.attrs.length > 0">
+							<li><b class="text-muted">Attributes</b></li>
+							<li ng-repeat="attr in clazz.attrs">
+								({{attr.name.conceptId}}) {{attr.name.term}} <b class="text-muted">=</b> ({{attr.value.conceptId}}) {{attr.value.term}}
+							</li>
+						</ul>
+					</li>
+				</ul>
+				<ul ng-if="inferredData.equalClasses == null || inferredData.equalClasses.length < 2"  ng-show="equalShow">
+					<li><span class="text-muted">Not exists.</span></li>
+				</ul>
+			</div>
+			<div class="ce-cv-clazz ce-cv-clazz-super" ng-init="superShow=true;superCls='glyphicon-chevron-up'">
+				<b class="text-danger">Super Classes</b> <span class="glyphicon text-danger" aria-hidden="true" ng-class="superCls" ng-click="superShow = !superShow;superCls = superCls=='glyphicon-chevron-up' ? 'glyphicon-chevron-down' : 'glyphicon-chevron-up'"></span>
+				<ul ng-if="inferredData.superClasses != null" ng-show="superShow">
+					<li ng-repeat="clazz in inferredData.superClasses">
+						<span class="text-danger">({{clazz.conceptId}})</span> {{clazz.term}}
+					</li>
+				</ul>
+				<ul ng-if="inferredData.superClasses == null" ng-show="superShow">
+					<li><span class="text-muted">Not exists.</span></li>
+				</ul>
+			</div>
+			
+			<div class="ce-cv-clazz ce-cv-clazz-sub" ng-init="subShow=true;subCls='glyphicon-chevron-up'">
+				<b class="text-warning">Sub Classes</b> <span class="glyphicon text-warning" aria-hidden="true" ng-class="subCls" ng-click="subShow = !subShow;subCls = subCls=='glyphicon-chevron-up' ? 'glyphicon-chevron-down' : 'glyphicon-chevron-up'"></span>
+				<ul ng-if="inferredData.subClasses != null" ng-show="subShow">
+					<li ng-repeat="clazz in inferredData.subClasses">
+						<span class="text-warning">({{clazz.conceptId}})</span> {{clazz.term}}
+					</li>
+				</ul>
+				<ul ng-if="inferredData.subClasses == null" ng-show="subShow">
+					<li><span class="text-muted">Not exists.</span></li>
+				</ul>
+			</div>
+			<div class="ce-cv-clazz ce-cv-clazz-ins" ng-init="insShow=true;insCls='glyphicon-chevron-up'">
+				<b class="text-success">Instances</b> <span class="glyphicon text-success" aria-hidden="true" ng-class="insCls" ng-click="insShow = !insShow;insCls = insCls=='glyphicon-chevron-up' ? 'glyphicon-chevron-down' : 'glyphicon-chevron-up'"></span>
+				<ul ng-if="inferredData.instances != null" ng-show="insShow">
+					<li ng-repeat="clazz in inferredData.instances">
+						<span class="text-success">({{clazz.conceptId}})</span> {{clazz.term}}
+					</li>
+				</ul>
+				<ul ng-if="inferredData.instances == null" ng-show="insShow">
+					<li><span class="text-muted">Not exists.</span></li>
+				</ul>
+			</div>
+		</li>
+		<li>
+			<div class="ce-cv-vs">
+				<svg ce-visualization width="800" height="500"></svg>
+			</div>
+		</li>
+	</ul>
+	<div ng-if="inferredData == null">
+		<h3 class="text-muted" style="text-align:center;">NOT EXSIST! (Inferred Data)</h3>
+	</div>
+</div>

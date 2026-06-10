@@ -1,0 +1,42 @@
+<nav class="iui_header" role="navigation">
+  <div id="logo" class="iui_header_logo">
+    <a href="http://infoclinic.co" target="_blank">
+      <img src="resources/images/logo.png" alt="InfoClinic's Terminology Service" style="height:35px;">
+    </a>  
+  </div>
+
+  <ul class="iui_nav" style="width:auto">
+    <li ng-class="{active:$state.is('snomedctBrowser.concept')}">  
+      <a ui-sref="snomedctBrowser()" ui-sref-opts="{reload:true}">{{ "menu.snomedctbrowser" | translate }}</a> 
+    </li>
+    <li ng-class="{active:$state.includes('loincBrowser')}">
+      <a ui-sref="loincBrowser({lang:$stateParams.lang ? $stateParams.lang:'en-US'})">{{ "menu.loincbrowser" | translate }}</a> 
+    </li>
+    <li ng-class="{active:$state.includes('icd10Browser')}">
+      <a ui-sref="icd10Browser()">{{ "menu.icd10browser" | translate }}</a>
+    </li>
+    <li ng-class="{active:$state.includes('mapBrowser')}">
+      <a ui-sref="mapBrowser()">{{ "menu.mapbrowser" | translate }}</a>
+    </li>
+  </ul>
+<!--
+  <ul class="iui_nav" style="width:auto">
+    <li ng-class="{active:$state.is('snomedctBrowser.concept')}">
+      <a ui-sref="snomedctBrowser()" ui-sref-opts="{reload:true}">{{ "menu.snomedctbrowser" | translate }}</a>
+    </li>
+    <li ng-class="{active:$state.include('loincBrowser')}">
+      <a ui-sref="loincBrowser.entity()">{{ "menu.loincbrowser" | translate }}</a>
+    </li>
+    <li ng-class="{active:$state.include('icd10Browsere')}">
+      <a ui-sref="icd10Browser.code()">{{ "menu.icd10browser" | translate }}</a>
+    </li>
+  </ul>
+-->
+  <ul class="iui_nav" style="width: auto;position:absolute;right:0">
+    <li style="line-height:50px;">
+      <span class="text">International Edition 2020.03.09</span>
+    </li>
+    <li class="dropdown" ng-class="{'open': isOpen==true}" locale></li>
+    <li><a href="resources/template/help/help.html" target="_blank" class="glyphicon glyphicon-question-sign"></a></li>
+  </ul>
+</nav>

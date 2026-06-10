@@ -1,0 +1,84 @@
+@CHARSET "UTF-8";
+
+.browser-wrap {
+	display: -webkit-box; /* OLD - iOS 6-, Safari 3.1-6 */
+	display: -moz-box; /* OLD - Firefox 19- (buggy but mostly works) */
+	display: -ms-flexbox; /* TWEENER - IE 10 */
+	display: -webkit-flex; /* NEW - Chrome */
+	display: flex; /* NEW, Spec - Opera 12.1, Firefox 20+ */
+	height: inherit;
+}
+
+.browser-wrap * {
+	outline: none;
+}
+
+
+.browser-wrap .main-content, 
+.browser-wrap .main-nav, 
+.browser-wrap .main-sidebar,
+	.browser-wrap .main-resizer {
+	display: -webkit-box; /* OLD - iOS 6-, Safari 3.1-6 */
+	display: -moz-box; /* OLD - Firefox 19- (buggy but mostly works) */
+	display: -ms-flexbox; /* TWEENER - IE 10 */
+	display: -webkit-flex; /* NEW - Chrome */
+	display: flex; /* NEW, Spec - Opera 12.1, Firefox 20+ */
+	-webkit-flex-direction: column; /* Safari 6.1+ */
+	flex-direction: column;
+}
+
+
+.browser-wrap .main-nav {
+	min-width: 300px;
+	position: relative;
+	border-right: 1px solid #ccc;
+}
+
+.browser-wrap .main-content {
+	position: relative;
+	flex-grow: 2;
+}
+
+.browser-wrap .main-sidebar {
+	min-width: 300px;
+	position: relative;
+	border-left: 1px solid #ccc;
+}
+
+
+
+/* ---------------------------------------- */
+/* BEGIN: MD-TAB Small Height */
+/* ---------------------------------------- */
+.browser-wrap md-tabs-canvas, 
+.browser-wrap md-tabs-canvas>md-pagination-wrapper {
+	height: 34px;
+}
+
+.browser-wrap md-tabs>md-tabs-content-wrapper {
+	top: 34px !important;
+}
+
+.browser-wrap .md-tab:lang(ko-KR) {
+	padding: 5px 24px !important;
+}
+
+.browser-wrap .md-tab:lang(en-US) {
+	padding: 5px 10px !important;
+}
+
+.browser-wrap md-tab-item>span {
+	font-size: 13px;
+}
+
+.browser-wrap md-tabs[md-border-bottom]:not (.md-dynamic-height ) md-tabs-content-wrapper {
+	top: 35px;
+}
+
+.browser-wrap md-tab-content>.layout-fill {
+	top: 0;
+	position: absolute;
+}
+/* ---------------------------------------- */
+/* END: MD-TAB Small Height */
+/* ---------------------------------------- */

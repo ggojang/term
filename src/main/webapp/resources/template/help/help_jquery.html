@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>STOM Help</title>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<!--
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+
+    <script src="js/help.js"></script>
+-->
+    <link rel="stylesheet" type="text/css" href="css/help.css">
+
+    <!--[if lt IE 9]>
+        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    
+    <script>
+        $(document).ready(function(){
+            $("a:first").click(function(){
+                $("#snomedct_browser").load("backup/help.html");
+            });
+        });
+    </script>
+    
+</head>
+
+<body class="body-screen">
+
+<div class="wrap">
+
+    <div class="top">
+        <h1 class="title">InfoClinic STOM Browser &amp; APIs</h1>
+    </div>
+
+    <div class="menu">
+        <a href="#snomedct_browser">SNOMED CT Browser</a>
+        <a href="#loinc_broswer">LOINC Browser</a>
+        <a href="#stom_apis">STOM APIs</a>
+    </div>
+
+<!--    <div class="middle">
+
+        <div class="navi">
+            <nav class="naviVWrap" >
+                <ul class="no-style">
+                    <li>1. Top Mennu</li>
+                    <li>2. Hierarchy</li>
+                    <li>3. Overview</li>
+                </ul>
+            </nav>
+        </div>
+-->
+        <div class="content">
+            <div id="snomedct_browser" style="overflow:auto;">
+            </div>
+            <div id="loinc_browser" style="overflow:auto;">
+            </div>
+            <div id="stom_apis" style="overflow:auto;">
+            </div>
+        </div>
+
+    </div>
+
+<!--
+ <div class="foot">
+        </div>
+
+    </div>
+</div>
+-->
+
+</body>
+</html>

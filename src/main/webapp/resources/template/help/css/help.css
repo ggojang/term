@@ -1,0 +1,32 @@
+<style>
+
+.wrap {
+    height:98%;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+.title {
+    text-align:center;
+}
+
+
+.nav a {
+    padding: 0px 20px;
+    color:#000000;
+    font-weight:bold;
+    font-size:20px;
+    text-decoration:none;
+}
+
+.no-style {
+    list-style-type: none;
+}
+
+.foot {
+    width: 100%;
+    border-top: 1px solid #000000;
+    float:left;
+}
+
+</style>

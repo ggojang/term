@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 참고: http://docs.spring.io/spring-data/jpa/docs/1.4.1.RELEASE/reference/html/repositories.html -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+    http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd">
+
+	<!-- Spring Data JPA 설정 -->
+
+	<!-- TransactionManager 등록 -->
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory"></property>
+	</bean>
+	<!-- @Transactional 어노테이션허용 -->
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+
+	<!-- JPA 예외를 스프링 예외로 변환 -->
+	<bean
+		class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
+
+	<!-- EntityManagerFactory 등록 (하이버네이트의 SessionFactory에 상응) -->
+	<bean id="entityManagerFactory"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="packagesToScan" value="co.infoclinic.term" /> <!-- @Entity 탐색 시작 위치 -->
+		<property name="jpaVendorAdapter"> <!-- 하이버네이트 구현체 등록 -->
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter" />
+		</property>
+		<property name="jpaProperties"> <!-- 하이버네이트 상세 설정 -->
+			<!-- org.springframework.boot.autoconfigure.orm.jpa:L161 참고 -->
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</prop> <!-- PostgreSQL 형식에 맞게 변환해주는 클래스 -->
+				<prop key="hibernate.show_sql">false</prop> <!-- SQL 보기 -->
+				<prop key="hibernate.format_sql">false</prop> <!-- SQL 정렬해서 보기 -->
+				<prop key="hibernate.hbm2ddl.auto">none</prop> <!-- 테이블(DDL) 자동 생성 -->
+				<prop key="hibernate.ejb.naming_strategy">co.infoclinic.term.common.strategy.UpperCasedNamingStrategy
+				</prop> <!-- 네이밍 전략 -->
+			</props>
+		</property>
+	</bean>
+
+	<!-- JPA @Repository 탐색 시작 위치 -->
+	<jpa:repositories base-package="co.infoclinic.term" entity-manager-factory-ref="entityManagerFactory" />
+
+	<!-- Spring Data JPA 설정 끝 -->
+
+</beans>

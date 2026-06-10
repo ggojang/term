@@ -1,0 +1,14 @@
+<div>
+  <ul>
+    <li>Code : {{ctrl.code}}</li>
+    <li>Preferred : {{ctrl.preferredName}}</li>
+    <li ng-if="ctrl.motalities">
+      Motality :
+      <span ng-repeat="m in ctrl.motalities">{{m}}</span>
+    </li>
+    <li ng-if="ctrl.mobidities">
+      Mobidity :
+      <span ng-repeat="m in ctrl.mobidities">{{m}}</span>
+    </li>
+  </ul>
+</div>

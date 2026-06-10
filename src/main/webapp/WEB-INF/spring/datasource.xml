@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- 
+	
+		Apache DBCP2 BasicDataSource
+	
+		// 속성 설명
+		driverClassName: JDBC Driver class
+		maxActive: 커넥션 풀이 제공할 최대 커넥션 개수(기본값: 8)
+		validationQuery: 커넥션 유효성 검사시 사용할 쿼리문
+		whenExhaustedAction: 커넥션 풀에서 가져올 수 있는 커넥션이 없을 때 어떻게 동작할지를 지정한다. 1일 경우 maxWait 속성에서 지정한 시간만큼 커넥션을 구할 때 까지 기다리며, 0일 경우 에러를 발생시킨다. 2일 경우에는 일시적으로 커넥션을 생성해서 사용한다.
+		maxWait: whenExhaustedAction 속성의 값이 1일 때 사용되는 대기 시간. 단위는 1/1000초이며, 0 보다 작을 경우 무한히 대기한다.(기본값: -1(무제한))
+		maxIdle: 사용되지 않고 풀에 저장될 수 있는 최대 커넥션 개수. 음수일 경우 제한이 없다.
+		minIdle: 사용되지 않고 풀에 저장될 수 있는 최소 커넥션 개수.(기본값: 0)
+		testOnBorrow: true일 경우 커넥션 풀에서 커넥션을 가져올 때 커넥션이 유효한지의 여부를 검사한다.(기본값: false)
+		testOnReturn: true일 경우 커넥션 풀에 커넥션을 반환할 때 커넥션이 유효한지의 여부를 검사한다.
+		timeBetweenEvctionRunsMillis: 사용되지 않은 커넥션을 추출하는 쓰레드의 실행 주기를 지정한다. 양수가 아닐 경우 실행되지 않는다. 단위는 1/1000 초이다.(기본값: -1)
+		numTestsPerEvictionRun: 사용되지 않는 커넥션을 몇 개 검사할지 지정한다.
+		minEvictableIdleTimeMillis: 사용되지 않는 커넥션을 추출할 때 이 속성에서 지정한 시간 이상 비활성화 상태인 커넥션만 추출한다. 양수가 아닌 경우 비활성화된 시간으로는 풀에서 제거되지 않는다. 시간 단위는 1/1000초이다.
+		testWhileIdle: true일 경우 비활성화 커넥션을 추출할 때 커넥션이 유효한지의 여부를 검사해서 유효하지 않은 커넥션은 풀에서 제거한다.
+	
+		// 고려 사항
+		maxActive: 사이트의 최대 커넥션 사용량을 기준으로 지정. 동시 접속자수에 따라서 지정한다.
+		validationQuery: DB리소스를 최대한 적게 사용하는 쿼리를 사용하는 것이 좋다. ex) SELECT 1
+		minIdle: 
+			사용되지 않는 커넥션의 최소 개수를 0으로 지정하게 되면 풀에 저장된 커넥션의 개수가 0이 될 수 있으며, 이 경우 커넥션이 필요할 때 다시 커넥션을 생성하게 된다. 
+			따라서 커넥션의 최소 개수는 5개 정도로 지정해두는 것이 좋다.
+		timeBetweenEvctionRunsMillis: 
+			이 값을 알맞게 지정해서 사용되지 않는 커넥션을 풀에서 제거하는 것이 좋다. 
+			커넥션의 동시 사용량은 보통 새벽에 최저이며 낮 시간대에 최대에 이르게 되는데 이 두 시간대에 필요한 커넥션의 개수 차이는 수십개에 이르게 된다. 
+			이때 최대 상태에 접어들었더가 최소 상태로 가게 되면 풀에서 사용되지 않는 커넥션의 개수가 점차 증가하게 된다. 
+			따라서 사용되지 않는 커넥션은 일정 시간 후에 삭제되도록 하는 것이 좋다. 
+			보통 10~20분 단위로 사용되지 않는 커넥션을 검사하도록 지정하는 것이 좋다.
+		testWhileIdle:
+			사용되지 않는 커넥션을 검사할 때 유효하지 않은 커넥션은 검사하는 것이 좋다.
+			놀고 있는 connection의 제거 여부를 검사할 때 해당 connection의 유효성 테스트 여부
+			기본값은 false이며, 일반적으로 true로 설정하는 것이 좋은 것 같다.
+		testOnBorrow: true설정하게 되면 매번 validationQuery를 수행하기 때문에 약간의 성능저하를 감수해야 한다.
+		testOnReturn: testOnBorrow와 비슷한데... 다만 유효성 검사 시점이 connection을 pool에 반환할때 이다.
+	-->
+
+	<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource">
+		<!-- 
+			log4jdbc를 사용하기위하여 변경한 내역
+			driverClassName: PostgreSQL용 log4jdbc 설정
+			url: 중간에 log4jdbc 삽입
+		-->
+		<property name="driverClassName" value="net.sf.log4jdbc.sql.jdbcapi.DriverSpy"/>
+		<property name="url"
+			value="jdbc:log4jdbc:postgresql://localhost:5432/term?useUnicode=true&amp;characterEncoding=UTF-8" />
+		<property name="username" value="postgres" />
+		<property name="password" value="julab123!" />
+		
+		<!-- testWhileIdle: 커넥션이 놀고 있을 때, validationQuery를 사용한 유효성 검사 여부 -->
+		<property name="testWhileIdle" value="true" />
+		
+		<property name="testOnBorrow" value="false" />
+		
+		<!-- timeBetweenEvictionRunsMillis: 해당 밀리초마다 validationQuery를 사용한 유효성 검사 진행; 7200000ms = 2시간 -->
+		<property name="timeBetweenEvictionRunsMillis" value="7200000" />
+		
+		<!-- validationQuery: 유효 검사용 쿼리 -->
+		<property name="validationQuery" value="SELECT 1" />
+	</bean>
+</beans>

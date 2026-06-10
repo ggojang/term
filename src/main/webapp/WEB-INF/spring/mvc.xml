@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:websocket="http://www.springframework.org/schema/websocket"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		http://www.springframework.org/schema/websocket http://www.springframework.org/schema/websocket/spring-websocket.xsd">
+	
+	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+	<!-- DispatcherServlet으로 설정된 서블릿의 요청 처리 기반을 정의 -->
+	
+	
+	
+	<!--
+		XML Namespace 대 Annotation (https://yangbongsoo.gitbooks.io/study/content/spring.html)
+		<context:component-scan>          @ComponentScan
+		<tx:annotation-driven/>           @EnableTransactionManagement
+		<mvc:annotation-driven/>          @EnableWebMvn
+		<aop:aspectj-autoproxy/>          @EnableAspectJAutoProxy
+	-->
+	
+	
+	<!-- Enables the Spring MVC @Controller programming model -->
+	<!--
+		WebMvc 활성화
+			- @Controller에게 요청을 전파하기위해 요구되는 아래 번들들을 등록한다.
+		
+		등록하는 번들
+			- HandlerMapping
+			- HandlerAdapter
+			- ContentNegotiationManager
+			- HttpMessageConvertes
+			- HandlerExceptionResolvers
+			- ConversionService(Converter, Formatter)
+			- etc
+		
+		예외
+			- JSON을 위한 MappingJackson2HttpMessageConverter은 직접등록해야한다.
+	-->
+	<mvc:annotation-driven />
+	
+	<!--
+		컴포넌트 스캔 (+ <context:component-scan> 역할)
+		
+		대상
+			@Component, @Repository, @Service, @Controller
+		
+		해석
+			패키지(co.infoclinic.term) 안의 클래스들을 스캔하고, 빈 인스턴스를 생성한다.
+	-->
+	<context:component-scan base-package="co.infoclinic.term" />
+	
+	<!--
+	    컨텍스트 내에 등록된 빈들의 어노테이션을 활성화 한다.
+	    - 빈 등록을 XML로 했는지 패키지스캔으로 했는지는 중요하지않다.(상관없다)
+	    - context:component-scan 또한 같은 일을 하는데, 컨텍스트에 빈을 등록하기위해 패키지를 스캔할 수 있다,
+	    - context:annotation-config는 빈을 등록하기위해 패키지스캔을 할 수 없다.
+		역할: 다음의 어노테이션을 처리 @Required, @Autowired, @Resource, @PostConstruct, @PreDestroy, @Configuration 
+		<context:annotation-config />
+	-->
+	
+	<!-- 
+		정적자원 설정하기
+			- CSS, JS, 이미지 등의 자원은 거의 변하지 않기 떄문에, 웹 브라우저에서 캐시를 하면 네트워크/서버 사용량, 브라우저 반응 속도 등을 개선할 수 있다.
+		
+		속성
+			- mapping: 요청 경로 패턴을 설정한다.(컨텍스트 경로를 제외한 나머지 부분의 경로)
+			- location: 웹 어플리케이션 내에서 요청 경로 패턴에 해당하는 자원의 위치를 지정한다. 위치가 여러곳일 경우 각 위치를 콤마로 구분한다.
+			- cache-period: 웹 브라우저에서 캐시 시간 관련 응답 헤더를 전송한다. 초 단위로 캐시 시간을 지정하며 이 값이 0이면 웹 브라우저가 캐시하지 않도록 한다.
+		
+		해석
+			요청 경로가 /resources/로 시작하는 패턴이라면, 그에 해당하는 자원을 /resources/나 /WEB-INF/resources/ 디렉토리에서 검색한다.
+	-->
+	<mvc:resources location="/resources/" mapping="/resources/**" cache-period="0" />
+	<mvc:resources location="/template/" mapping="/resources/template/**"/>
+	
+	<bean class="org.springframework.data.web.config.SpringDataWebConfiguration" />
+
+	<!-- 
+		Message Converters 등록
+		contextNegotiationManager : https://stackoverflow.com/questions/14590640/415-unsupported-media-type-with-spring-3-2
+	-->
+	<mvc:annotation-driven content-negotiation-manager="contentNegotiationManager">
+		<mvc:message-converters register-defaults="false">
+			<bean id="jacksonMessageConverter"
+            	p:supportedMediaTypes="application/json"
+            	class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+				<!-- 
+				<property name="objectMapper" ref="objectMapper" />
+				 -->
+			</bean>
+			<!--
+			<bean class="org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter">
+				<property name="objectMapper" ref="xmlMapper" />
+			</bean>
+			-->
+		</mvc:message-converters>
+		<mvc:argument-resolvers>
+			<bean class="org.springframework.data.web.PageableHandlerMethodArgumentResolver" />
+		</mvc:argument-resolvers>
+	</mvc:annotation-driven>
+	<bean id="objectMapper" class="org.springframework.http.converter.json.Jackson2ObjectMapperFactoryBean"/>
+	
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+	<!-- 
+		ViewResolver 설정
+			- jsp와 name을 매핑시켜주는 역할을 한다. 
+	-->
+		
+	<bean id="contentNegotiationManager"  
+		class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
+		<!-- 확장자와 contentType 을 연결해 준다. -->
+		<property name="favorPathExtension" value="false" />
+        <property name="ignoreAcceptHeader" value="false"/>
+        <property name="useJaf" value="false" />
+        <!-- 
+        <property name="parameterName" value="mediaType"/>
+        
+		<property name="defaultContentType" value="application/json" />
+		
+        <property name="mediaTypes">
+            <map>
+               <entry key="html" value="text/html"/>
+               <entry key="json" value="application/json"/>
+           </map>
+        </property>
+         -->
+	</bean>
+	<!-- 
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="order" value="2"/>
+		<property name="prefix" value="/" />
+		<property name="suffix" value=".html" />
+	</bean>
+	 -->
+	
+	<!-- 
+		@RequestMapping에 선언된 URL이 있으면 DispatherServlet이 처리하고
+	     @RequestMapping에서 찾지 못한다면 디폴트서블릿이 처리하도록 한다.
+	-->
+	<mvc:default-servlet-handler/>
+	
+	<!-- 
+		@AspectJ 사용 설정 
+	--> 
+	<aop:aspectj-autoproxy />
+	
+	<!--
+		LoggerAspect 빈 등록
+	-->
+	<bean id="logAspect" class="co.infoclinic.term.common.logger.LoggerAspect" />
+
+	<!--
+		mvc:cors(HTTP 접근제어 Cross Origin Resource Sharing)) 추가
+	-->
+	<mvc:cors>
+		<mvc:mapping path="/**"
+			allowed-origins="*"
+			allowed-methods="POST GET PUT DELETE OPTIONS"
+			allowed-headers="x-requested-with, Content-Type"
+			max-age="3600"></mvc:mapping>
+	</mvc:cors>
+	
+	<!--
+		mvc:interceptor 추가
+	-->
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**/" />
+			<bean id="loggerInterceptor" class="co.infoclinic.term.common.logger.LoggerInterceptor" />
+		</mvc:interceptor>
+	</mvc:interceptors>
+	
+	<!-- Websocket Config -->
+	
+	<websocket:handlers>
+		<websocket:mapping handler="logTailListener" path="/logger/tail"/>
+		<websocket:sockjs/>
+	</websocket:handlers>
+	
+	<bean id="logTailListener" class="co.infoclinic.term.common.logger.LogFileTailerListener" />
+	
+</beans>

@@ -1,0 +1,11 @@
+<div ng-controller="UserRefsetController as userrefsetVm">
+  <js-tree
+  	id="usrtree"
+    tree-data="scope"
+    tree-model="stuff"
+    tree-plugins="types,contextmenu"
+    tree-events="select_node:selectNode;create_node:changeNode;rename_node:changeNode;delete_node:changeNode"
+    tree-contextmenu="contextMenu"
+    tree-types="types">
+  </js-tree>
+</div>

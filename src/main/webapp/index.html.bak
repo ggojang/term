@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="initial-scale=1, maximum-scale=1">
+<meta name="keyword" content="SNOMED CT Browser, LOINC Browser, ICD10 Browser, STOM, Standard Terminology of Medicine, SNOMED CT API, LOINC API, ICD10 API, InfoClinic, IHTSDO, SNOMED International" />
+<meta name="description" content="STOM Browser & Restful APIs for SNOMED CT, LOINC & ICD10" />
+<meta name="author" content="InfoClinic Co." />
+<title>STOM Browser</title>
+
+<link href="resources/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+<link href="resources/lib/angular-material/angular-material.min.css" rel="stylesheet" type="text/css"/>
+<link href="resources/lib/flag-icon-css/css/flag-icon.min.css" rel="stylesheet" type="text/css"/>
+<link href="resources/lib/v-accordion/dist/v-accordion.min.css" rel="stylesheet" type="text/css"/>
+<link href="resources/lib/ng-table/dist/ng-table.min.css" rel="stylesheet" type="text/css">
+<link href="resources/lib/jstree/dist/themes/default/style.css" rel="stylesheet" type="text/css">
+<link href="resources/lib/bootstrap-languages/languages.css" type="text/css" rel="stylesheet" />
+
+<link href="resources/css/main.css" type="text/css" rel="stylesheet" />
+<link href="resources/css/common.css" type="text/css" rel="stylesheet" />
+<link href="resources/css/snomedctbrowser.css" type="text/css" rel="stylesheet" />
+<link href="resources/css/loincbrowser.css" type="text/css" rel="stylesheet" />
+
+
+	<!-- Google Analytics -->
+	<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-72575572-2', 'auto');
+	//ga('send', 'pageview');
+	</script>
+</head>
+<body>
+	<!-- BEGIN HEADER -->
+	<header id="header" data-ng-include="'resources/template/header.html'"></header>
+	<!-- END HEADER -->
+	<div id="content" ui-view resize>
+	  <h1 style="position:absolute;left:-9999px;">STOM Browser</h1>
+	</div>
+	
+	<!-- Modernizr -->
+	<script type="text/javascript" src="resources/lib/modernizr/modernizr.js"></script>
+	<!-- jQuery -->
+	<script type="text/javascript" src="resources/lib/jquery/jquery.js"></script>
+	<!-- jQuery Ui -->
+	<script type="text/javascript" src="resources/lib/jquery-ui/jquery-ui.min.js"></script>
+	<!-- jQuery Migrate -->
+	<script type="text/javascript" src="resources/lib/jquery-migrate/jquery-migrate.js"></script>
+
+	<!-- Angular -->
+	<script type="text/javascript" src="resources/lib/angular/angular.js"></script>
+
+	<!-- Bootstrap -->
+	<script type="text/javascript" src="resources/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+
+	<!-- jQuery Ui Layout -->
+	<script type="text/javascript" src="resources/lib/jquery-ui-layout/source/stable/jquery.layout.min.js"></script>
+
+	<!-- HTML2Canvas -->
+	<script type="text/javascript" src="resources/lib/html2canvas/build/html2canvas.min.js"></script>
+
+	<!-- MOMENT -->
+	<script type="text/javascript" src="resources/lib/moment/min/moment.min.js"></script>
+	<script type="text/javascript" src="resources/lib/angular-moment/angular-moment.min.js"></script>
+	
+	<!-- ngTable -->
+	<script type="text/javascript" src="resources/lib/ng-table/dist/ng-table.min.js"></script>
+
+	<!-- JsTree -->
+	<script type="text/javascript" src="resources/lib/jstree/dist/jstree.js"></script>
+	<script type="text/javascript" src="resources/lib/jsTree-directive/jsTree.directive.js"></script>
+
+	<!-- V-Accordion -->
+	<script type="text/javascript" src="resources/lib/v-accordion/dist/v-accordion.min.js"></script>
+
+	<!-- D3 -->
+	<script type="text/javascript" src="resources/lib/d3/d3.min.js"></script>
+
+	<!-- REACT -->
+	<script type="text/javascript" src="resources/lib/react/react.js"></script>
+	<script type="text/javascript" src="resources/lib/react/react-dom.js"></script>
+	<script type="text/javascript" src="resources/lib/ngReact/ngReact.min.js"></script>
+
+	<!-- Angular Resource -->
+	<script type="text/javascript" src="resources/lib/angular-resource/angular-resource.min.js"></script>
+
+	<!-- Angular Animate -->
+	<script type="text/javascript" src="resources/lib/angular-animate/angular-animate.js"></script>
+	<!-- Angular bootstrap -->
+	<script type="text/javascript" src="resources/lib/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+	<!-- Angular Sanitize -->
+	<script type="text/javascript" src="resources/lib/angular-sanitize/angular-sanitize.js"></script>
+	<!-- Angular Ui Router -->
+	<script type="text/javascript" src="resources/lib/angular-ui-router/release/angular-ui-router.js"></script>
+	<!-- Angular Recursion -->
+	<script type="text/javascript" src="resources/lib/angular-recursion/angular-recursion.js"></script>
+	<!-- Angular Filter -->
+	<script type="text/javascript" src="resources/lib/angular-filter/dist/angular-filter.js"></script>
+	<!-- Angular Aria -->
+	<script type="text/javascript" src="resources/lib/angular-aria/angular-aria.min.js"></script>
+	<!-- Angular Material -->
+	<script type="text/javascript" src="resources/lib/angular-material/angular-material.min.js"></script>
+	<!-- Angular Translate -->
+	<script type="text/javascript" src="resources/lib/angular-translate/angular-translate.min.js"></script>
+	<script type="text/javascript" src="resources/lib/angular-translate-loader-static-files/angular-translate-loader-static-files.min.js"></script>
+	<script type="text/javascript" src="resources/lib/angular-translate-storage-cookie/angular-translate-storage-cookie.min.js"></script>
+	<script type="text/javascript" src="resources/lib/angular-translate-storage-local/angular-translate-storage-local.min.js"></script>
+
+	<!-- Angular DynamicLocale -->
+	<script type="text/javascript" src="resources/lib/angular-dynamic-locale/src/tmhDynamicLocale.js"></script>
+
+	<!-- Ng Timeago -->
+	<script type="text/javascript" src="resources/lib/ngtimeago/ngtimeago.js"></script>
+
+	<!-- Infoclinic Terminology -->
+	<script type="text/javascript" src="resources/lib/angular-infoclinic/crud-table.js"></script>
+	<script type="text/javascript" src="resources/lib/angular-infoclinic/common-modal.js"></script>
+	<script type="text/javascript" src="resources/lib/angular-infoclinic/refset-editor.js"></script>
+	<script type="text/javascript" src="resources/lib/angular-infoclinic/terminology.js"></script>
+	<script type="text/javascript" src="resources/lib/angular-infoclinic/terminology.history.js"></script>
+	<script type="text/javascript" src="resources/lib/angular-infoclinic/combo-list.js"></script>
+	
+	
+	<!-- App -->
+	
+	<!-- Common Module -->
+	<script type="text/javascript" src="resources/js/common/module.js"></script>
+	<script type="text/javascript" src="resources/js/common/service/util.service.js"></script>
+	<script type="text/javascript" src="resources/js/common/service/user.service.js"></script>
+	<script type="text/javascript" src="resources/js/common/constant/locale.constant.js"></script>
+	<script type="text/javascript" src="resources/js/common/service/locale.service.js"></script>
+	<script type="text/javascript" src="resources/js/common/service/api.service.js"></script>
+	<script type="text/javascript" src="resources/js/common/directive/locale.directive.js"></script>
+	<script type="text/javascript" src="resources/js/common/directive/icloading.directive.js"></script>
+	
+	<script type="text/javascript" src="resources/js/common/directive/combo.directive.js"></script>
+	<script type="text/javascript" src="resources/js/common/directive/codetooltip.directive.js"></script>
+	
+	<!-- SNOMEDCT Browser Module -->
+	<script type="text/javascript" src="resources/js/snomedctBrowser/module.js"></script>
+	<script type="text/javascript" src="resources/js/snomedctBrowser/constant/semantictag.constant.js"></script>
+	<script type="text/javascript" src="resources/js/snomedctBrowser/constant/description.constant.js"></script>
+	<script type="text/javascript" src="resources/js/snomedctBrowser/constant/langrefset.constant.js"></script>
+	
+	<script type="text/javascript" src="resources/js/snomedctBrowser/service/browser.service.js"></script>
+	
+	<script type="text/javascript" src="resources/js/snomedctBrowser/controller/layout.controller.js"></script>
+	<script type="text/javascript" src="resources/js/snomedctBrowser/controller/diagram.controller.js"></script>
+	<script type="text/javascript" src="resources/js/snomedctBrowser/controller/taxonomy.controller.js"></script>
+	<script type="text/javascript" src="resources/js/snomedctBrowser/controller/concept.controller.js"></script>
+	<script type="text/javascript" src="resources/js/snomedctBrowser/controller/description.controller.js"></script>
+	<script type="text/javascript" src="resources/js/snomedctBrowser/controller/children.controller.js"></script>
+	<script type="text/javascript" src="resources/js/snomedctBrowser/controller/parent.controller.js"></script>
+	<script type="text/javascript" src="resources/js/snomedctBrowser/controller/qualifier.controller.js"></script>
+	
+	<script type="text/javascript" src="resources/js/snomedctBrowser/directive/diagram.directive.js"></script>
+	<script type="text/javascript" src="resources/js/snomedctBrowser/directive/relationship.directive.js"></script>
+	<script type="text/javascript" src="resources/js/snomedctBrowser/directive/description.directive.js"></script>
+	<script type="text/javascript" src="resources/js/snomedctBrowser/directive/expression.directive.js"></script>
+	<script type="text/javascript" src="resources/js/snomedctBrowser/controller/search.controller.js"></script>
+	<script type="text/javascript" src="resources/js/snomedctBrowser/directive/search.directive.js"></script>
+	
+	<!-- LOINC Browser Module -->
+	<script type="text/javascript" src="resources/js/loincBrowser/module.js"></script>
+	
+	<script type="text/javascript" src="resources/js/loincBrowser/filter/split.filter.js"></script>
+	
+	<script type="text/javascript" src="resources/js/loincBrowser/service/browser.service.js"></script>
+	<script type="text/javascript" src="resources/js/loincBrowser/service/entity.service.js"></script>
+	<script type="text/javascript" src="resources/js/loincBrowser/service/data.service.js"></script>
+	
+	<script type="text/javascript" src="resources/js/loincBrowser/controller/explorer.controller.js"></script>
+	<script type="text/javascript" src="resources/js/loincBrowser/controller/entity.controller.js"></script>
+	<script type="text/javascript" src="resources/js/loincBrowser/controller/panel.controller.js"></script>
+
+	<!-- ICD10 Browser Module -->
+        <script type="text/javascript" src="resources/js/icd10Browser/module.js"></script>
+
+        <script type="text/javascript" src="resources/js/icd10Browser/service/browser.service.js"></script>
+        <script type="text/javascript" src="resources/js/icd10Browser/service/code.service.js"></script>
+        <script type="text/javascript" src="resources/js/icd10Browser/service/data2.service.js"></script>
+
+        <script type="text/javascript" src="resources/js/icd10Browser/controller/explorer2.controller.js"></script>
+        <script type="text/javascript" src="resources/js/icd10Browser/controller/code.controller.js"></script>
+	
+	<!-- App Module -->
+	<script type="text/javascript" src="resources/js/app.js"></script>
+
+	<script>
+	
+	// jqmigrate loggin off
+	jQuery.migrateMute = true;
+	
+	// if access ie, mobile  => redirect infoclinic home 
+	redirectForAccessIEOrPhone();
+
+	/**
+	 *
+	 */
+	function redirectForAccessIEOrPhone()
+	{
+		var isMobile = false;
+		var isInternetExplorer = false;
+
+		var userAgent = window.navigator.userAgent.toLowerCase();
+		// Iphone, Android Mobile, Ipod, Opera, Window Phone
+		isMobile = /mobile|iphone|ipod|mini|iemobile/.test(userAgent);
+		// MS Internet Explorer : trident(버전8이상), msie
+		// Explorer은 레이아웃 엔진으로 Trident을 사용하지만 버전 8부터 지원하므로 하위 지원을 위해 MSIE를 검사한다.
+		isInternetExplorer = /trident|msie/.test(userAgent);
+
+		if (isInternetExplorer)
+		{
+			alert('Supported Browsers : Chrome 51+, Safari 9.1+, Firefox 46+ \n No Supported Browsers : Internet Explorer and SmartPhones');
+			window.open('http://infoclinic.co','_self');
+		}
+	}
+
+	/**
+	 * 아래코드는 keycode.info 처리방법을 참고하였음.
+	 * mac chrome또는 firefox에서 delete key 누르면 backspace(페이지 뒤로가기)가 실행되므로 실행되지않도록 하는 메소드
+	 * 참고 : http://stackoverflow.com/questions/24764626/any-way-to-prevent-disable-ctrl-key-shortcuts-in-the-browser
+	 */
+	var body = document.querySelector('body');
+	body.onkeydown = function(e) {
+		var targetLocalName = e.target.localName;
+		if (targetLocalName === 'input') return;
+
+		var keyCode = e.keyCode;
+		if (keyCode === 8) {
+			e.preventDefault();
+			// keyCode table: https://blog.lael.be/post/75
+			// metaKey란? http://www.w3schools.com/jsref/event_key_metakey.asp
+			// 모든 키보드가 메타키를 가지고있지는 않다.
+			// 썬마이크로시스템 키보드, MIT 및 LISP 기계식 키보드는 diamond symbol metakey가 있다.
+			// MAC은 Command키가 메타키이다.
+			// 메타키와 함께 누르지않은 경우에 대해서는 즉, 키 단독으로 눌렀을때는 다른 이벤트를 예방하도록 한다.
+		}
+	}
+	</script>
+
+</body>
+</html>

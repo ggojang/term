@@ -1,0 +1,13 @@
+@CHARSET "UTF-8";
+
+.ic-loading {
+	position: absolute;
+	margin: 0px;
+   opacity: 0.5;
+   background:#fff;
+   z-index:9999;
+}
+
+.iui_nav>.dropdown.open:active, .iui_nav>.dropdown.open:hover {
+    background-color: transparent;
+}

@@ -1,0 +1,52 @@
+<div class="sctb-wrap">
+	<!-- Navigation -->
+	<nav class="main-nav" role="navigation">
+		<md-content>
+			<md-tabs md-border-bottom>
+				<md-tab label="{{ 'browser.explore' | translate }}">
+					<search></search>
+				</md-tab>
+			</md-tabs>
+		</md-content>
+	</nav><!-- Navigation END -->
+	<!-- Main -->
+	<section class="main-content" role="main">
+		<md-content>
+			<md-tabs md-border-bottom>
+				<md-tab label="{{ 'browser.detail' | translate }}">
+					<md-tab-content id="sctb-detail" ng-include="'resources/template/snomedctBrowser/detail.html'"></md-tab-content>
+				</md-tab>
+			</md-tabs>
+		</md-content>
+	</section><!-- Main END -->
+	<!-- Aside -->
+	<aside class="main-sidebar" role="complementary" ng-class="layoutVm.isExpanded ? '':'collapsed'">
+		<md-content>
+			<md-tabs md-border-bottom md-selected="layoutVm.asideSelectedIndex">
+				<md-tab label="{{ 'browser.parentchild' | translate }}">
+					<md-tab-content>
+						<div class="inspector-panel" ng-class="{'inspector-panel-collapsed': layoutVm.parentTab.isCollapsed}">
+							<div class="inspector-panel-heading" ng-click="layoutVm.parentTab.toggle()">{{ 'browser.parent' | translate }}</div>
+							<div class="inspector-panel-content" ng-include="'resources/template/snomedctBrowser/parent.html'"></div>
+						</div>
+						<div class="inspector-panel"  ng-class="{'inspector-panel-collapsed': layoutVm.childrenTab.isCollapsed}">
+							<div class="inspector-panel-heading" ng-click="layoutVm.childrenTab.toggle()">{{ 'browser.children' | translate }}</div>
+							<div class="inspector-panel-content" ng-include="'resources/template/snomedctBrowser/children.html'"></div>
+						</div>
+					
+					</md-tab-content>
+				</md-tab>
+				<md-tab label="{{ 'browser.qualifier' | translate }}">
+					<md-tab-content ng-include="'resources/template/snomedctBrowser/qualifier.html'"></md-tab-content>
+				</md-tab>
+			</md-tabs>
+		</md-content>
+		<div class="expand-collapse-tools" ng-if="!layoutVm.isExpanded">
+           	<a class="expand-collapse-layer" ng-click="layoutVm.toggleExpand()"></a>
+           	<div class="btn-group btn-group-vertical">
+           		<button type="button" class="btn btn-sm" ng-click="layoutVm.openSidebarAndTab(0)"><p>{{ 'browser.parentchild' | translate }}</p></button>
+           		<button type="button" class="btn btn-sm" ng-click="layoutVm.openSidebarAndTab(1)"><p>{{ 'browser.qualifier' | translate }}</p></button>
+           	</div>	
+        </div>
+	</aside><!-- Aside END -->
+</div>

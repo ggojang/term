@@ -1,0 +1,88 @@
+<!-- Non-Edit Mode -->
+<div ng-hide="de.ui.editorEnabled">
+  <!-- Default International Release LanguageSet (US, GB) -->
+  <div>
+    <!-- Flag Icon Wrapper -->
+    <div style="padding-bottom:10px" class="text-right">
+      <!-- Flag Icon -->
+      <i
+        class="btn btn-default btn-xs flag-icon"
+        style="border-radius:50%;background-size:cover;width:30px;line-height:28px;padding:initial;"
+        ng-class="'flag-icon-' + de.data[idx].lang"
+        ng-click="de.setBaseLangIndex(idx)"
+        ng-repeat="idx in de.ui.base.dataIdxs track by $index"
+        aria-label="flag-icon">
+      </i>
+    </div>
+    <!--<p class="text-center">{{de.findLanguageNameByCountryCode(de.data[de.ui.base.idx].lang)}}</p>-->
+    <!-- Grid Wrapper-->
+    <div>
+      <!-- Grid -->
+      <table class="table table-striped table-responsive">
+        <!-- HEADER -->
+        <tr style="height:36.6px">
+          <!-- Content Headers -->
+          <th>DescriptionId</th>
+          <th>Type</th>
+          <th>Term</th>
+          <th>Acceptability</th>
+        </tr>
+        <tr style="height:36.6px"
+          ng-repeat="description in de.data[de.ui.base.idx].descriptions | filter:{active: true} | orderBy:'priority'"
+          ng-if="description.active">
+          <td width="8%">{{ description.descriptionId }}</td>
+          <td width="8%">
+            <i class="icon-cd" ng-class="'icon-cd-' + de.getConceptTypeSimple(description.typeId, description.languageReferencesetList[0].acceptabilityId)" aria-label="type-icon">
+            <md-tooltip md-direction="top">
+              {{ 'terminology.' + de.getConceptTypeSimple(description.typeId, description.languageReferencesetList[0].acceptabilityId) | translate }}
+            </md-tooltip>
+            </i>
+          </td>
+          <td min-width="40%">{{ description.term }}</td>
+          <td width="15%"><i class="glyphicon" ng-class="de.getAcceptableIcon(description.languageReferencesetList[0].acceptabilityId, description.typeId)" aria-hidden="true"></i></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Other Lang -->
+  <div
+    ng-repeat="idx in de.ui.other.dataIdxs track by $index"
+    ng-if="de.data[idx].descriptions.length > 0">
+    <div style="padding-bottom:10px" class="text-right">
+      <i
+        class="btn btn-default btn-xs flag-icon"
+        style="border-radius:50%;background-size:cover;width:30px;line-height:28px;padding:initial;"
+        ng-class="'flag-icon-' + de.data[idx].lang"
+        ng-click="de.setOtherLangIndex(idx)"
+        aria-label="flag-icon">
+      </i>
+    </div>
+    <div>
+      <table class="table table-striped table-responsive">
+        <!-- HEADER -->
+        <tr style="height:36.6px">
+          <!-- Content Headers -->
+          <th>DescriptionId</th>
+          <th>Type</th>
+          <th>Term</th>
+          <th>Acceptability</th>
+        </tr>
+        <tr style="height:36.6px"
+          ng-repeat="description in de.data[idx].descriptions | filter:{active: true} | orderBy:'priority'"
+          ng-if="description.active">
+          <td width="8%">{{ description.descriptionId }}</td>
+          <td width="8%">
+            <i class="icon-cd" ng-class="'icon-cd-' + de.getConceptTypeSimple(description.typeId, description.languageReferencesetList[0].acceptabilityId)" aria-label="type-icon">
+            <md-tooltip md-direction="top">
+              {{ 'terminology.' + de.getConceptTypeSimple(description.typeId, description.languageReferencesetList[0].acceptabilityId) | translate }}
+            </md-tooltip>
+            </i>
+          </td>
+          <td min-width="40%">{{ description.term }}</td>
+          <td width="15%"><i class="glyphicon" ng-class="de.getAcceptableIcon(description.languageReferencesetList[0].acceptabilityId, description.typeId)" aria-hidden="true"></i></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>

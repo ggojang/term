@@ -1,0 +1,22 @@
+<nav class="iui_header" role="navigation">
+  <div id="logo" class="iui_header_logo">
+    <a href="http://infoclinic.co" target="_blank">
+      <img src="resources/images/logo.png" alt="InfoClinic's Terminology Service" style="height:35px;">
+    </a>  
+  </div>
+  <ul class="iui_nav">
+    <li ng-class="{active:$state.is('snomedctBrowser.concept')}">
+      <a ui-sref="snomedctBrowser.concept({conceptId:'138875005'})" ui-sref-opts="{reload:true}">{{ "menu.snomedctbrowser" | translate }}</a>
+    </li>
+    <li ng-class="{active:$state.includes('loincBrowser')}">
+      <a ui-sref="loincBrowser({lang:$stateParams.lang ? $stateParams.lang:'en-US'})">{{ "menu.loincbrowser" | translate }}</a> 
+    </li>
+  </ul>
+  <ul class="iui_nav">
+    <li style="line-height:50px;">
+      <span class="text">International Edition 2018.01.31</span>
+    </li>
+    <li class="dropdown" ng-class="{'open': isOpen==true}" locale></li>
+    <li><a href="resources/template/help/help.html" target="_blank" class="glyphicon glyphicon-question-sign"></a></li>
+  </ul>
+</nav>

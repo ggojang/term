@@ -1,0 +1,61 @@
+<div class="td tcol0" ng-class="{'inactive':nm.type!==0 && (nm.ctx.inact.self || nm.ctx.inact.all || nm.ctx.del)}">
+	<div class="celldiv">
+		<div class="grad"></div>
+		<!-- 
+			if Candidate Member
+				then call getCandiMbrChdrn
+			if Member
+				then call getMbrChdrn
+		-->
+		<a class="glyphicon" ng-class="m.getStateClass(nm)" ng-click="nm.childrenCount > 0 ? m.getChildren(nm):null"></a>
+		<span>
+			<i class="badge alert-warning" ng-bind-html="'&nbsp;&nbsp;'"></i>
+			<span ng-click="" ng-bind="nm.term == null ? (nm.referencedComponent.name == null ? nm.referencedComponent.id:nm.referencedComponent.name):nm.term" title="{{nm.referencedComponent.name}}"></span>
+		</span>
+	</div>
+</div>
+<div class="td tcol1">
+</div>
+<!-- Edit모드 일 경우에만 보여짐 -->
+<div class="td tcol2" ng-if="rs.viewSrch" ng-switch="nm.type">
+	<!-- if Candidate Member  -->
+	<div ng-switch-when="0">
+		<button type="button" class="btn btn-xs btn-danger" title="delete self and subtypes" ng-click="m.deleteCandidateMbr(nm, true)" ng-if="nm.subtypes.length > 0">
+			<span class="glyphicon glyphicon-trash"> All</span>
+		</button>
+		<button type="button" class="btn btn-xs btn-danger" title="delete self" ng-click="m.deleteCandidateMbr(nm, false)">
+			<span class="glyphicon glyphicon-trash" ng-bind="nm.childrenCount === 0 || !nm.inclSubtypes || nm.subtypes.length > 0 ? ' Self':' All'"></span>
+		</button>
+	</div>
+	
+	<!-- if Member -->
+	<div ng-switch-default ng-init="nm.ctx.inact={self:false,all:false};nm.ctx.del=false">
+		<div class="btn-group">
+			<!-- TODO 하위 서브타입까지 비활성화 처리하기위한 버튼  ng-click="m.setInact(nm, false)" 
+			<button type="button" class="btn btn-xs" ng-if="nm.inclSubtypes || nm.subtypes.length > 0"  ng-class="{'btn-danger':nm.ctx.inact.all, 'btn-default': !nm.ctx.inact.all}">
+				<span class="glyphicon glyphicon-ban-circle"> All</span>
+			</button>
+			 -->
+			<button type="button" class="btn btn-xs" ng-click="m.inactiveMbr(nm, true)" ng-class="{'btn-danger':nm.ctx.inact.self, 'btn-default': !nm.ctx.inact.self}">
+				<span class="glyphicon glyphicon-ban-circle"></span>
+			</button>
+			
+			<button type="button" class="btn btn-xs" title="delete" ng-click="m.deleteMbr(nm, true)" ng-class="{'btn-danger':nm.ctx.del, 'btn-default':!nm.ctx.del}">
+				<span class="glyphicon glyphicon-trash"></span>
+			</button>
+		</div>
+	</div>
+</div>
+
+<div
+	class="treeTable" 
+	ng-if="nm.subtypes.length > 0"
+	ng-init="nm.ctx.open = ( nm.ctx.open ? true: (nm.conceptId == '138875005' ? true:false));"
+	ng-show="nm.ctx.open">
+  <div
+  	class="tr"
+    ng-repeat="nm in subtypes = nm.subtypes | orderBy:'term'"
+    ng-include="'resources/template/refset/simpleMbrLst.html'">
+  </div>
+</div>
+

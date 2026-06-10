@@ -1,0 +1,27 @@
+<div class="browser-wrap">
+	<!-- BEGIN NAV -->
+	<nav class="main-nav">
+		<md-content>	
+			<md-tabs>
+				<md-tab ng-repeat="nav in layoutVm.context.nav" label="{{ nav.label }}" ui-sref="{{ nav.route }}"></md-tab>
+			</md-tabs>
+		</md-content>
+	</nav><!-- END NAV -->
+	
+	
+	<!-- BEGIN SECTION -->
+	<section class="main-content">
+		<md-content>	
+			<md-tabs>
+				<md-tab label="{{ layoutVm.context.content.label }}"></md-tab>
+			</md-tabs>
+		</md-content>
+	</section><!-- END SECTION -->
+	
+	
+	<!-- BEGIN ASIDE -->
+	<aside class="main-sidebar">
+	Aside
+	</aside><!-- END ASIDE -->
+</div>
+
