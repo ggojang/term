@@ -40,13 +40,24 @@ public class ReferenceSetActiveLoader {
     /** VERSION 컬럼 값 */
     private static final String VERSION_VALUE = "INT-" + VERSION_DATE;
 
+    /**
+     * 실행 옵션:
+     *   (인수 없음)       전체 실행 (TRUNCATE → INSERT → UPDATE)
+     *   --update-only    UPDATE 단계만 실행 (INSERT 완료 후 중단된 경우 재개용)
+     */
     public static void main(String[] args) throws Exception {
+        boolean updateOnly = args.length > 0 && "--update-only".equals(args[0]);
         try (Connection conn = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD)) {
             conn.setAutoCommit(false);
             try (Statement s = conn.createStatement()) {
                 s.execute("SET search_path TO term");
             }
-            load(conn);
+            if (updateOnly) {
+                System.out.println("[INFO] --update-only 모드: UPDATE 단계만 실행합니다.");
+                new ReferenceSetActiveLoader().runUpdates(conn);
+            } else {
+                load(conn);
+            }
             conn.commit();
         }
         System.out.println("[INFO] REFERENCESET_ACTIVE 적재 완료.");
@@ -341,8 +352,18 @@ public class ReferenceSetActiveLoader {
 
             // ================================================================
             // UPDATE: NAME/VALUE 컬럼 후처리
-            // MySQL 다중 테이블 UPDATE → PostgreSQL UPDATE ... FROM
             // ================================================================
+        }
+        runUpdates(conn);
+
+        long elapsed = (System.currentTimeMillis() - start) / 1000;
+        log.info("REFERENCESET_ACTIVE 적재 완료. 소요시간=" + elapsed + "초");
+    }
+
+    /** UPDATE 단계만 실행 (--update-only 재개 또는 doLoad에서 호출) */
+    private void runUpdates(Connection conn) throws Exception {
+        log.info("REFERENCESET_ACTIVE UPDATE 단계 시작...");
+        try (Statement stmt = conn.createStatement()) {
 
             log.info("  Updating REFSET_NAME ...");
             stmt.execute(
@@ -512,8 +533,6 @@ public class ReferenceSetActiveLoader {
             );
             conn.commit();
         }
-
-        long elapsed = (System.currentTimeMillis() - start) / 1000;
-        log.info("REFERENCESET_ACTIVE 적재 완료. 소요시간=" + elapsed + "초");
+        log.info("REFERENCESET_ACTIVE UPDATE 단계 완료.");
     }
 }
