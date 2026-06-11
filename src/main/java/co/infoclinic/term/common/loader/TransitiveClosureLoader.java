@@ -172,56 +172,53 @@ public class TransitiveClosureLoader {
      * 결과 → codeChildCodesMap(부모→자식집합), codeTermMap(개념→용어)
      */
     private void loadIsaRelationships() throws Exception {
-        // 원본 MySQL 쿼리의 복잡한 서브쿼리를 PostgreSQL로 변환.
-        // MAX(effective_time) GROUP BY로 최신 상태 행을 선택한 후 active=1 필터 적용.
-        String sql =
-            // (A) 최신 IS-A 관계 (source_id, destination_id)
-            "SELECT r.source_id  AS child_id, " +
-            "       r.destination_id AS parent_id, " +
-            "       COALESCE(d.term, '') AS term " +
-            "FROM term.inferred_relationship r " +
-            // 최신 EFFECTIVE_TIME을 가진 행만 선택
-            "INNER JOIN ( " +
-            "    SELECT source_id, destination_id, MAX(effective_time) AS max_et " +
-            "    FROM term.inferred_relationship " +
-            "    WHERE type_id = '" + ISA_TYPE_ID + "' " +
-            "    GROUP BY source_id, destination_id " +
-            ") latest_r " +
-            "    ON r.source_id       = latest_r.source_id " +
-            "   AND r.destination_id  = latest_r.destination_id " +
-            "   AND r.effective_time  = latest_r.max_et " +
-            // (B) source_id의 FSN 용어 (최신 활성 FSN JOIN)
-            "LEFT JOIN ( " +
-            "    SELECT d2.concept_id, d2.term " +
-            "    FROM term.description d2 " +
-            "    INNER JOIN ( " +
-            "        SELECT concept_id, MAX(effective_time) AS max_et " +
-            "        FROM term.description " +
-            "        WHERE type_id = '" + FSN_TYPE_ID + "' " +
-            "          AND language_code = 'en' " +
-            "        GROUP BY concept_id " +
-            "    ) latest_d " +
-            "        ON d2.concept_id    = latest_d.concept_id " +
-            "       AND d2.effective_time = latest_d.max_et " +
-            "    WHERE d2.type_id = '" + FSN_TYPE_ID + "' " +
-            "      AND d2.active  = 1 " +
-            ") d ON r.source_id = d.concept_id " +
-            // IS-A 관계이고 최신 상태가 활성인 것만
-            "WHERE r.type_id = '" + ISA_TYPE_ID + "' " +
-            "  AND r.active  = 1";
+        // ① 최신 활성 IS-A 관계를 DISTINCT ON으로 효율적으로 조회.
+        //    DISTINCT ON (source_id, destination_id) + ORDER BY effective_time DESC
+        //    → type_id 인덱스(idx_inferred_type_src_dst_et) 활용, 서브쿼리/GROUP BY 불필요.
+        //    active=1 필터는 외부에서 처리(최신 effective_time 행의 active 상태 확인).
+        String isaSql =
+            "SELECT child_id, parent_id FROM (" +
+            "  SELECT DISTINCT ON (source_id, destination_id)" +
+            "    source_id AS child_id, destination_id AS parent_id, active" +
+            "  FROM term.inferred_relationship" +
+            "  WHERE type_id = '" + ISA_TYPE_ID + "'" +
+            "  ORDER BY source_id, destination_id, effective_time DESC" +
+            ") latest WHERE active = 1";
 
+        // ② 각 개념의 최신 활성 FSN 용어를 DISTINCT ON으로 조회.
+        //    idx_description_c_id_t_id_etime (concept_id, type_id, effective_time) 활용.
+        String fsnSql =
+            "SELECT concept_id, term FROM (" +
+            "  SELECT DISTINCT ON (concept_id)" +
+            "    concept_id, term, active" +
+            "  FROM term.description" +
+            "  WHERE type_id = '" + FSN_TYPE_ID + "'" +
+            "    AND language_code = 'en'" +
+            "  ORDER BY concept_id, effective_time DESC" +
+            ") latest WHERE active = 1";
+
+        // FSN 용어 맵 선 로딩 (description 테이블, ~350K 행 예상)
+        log.info("  FSN 용어 로딩 중...");
+        Map<String, String> fsnMap = new HashMap<>();
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(fsnSql)) {
+            while (rs.next()) {
+                fsnMap.put(rs.getString("concept_id"), rs.getString("term"));
+            }
+        }
+        log.info("  FSN 용어 로딩 완료: " + fsnMap.size() + "건");
+
+        // IS-A 관계 로딩
         log.info("  IS-A 관계 쿼리 실행 중...");
         try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             ResultSet rs = stmt.executeQuery(isaSql)) {
             while (rs.next()) {
                 String child  = rs.getString("child_id");
                 String parent = rs.getString("parent_id");
-                String term   = rs.getString("term");
 
-                // 부모 → 자식 집합
                 codeChildCodesMap.computeIfAbsent(parent, k -> new HashSet<>()).add(child);
-                // 자식 개념의 FSN 용어 (마지막 값 유지)
-                codeTermMap.put(child, term);
+                // FSN 용어: 미리 로딩한 맵에서 참조
+                codeTermMap.put(child, fsnMap.getOrDefault(child, ""));
             }
         }
     }
