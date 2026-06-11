@@ -76,6 +76,11 @@ public class SnomedDataLoader {
             loadAddonPackages(conn, basePath);
             conn.commit();
 
+            // REFERENCESET에서 최신 활성 행 추출 → REFERENCESET_ACTIVE 적재
+            // (refset_active_ddl.sql + refset_active_loader.sql 통합 Java 버전)
+            System.out.println("[INFO] REFERENCESET_ACTIVE 테이블 적재 시작...");
+            ReferenceSetActiveLoader.load(conn);
+
             // IS-A 계층 Transitive Closure 계산 및 TC 테이블 적재
             // (TransitiveClosureGeneratorFromInferred.sh + TransitiveClosureGenerator.java 통합 Java 버전)
             System.out.println("[INFO] TC (Transitive Closure) 테이블 적재 시작...");
