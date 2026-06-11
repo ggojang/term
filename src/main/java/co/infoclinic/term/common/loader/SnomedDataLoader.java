@@ -279,7 +279,7 @@ public class SnomedDataLoader {
 
     /**
      * release_files 디렉터리 내 국제판 외 모든 애드온 패키지를 자동 탐색하여 적재한다.
-     * MySQLLoader.sql에 없는 패키지(NCPT, LOINCRF2 등)도 포함한다.
+     * LOINC RF2, NCPT 등 import_loinc.sql / import_ncptr.sql에 정의된 패키지 포함.
      * 파일이 없는 패키지는 경고 메시지 후 건너뛴다.
      */
     private static void loadAddonPackages(Connection conn, Path basePath) throws Exception {
@@ -288,27 +288,31 @@ public class SnomedDataLoader {
         try (Stream<Path> dirs = Files.list(basePath)) {
             List<Path> packages = dirs
                 .filter(Files::isDirectory)
-                // 국제판과 LOINCRF2(Delta만 있음)는 별도 처리
-                .filter(p -> {
-                    String name = p.getFileName().toString();
-                    return !name.startsWith("SnomedCT_InternationalRF2_")
-                        && !name.startsWith("SnomedCT_LOINCRF2_");
-                })
+                // 국제판만 제외; LOINCRF2 / NCPT 등은 모두 포함
+                .filter(p -> !p.getFileName().toString().startsWith("SnomedCT_InternationalRF2_"))
                 .sorted()
                 .toList();
 
             for (Path pkg : packages) {
                 System.out.println("[INFO] 패키지 적재: " + pkg.getFileName());
 
-                // 핵심 Terminology 테이블도 적재 (CONCEPT, DESCRIPTION, RELATIONSHIP)
-                loadAddonTerminology(conn, pkg);
+                // Full/Terminology: CONCEPT, DESCRIPTION, RELATIONSHIP, OWL Refset
+                loadAddonTerminology(conn, pkg, false);
 
-                // Refset 적재
+                // Snapshot/Terminology: INFERRED_RELATIONSHIP_SNAP
+                // (import_loinc.sql, import_ncptr.sql 에서 Snapshot Relationship을 SNAP 테이블에 적재)
+                loadAddonTerminology(conn, pkg, true);
+
+                // Full/Refset: REFERENCESET (der2_* 파일들)
                 Path refsetDir = pkg.resolve("Full/Refset");
                 if (Files.isDirectory(refsetDir)) {
                     loadAllRefsets(conn, refsetDir);
-                } else {
-                    System.out.println("[WARN]   Full/Refset 디렉터리 없음: " + refsetDir);
+                }
+
+                // Snapshot/Refset: 일부 패키지는 Snapshot에만 Refset이 있음
+                Path snapRefsetDir = pkg.resolve("Snapshot/Refset");
+                if (Files.isDirectory(snapRefsetDir)) {
+                    loadAllRefsets(conn, snapRefsetDir);
                 }
             }
         }
@@ -318,11 +322,22 @@ public class SnomedDataLoader {
     }
 
     /**
-     * 애드온 패키지의 Terminology 파일(Concept, Description, Relationship)을 적재한다.
-     * 파일명 패턴이 국제판과 달라 Full/Terminology 내 전체 탐색으로 처리.
+     * 애드온 패키지의 Terminology 파일을 적재한다.
+     *
+     * isSnapshot=false → Full/Terminology
+     *   sct2_Concept_*        → CONCEPT
+     *   sct2_Description_*    → DESCRIPTION
+     *   sct2_Relationship_*   → INFERRED_RELATIONSHIP
+     *   sct2_StatedRelationship_* → STATED_RELATIONSHIP
+     *   sct2_sRefset_*        → REFERENCESET (OWL Expression 등 Terminology에 포함된 Refset)
+     *
+     * isSnapshot=true → Snapshot/Terminology
+     *   sct2_Relationship_*   → INFERRED_RELATIONSHIP_SNAP
+     *   (import_loinc.sql, import_ncptr.sql 에서 Snapshot Relationship을 SNAP 테이블에 적재)
      */
-    private static void loadAddonTerminology(Connection conn, Path packageDir) throws Exception {
-        Path termDir = packageDir.resolve("Full/Terminology");
+    private static void loadAddonTerminology(Connection conn, Path packageDir, boolean isSnapshot)
+            throws Exception {
+        Path termDir = packageDir.resolve(isSnapshot ? "Snapshot/Terminology" : "Full/Terminology");
         if (!Files.isDirectory(termDir)) {
             return;
         }
@@ -336,30 +351,51 @@ public class SnomedDataLoader {
             for (Path file : txtFiles) {
                 String lname = file.getFileName().toString().toLowerCase(Locale.ROOT);
 
-                if (lname.startsWith("sct2_concept_")) {
-                    copyFile(conn, file,
-                        "COPY term.concept (concept_id, effective_time, active, module_id, definition_status_id) " +
-                        "FROM STDIN WITH (FORMAT TEXT, DELIMITER E'\\t', HEADER TRUE, NULL '')");
-
-                } else if (lname.startsWith("sct2_description_")) {
-                    copyFile(conn, file,
-                        "COPY term.description (description_id, effective_time, active, module_id, concept_id, language_code, type_id, term, case_significance_id) " +
-                        "FROM STDIN WITH (FORMAT TEXT, DELIMITER E'\\t', HEADER TRUE, NULL '')");
-
-                } else if (lname.contains("relationshipconcretevalues_") || lname.startsWith("sct2_relationship_")) {
-                    // Stated / Inferred 공통: Characteristic_type_id로 구분하지 않고
-                    // 파일명 기준으로 분리 (StatedRelationship은 inferred_relationship에 넣지 않음)
-                    if (lname.startsWith("sct2_statedrelationship_")) {
+                if (isSnapshot) {
+                    // Snapshot/Terminology: Relationship 파일만 INFERRED_RELATIONSHIP_SNAP에 적재
+                    if (lname.startsWith("sct2_relationship_") || lname.contains("relationshipconcretevalues_")) {
                         copyFile(conn, file,
-                            "COPY term.stated_relationship (relationship_id, effective_time, active, module_id, source_id, destination_id, relationship_group, type_id, characteristic_type_id, modifier_id) " +
-                            "FROM STDIN WITH (FORMAT TEXT, DELIMITER E'\\t', HEADER TRUE, NULL '')");
-                    } else {
-                        copyFile(conn, file,
-                            "COPY term.inferred_relationship (relationship_id, effective_time, active, module_id, source_id, destination_id, relationship_group, type_id, characteristic_type_id, modifier_id) " +
+                            "COPY term.inferred_relationship_snap " +
+                            "(relationship_id, effective_time, active, module_id, source_id, destination_id, " +
+                            "relationship_group, type_id, characteristic_type_id, modifier_id) " +
                             "FROM STDIN WITH (FORMAT TEXT, DELIMITER E'\\t', HEADER TRUE, NULL '')");
                     }
+                } else {
+                    // Full/Terminology
+                    if (lname.startsWith("sct2_concept_")) {
+                        copyFile(conn, file,
+                            "COPY term.concept " +
+                            "(concept_id, effective_time, active, module_id, definition_status_id) " +
+                            "FROM STDIN WITH (FORMAT TEXT, DELIMITER E'\\t', HEADER TRUE, NULL '')");
+
+                    } else if (lname.startsWith("sct2_description_")) {
+                        copyFile(conn, file,
+                            "COPY term.description " +
+                            "(description_id, effective_time, active, module_id, concept_id, language_code, " +
+                            "type_id, term, case_significance_id) " +
+                            "FROM STDIN WITH (FORMAT TEXT, DELIMITER E'\\t', HEADER TRUE, NULL '')");
+
+                    } else if (lname.startsWith("sct2_statedrelationship_")) {
+                        copyFile(conn, file,
+                            "COPY term.stated_relationship " +
+                            "(relationship_id, effective_time, active, module_id, source_id, destination_id, " +
+                            "relationship_group, type_id, characteristic_type_id, modifier_id) " +
+                            "FROM STDIN WITH (FORMAT TEXT, DELIMITER E'\\t', HEADER TRUE, NULL '')");
+
+                    } else if (lname.startsWith("sct2_relationship_") || lname.contains("relationshipconcretevalues_")) {
+                        copyFile(conn, file,
+                            "COPY term.inferred_relationship " +
+                            "(relationship_id, effective_time, active, module_id, source_id, destination_id, " +
+                            "relationship_group, type_id, characteristic_type_id, modifier_id) " +
+                            "FROM STDIN WITH (FORMAT TEXT, DELIMITER E'\\t', HEADER TRUE, NULL '')");
+
+                    } else if (lname.startsWith("sct2_srefset_")) {
+                        // OWL Expression 등 Terminology 폴더에 위치한 Refset 파일 → REFERENCESET
+                        // (import_ncptr.sql: sct2_sRefset_OWLExpressionNCPTFull_*.txt → REFERENCESET)
+                        loadRefsetFile(conn, file);
+                    }
+                    // sct2_Identifier, sct2_TextDefinition 등은 DDL 대상 테이블 없으므로 건너뜀
                 }
-                // sct2_Identifier, sct2_TextDefinition 등은 현재 DDL 대상 테이블 없으므로 건너뜀
             }
         }
     }
