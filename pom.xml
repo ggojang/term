@@ -10,37 +10,37 @@
 	<properties>
 		<!-- Java Version -->
 		<java-version>1.8</java-version>
-		
+
 		<!-- Spring Version -->
 		<org.springframework-version>4.2.6.RELEASE</org.springframework-version>
-		
+
 		<!-- Spring Data Jpa Version -->
 		<org.springframework.data-version>1.9.4.RELEASE</org.springframework.data-version>
-		
+
 		<!-- Hibernate Entitymanager Version -->
 		<org.hibernate-version>4.3.11.Final</org.hibernate-version>
-		
+
 		<!-- PostgreSQL Version -->
 		<postgresql-version>42.7.4</postgresql-version>
-		
+
 		<!-- Jackson Version -->
 		<com.fasterxml.jackson.core-version>2.17.1</com.fasterxml.jackson.core-version>
-		
+
 		<!-- Lombok Version -->
 		<org.projectlombok-version>1.18.46</org.projectlombok-version>
-		
+
 		<!-- AspectJ Version -->
 		<org.aspectj-version>1.9.25.1</org.aspectj-version>
-		
+
 		<!-- Logback Version -->
 		<logback-classic-version>1.4.14</logback-classic-version>
-		
+
 		<!-- Commons DBCP2 Version -->
 		<commons-dbcp2-version>2.13.0</commons-dbcp2-version>
-		
+
 		<!-- SLF4J Version -->
 		<org.slf4j-version>2.0.13</org.slf4j-version>
-		
+
 		<antlr.version>4.13.1</antlr.version>
 
 		<!-- OWL Inference -->
@@ -106,7 +106,7 @@
 			<artifactId>jsr305</artifactId>
 			<version>3.0.2</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
@@ -186,7 +186,7 @@
 			<artifactId>postgresql</artifactId>
 			<version>${postgresql-version}</version>
 		</dependency>
-		
+
 		<!-- DBCP2 Connection Pool -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -210,7 +210,7 @@
 			<artifactId>jackson-annotations</artifactId>
 			<version>${com.fasterxml.jackson.core-version}</version>
 		</dependency>
-		
+
 		<!-- Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -246,7 +246,7 @@
 			<artifactId>slf4j-api</artifactId>
 			<version>${org.slf4j-version}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.slf4j</groupId>
 		    <artifactId>jcl-over-slf4j</artifactId>
@@ -262,60 +262,6 @@
 		    <artifactId>log4jdbc-log4j2-jdbc4.1</artifactId>
 		    <version>1.16</version>
 		</dependency>
-		<!--  
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${org.slf4j-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>jcl-over-slf4j</artifactId>
-			<version>${org.slf4j-version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-		    <groupId>ch.qos.logback</groupId>
-		    <artifactId>logback-classic</artifactId>
-		    <version>${logback-classic-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>${org.slf4j-version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.15</version>
-			<exclusions>
-				<exclusion>
-					<groupId>javax.mail</groupId>
-					<artifactId>mail</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>javax.jms</groupId>
-					<artifactId>jms</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.sun.jdmk</groupId>
-					<artifactId>jmxtools</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.sun.jmx</groupId>
-					<artifactId>jmxri</artifactId>
-				</exclusion>
-			</exclusions>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-		    <groupId>org.bgee.log4jdbc-log4j2</groupId>
-		    <artifactId>log4jdbc-log4j2-jdbc4.1</artifactId>
-		    <version>1.16</version>
-		</dependency>
-		-->
-
 
 		<!-- Servlet -->
 		<dependency>
@@ -340,7 +286,7 @@
           	<artifactId>javax.websocket-api</artifactId>
         	<version>1.0</version>
        	</dependency>
-		
+
 		<!-- @Inject -->
 		<dependency>
 			<groupId>javax.inject</groupId>
@@ -405,7 +351,7 @@
 			<artifactId>maven-resources-plugin</artifactId>
 			<version>2.4.3</version>
 		</dependency>
-		
+
 		<!-- ANTLR4 -->
 		<dependency>
 			<groupId>org.antlr</groupId>
@@ -515,29 +461,6 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
-			
-			<!-- expression -->
-			<!--
-			<plugin>
-				<groupId>org.antlr</groupId>
-				<artifactId>antlr4-maven-plugin</artifactId>
-				<version>${antlr.version}</version>
-				
-				<executions>
-					<execution>
-						<configuration>
-							<sourceDirectory>src</sourceDirectory>
-							<outputDirectory>
-								${basedir}/target/generated-sources/antlr4
-							</outputDirectory>
-						</configuration>
-						<goals>
-							<goal>antlr4</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			-->
 		</plugins>
 	</build>
 </project>
