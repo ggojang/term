@@ -1,0 +1,104 @@
+{
+	"settings": {
+		"analysis": {
+			"filter": {
+ 				"edge5_filter": {
+                     			"token_chars": [
+                       				"letter",
+                        			"digit"
+                     			],
+                     			"min_gram": "2",
+                     			"type": "edgeNGram",
+                     			"max_gram": "5"
+               			},
+				"stopwords": {
+					"type": "stop",
+					"stopwords": "_english_"
+				},
+				"autocomplete_filter": {
+					"type": "edge_ngram",
+					"min_gram": "1",
+					"max_gram": "10"
+				},
+				"synonym_phrase" : {
+                   			"type" : "synonym",
+					"format" : "solr",
+                			"synonyms_path" : "synonym/syn_ph.txt"
+             			},
+				"synonym" : {
+					"type" : "synonym",
+					"tokenizer": "keyword",
+					"format" : "solr",
+					"synonyms_path" : "synonym/syn.txt"
+				}
+			},
+			"analyzer": {
+				"stop_analyzer": {
+					"filter": [
+						"lowercase",
+						"stopwords"
+					],
+					"type": "custom",
+					"tokenizer": "standard"
+				},
+				"edge5_analyzer": {
+                     			"filter": [
+                        			"lowercase",
+                         			"edge5_filter"
+                     			],
+                     			"type": "custom",
+                     			"tokenizer": "standard"
+                		},
+				"stop_edge5_analyzer": {
+					"filter": [
+						"lowercase",
+						"stopwords",
+						"edge5_filter"
+					],
+					"type": "custom",
+					"tokenizer": "standard"
+				},
+				"stop_synonym_analyzer": {
+					"filter": [
+						"lowercase",
+ 						"stopwords",
+						"synonym_phrase",
+ 						"synonym"
+ 					],
+					"type": "custom",
+					"tokenizer": "whitespace"
+ 				},
+				"autocomplete": {
+					"filter": [
+						"lowercase",
+						"autocomplete_filter"
+					],
+					"type": "custom",
+					"tokenizer": "standard"
+				},
+				"raw_lowercase_analyzer": {
+					"filter": [
+						"lowercase"
+					],
+					"type": "custom",
+					"tokenizer": "keyword"
+				},
+				"term_analyzer": {
+					"filter": [
+						"lowercase"
+					],
+					"type": "custom",
+					"tokenizer": "whitespace"
+				},
+				"synonym_analyzer" : {
+		                	"filter" : [
+						"lowercase", 
+						"synonym_phrase", 
+						"synonym"
+					],
+					"tokenizer" : "whitespace"
+                }
+			}
+		}
+	}
+}

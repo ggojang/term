@@ -1,0 +1,112 @@
+{
+		"term_snomedct_type": {
+			"properties": {
+				"componentActive": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"componentEffectiveTime": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"conceptActive": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"conceptEffectiveTime": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"conceptId": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"primitive": {
+					"type": "boolean"
+				},
+				"descriptionActive": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"descriptionEffectiveTime": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"descriptionId": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"fsn": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"id": {
+					"type": "long"
+				},
+				"lang": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"length": {
+					"type": "long"
+				},
+				"acceptabilityId": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"maxConceptDescriptionEffectiveTimeAndActive": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"semanticTag": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"term": {
+					"type": "string",
+					"analyzer": "term_analyzer",
+					"fields": {
+						"autocomplete": {
+							"type": "string",
+							"analyzer": "autocomplete"
+						},
+						"edge5": {
+							"type": "string",
+							"analyzer": "edge5_analyzer"
+                        			},
+						"raw": {
+							"type": "string",
+							"index": "not_analyzed"
+						},
+						"raw_lc": {
+							"type": "string",
+							"analyzer": "raw_lowercase_analyzer"
+						},
+						"stop": {
+                            				"type": "string",
+                            				"analyzer": "stop_analyzer"
+                       				},
+						"stop_edge5": {
+                             				"type": "string",
+                             				"analyzer": "stop_edge5_analyzer"
+                        			},
+						"stop_synonym": {
+							"type": "string",
+							"analyzer": "stop_synonym_analyzer"
+						},
+						"synonym": {
+							"type": "string",
+							"analyzer": "synonym_analyzer"
+						}
+					}
+				},
+				"type": {
+					"type": "integer"
+				},
+				"mrcmAttrs": {
+					"type": "string",
+				    	"index": "not_analyzed"
+				}
+			}
+		}
+}

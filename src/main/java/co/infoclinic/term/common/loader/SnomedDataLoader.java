@@ -92,6 +92,13 @@ public class SnomedDataLoader {
             SearchIndexLoader.load(conn);
             conn.commit();
 
+            // UMLS 동의어 적재 (map_index/UMLS_SYNONYM/syn.txt, syn_ph.txt)
+            // ES stop_synonym_analyzer 대체: MapSearchController 동의어 확장 검색에 사용
+            String synDir = Paths.get("").toAbsolutePath().resolve("map_index/UMLS_SYNONYM").toString();
+            System.out.println("[INFO] UMLS 동의어 적재 시작: " + synDir);
+            UmlsSynonymLoader.load(conn, synDir);
+            conn.commit();
+
             System.out.println("[INFO] 모든 데이터 적재 완료.");
         }
     }
