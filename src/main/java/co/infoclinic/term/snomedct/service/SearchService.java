@@ -7,7 +7,7 @@ import co.infoclinic.term.common.utils.MatchType;
 import co.infoclinic.term.common.utils.StateType;
 import co.infoclinic.term.snomedct.model.dto.SearchResults;
 import co.infoclinic.term.snomedct.model.dto.TermSearchResult;
-import io.searchbox.core.SearchResult;
+import io.searchbox.core.SearchResult;  // 하위 호환성 유지; 구현체는 null 반환
 
 /**
  * SNOMED CT 검색 서비스 인터페이스

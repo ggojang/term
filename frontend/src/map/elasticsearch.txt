@@ -1,0 +1,13 @@
+// semanticTag 확인 query
+
+{
+  "size": 0,
+  "aggs": {
+    "st": {
+      "terms": {
+        "field": "semanticTag",
+        "size": 1000
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+# Files needed to update while updating SNOMED CT 
+
+vi src/App.js
+vi src/map/main.js
+? vi src/snomedct/main.js
+./services/react/stom/yarn build

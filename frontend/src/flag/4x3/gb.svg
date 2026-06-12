@@ -1,0 +1,14 @@
+{ memb.map((mem, index) => (
+            <Grid item key={index}>  
+              {mem[0].type.id === '900000000000456007' && <div>
+                <Typography variant="h5">&nbsp;{mem[0].type.name}</Typography>
+                <br />
+                  <TableContainer align="center">
+                    <Table size="medium" aria-label="a medium table">
+                      <TableHead>
+                        <TableRow >
+                          { mem.extra.map((me, index) => (
+                            <StyledTableCell key={index} className={classes.label} >{me.}</StyledTableCell>
+                  
+                ))}
+              </div> }
