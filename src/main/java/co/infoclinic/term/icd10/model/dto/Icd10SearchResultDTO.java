@@ -17,4 +17,8 @@ public class Icd10SearchResultDTO {
 	private String kind;
 	
 	private String label;
+
+	private String koreanLabel;
+
+	private Boolean isKcdExt;
 }

@@ -18,8 +18,8 @@ public interface SchemeRepository extends JpaRepository<Scheme, String> {
 	 */
 	@Query(value = "SELECT * " +
 				   "FROM SCHEME " +
-				   "ORDER BY STR_TO_DATE(VERSION, 'v%Y%m%d') DESC " +
-				   "LIMIT 1", nativeQuery = true)	
+				   "ORDER BY TO_DATE(SUBSTRING(VERSION, 2), 'YYYYMMDD') DESC " +
+				   "LIMIT 1", nativeQuery = true)
 	Scheme findLatest();
 	
 	

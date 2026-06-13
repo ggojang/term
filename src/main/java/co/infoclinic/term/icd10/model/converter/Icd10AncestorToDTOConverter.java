@@ -53,6 +53,8 @@ public final class Icd10AncestorToDTOConverter {
 	    dto.setChildrenCount(entity.getChildrenCount());
 	    dto.setDescendantCount(entity.getDescendantCount());
 	    dto.setPath(entity.getPath());
+	    dto.setKoreanLabel(entity.getKoreanLabel());
+	    dto.setIsKcdExt(entity.getIsKcdExt());
 	    //int childrenCount = entity.getChildrenCount();
 	    //int descendantCount = entity.getDescendantCount();
 	    //String path = entity.getPath();

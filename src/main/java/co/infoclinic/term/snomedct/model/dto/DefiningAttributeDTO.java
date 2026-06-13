@@ -12,8 +12,10 @@ import lombok.NoArgsConstructor;
 public class DefiningAttributeDTO {
 
 	private String id;
-	
+
 	private String name;
-	
+
+	private String cardinality;
+
 	private List<DefiningRangeDTO> ranges;
 }

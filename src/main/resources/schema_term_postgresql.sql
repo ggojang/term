@@ -840,3 +840,47 @@ CREATE TABLE loinc.LG_TERMS (
     LG_ID_NAME       TEXT        DEFAULT NULL,
     PRIMARY KEY (SEQ)
 );
+
+-- ============================================================
+-- ICD-10 (2019 WHO)
+-- ============================================================
+CREATE SCHEMA IF NOT EXISTS icd10;
+
+DROP TABLE IF EXISTS icd10.ICD10_RUBRIC CASCADE;
+DROP TABLE IF EXISTS icd10.ICD10_CLASS  CASCADE;
+
+CREATE TABLE icd10.ICD10_CLASS (
+    SEQ              INTEGER,
+    CODE             VARCHAR(20)  NOT NULL,
+    VERSION          VARCHAR(10),
+    CLASS_KIND       VARCHAR(20),
+    USAGE_KIND       VARCHAR(20),
+    SUPER_CLASS      VARCHAR(20),
+    LABEL            TEXT,
+    REF              TEXT,
+    CHILDREN_COUNT   INTEGER DEFAULT 0,
+    DESCENDANT_COUNT INTEGER DEFAULT 0,
+    PATH             TEXT,
+    PRIMARY KEY (CODE)
+);
+
+CREATE TABLE icd10.ICD10_RUBRIC (
+    SEQ           SERIAL PRIMARY KEY,
+    CODE          VARCHAR(20) NOT NULL,
+    VERSION       VARCHAR(10),
+    ID            VARCHAR(100),
+    KIND          VARCHAR(20),
+    MODIFIER_CODE VARCHAR(20),
+    USAGE_KIND    VARCHAR(20),
+    LANG          VARCHAR(5),
+    FRAGMENT_TYPE VARCHAR(20),
+    PARA_TYPE     VARCHAR(50),
+    LABEL         TEXT,
+    REF           TEXT
+);
+
+CREATE INDEX idx_icd10_class_super ON icd10.ICD10_CLASS(SUPER_CLASS);
+CREATE INDEX idx_icd10_class_path  ON icd10.ICD10_CLASS(PATH);
+CREATE INDEX idx_icd10_rubric_code ON icd10.ICD10_RUBRIC(CODE);
+CREATE INDEX idx_icd10_rubric_kind ON icd10.ICD10_RUBRIC(KIND);
+-- pg_trgm 설치 후 활성화: CREATE INDEX idx_icd10_rubric_label_trgm ON icd10.ICD10_RUBRIC USING GIN (LABEL gin_trgm_ops);

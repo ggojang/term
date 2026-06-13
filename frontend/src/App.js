@@ -5,6 +5,7 @@ import EHRLayout from './ehr/layout.js';
 import RefsetLayout from './refsetViewer/layout.js';
 import MapLayout from './map/layout.js';
 import LoincLayout from './loinc/layout.js';
+import Icd10Layout from './icd10/layout.js';
 import PropTypes from 'prop-types';
 import CssBaseline from "@material-ui/core/CssBaseline"
 import clsx from 'clsx';
@@ -123,7 +124,7 @@ export default function App(props) {
   const handleChange = (event, newValue) => {
     /*switch (newValue) {
       case 4 :
-        window.location.replace("/ehr");
+        window.location.replace("http://localhost:3000/ehr");
         break;
     }*/
     setValue(newValue);
@@ -136,6 +137,8 @@ export default function App(props) {
         setMsg("International Edition 2026.06.01");
       } else if (value === 3) {
         setMsg("Version 2.82 (2026-02-24)");
+      } else if (value === 4) {
+        setMsg("KCD-9 Browser");
       } else if (value === 5){
         setMsg("2016 Release (2014-10-14)");
       } else {
@@ -170,6 +173,7 @@ export default function App(props) {
                   <Tab className={clsx(classes.label, classes.tab3)} label="Refset Viewer" {...a11yProps(1)} />
                   <Tab className={clsx(classes.label, classes.tab2)} label="Mapping Support" {...a11yProps(2)} />
                   <Tab className={clsx(classes.label, classes.tab3)} label="LOINC Browser" {...a11yProps(3)} />
+                  <Tab className={clsx(classes.label, classes.tab3)} label="KCD-9 Browser" {...a11yProps(4)} />
                 </Tabs>
             </Grid>
 
@@ -221,6 +225,9 @@ export default function App(props) {
           loincId={loincId}
           setLoincId={setLoincId}
         />
+      </TabPanel>
+      <TabPanel value={value} index={4}>
+        <Icd10Layout />
       </TabPanel>
     </div>
     </>

@@ -29,4 +29,8 @@ public class Icd10ChildrenDTO {
 
   private String path;
 
+  private String koreanLabel;
+
+  private Boolean isKcdExt;
+
 }

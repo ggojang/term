@@ -59,5 +59,11 @@ public class Icd10Children {
   
   @Column//(length = 255)
   private String path;
-  
+
+  @Column
+  private String koreanLabel;
+
+  @Column
+  private Boolean isKcdExt;
+
 }

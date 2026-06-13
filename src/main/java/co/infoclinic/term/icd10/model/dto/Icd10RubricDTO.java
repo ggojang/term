@@ -22,8 +22,12 @@ public class Icd10RubricDTO {
 	  
 	  private String usageKind;
 	  
-	  private List<Icd10RubricKindDTO> kinds;   
-	  
-	  //private String paraType;
+	  private List<Icd10RubricKindDTO> kinds;
+
+	  private String label;
+
+	  private String koreanLabel;
+
+	  private Boolean isKcdExt;
 
 }

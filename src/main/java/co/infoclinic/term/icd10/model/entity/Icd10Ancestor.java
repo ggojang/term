@@ -52,5 +52,11 @@ public class Icd10Ancestor {
 	  
 	  @Column//(length = 255)
 	  private String path;
-	  
+
+	  @Column
+	  private String koreanLabel;
+
+	  @Column
+	  private Boolean isKcdExt;
+
 }

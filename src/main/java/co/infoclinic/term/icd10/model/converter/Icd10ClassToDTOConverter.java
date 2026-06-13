@@ -40,7 +40,9 @@ public final class Icd10ClassToDTOConverter {
 	    dto.setChildrenCount(entity.getChildrenCount());
 //	    dto.setDescendantCount(entity.getDescendantCount());
 	    dto.setPath(entity.getPath());
-	 		
+	    dto.setKoreanLabel(entity.getKoreanLabel());
+	    dto.setIsKcdExt(entity.getIsKcdExt());
+
 		return dto;
 	}
 

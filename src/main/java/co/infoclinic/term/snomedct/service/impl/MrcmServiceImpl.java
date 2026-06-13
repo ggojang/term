@@ -82,21 +82,29 @@ public class MrcmServiceImpl implements MrcmService {
     		range = new DefiningRangeDTO();
     		range.setId(constraint.getValueId());
     		range.setName(constraint.getValueName());
- 
     		rangeList.add(range);
         }
     	
+    	// cardinality 맵 (attributeId → cardinality, 첫 번째 값 사용)
+    	Map<String, String> cardMap = new HashMap<String, String>();
+    	for (MrcmConstraints constraint : mrcmList) {
+    		if (constraint.getCardinality() != null && !cardMap.containsKey(constraint.getAttributeId())) {
+    			cardMap.put(constraint.getAttributeId(), constraint.getCardinality());
+    		}
+    	}
+
     	DefiningAttributeDTO definingAttributeDTO = null;
     	Iterator<String> itr = maps.keySet().iterator();
     	while (itr.hasNext()) {
     		String key = itr.next();
     		String value = maps.get(key);
-    		    		
+
     		definingAttributeDTO = new DefiningAttributeDTO();
     		definingAttributeDTO.setId(key);
     		definingAttributeDTO.setName(value);
+    		definingAttributeDTO.setCardinality(cardMap.get(key));
     		definingAttributeDTO.setRanges(valueMap.get(key));
-    		
+
     		definingAttributeDTOList.add(definingAttributeDTO);
     	}
     	return definingAttributeDTOList;

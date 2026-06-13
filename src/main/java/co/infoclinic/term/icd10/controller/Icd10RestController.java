@@ -30,7 +30,13 @@ import co.infoclinic.term.icd10.service.Icd10ChildrenService;
 import co.infoclinic.term.icd10.service.Icd10AncestorService;
 import co.infoclinic.term.icd10.service.Icd10SiblingService;
 import co.infoclinic.term.icd10.api.QryApi;
+import co.infoclinic.term.icd10.model.entity.Kcd9Morph;
+import co.infoclinic.term.icd10.repository.Kcd9MorphRepository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -69,6 +75,9 @@ public class Icd10RestController {
   
   @Autowired
   private Icd10SiblingService siblingService;
+
+  @Autowired
+  private Kcd9MorphRepository morphRepository;
   
   
   /**
@@ -122,5 +131,24 @@ public class Icd10RestController {
 	  return childrenService.getChildrenDTOByClassCode(code);
   }
 
-  
+  // ── KCD-9 Neoplasm Morphology ──────────────────────────────────────────────
+
+  @ApiOperation(value = "List all KCD9 Morphology")
+  @RequestMapping(value = "/kcd9/morph/all", method = RequestMethod.GET)
+  public List<Kcd9Morph> getAllMorph() {
+      return morphRepository.findAll();
+  }
+
+  @ApiOperation(value = "Search KCD9 Morphology")
+  @RequestMapping(value = "/kcd9/morph/search", method = RequestMethod.GET)
+  public Page<Kcd9Morph> searchMorph(
+          @RequestParam String q,
+          @RequestParam(defaultValue = "1") int page,
+          @RequestParam(defaultValue = "50") int size) {
+      int offset = (page - 1) * size;
+      List<Kcd9Morph> content = morphRepository.search(q, offset, size);
+      long total = morphRepository.searchCount(q);
+      return new PageImpl<>(content, new PageRequest(page - 1, size), total);
+  }
+
 }

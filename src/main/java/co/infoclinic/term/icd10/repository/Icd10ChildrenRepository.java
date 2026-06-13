@@ -10,7 +10,7 @@ import co.infoclinic.term.icd10.model.entity.Icd10Children;
 
 public interface Icd10ChildrenRepository extends JpaRepository<Icd10Children, String> {
 
-	@Query(value = "SELECT * FROM icd10.ICD10_CLASS WHERE SUPER_CLASS = ?1 ORDER BY SEQ", nativeQuery = true)
+	@Query(value = "SELECT * FROM icd10.ICD10_CLASS WHERE SUPER_CLASS = CASE WHEN ?1 = 'root' THEN 'ICD10 2019' ELSE ?1 END ORDER BY SEQ", nativeQuery = true)
 	/*
 	@Query(value = "SELECT a.*, r.LABEL FROM icd10.ICD10_RUBRIC as r "
 			+ "JOIN (SELECT * FROM icd10.ICD10_CLASS as c WHERE c.SUPER_CLASS = ?1) a "

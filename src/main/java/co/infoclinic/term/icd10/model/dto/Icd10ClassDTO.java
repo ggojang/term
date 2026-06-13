@@ -28,4 +28,8 @@ public class Icd10ClassDTO {
 //  private int descendantCount;
   
   private String path;
+
+  private String koreanLabel;
+
+  private Boolean isKcdExt;
 }

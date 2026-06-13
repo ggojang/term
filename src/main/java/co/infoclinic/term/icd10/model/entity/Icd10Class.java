@@ -59,7 +59,13 @@ public class Icd10Class {
   
   @Column//(length = 255)
   private String path;
-  
+
+  @Column
+  private String koreanLabel;
+
+  @Column
+  private Boolean isKcdExt;
+
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "icd10Class")
   private List<Icd10Rubric> icd10Rubric;
   

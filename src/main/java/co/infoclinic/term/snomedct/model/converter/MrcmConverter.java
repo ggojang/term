@@ -48,12 +48,13 @@ public final class MrcmConverter {
 			String attributeName = mrcm.getAttributeName();
 			String valueId = mrcm.getValueId();
 			String valueName = mrcm.getValueName();
-			
+			String cardinality = mrcm.getCardinality();
+
 			// Map Key:AttributeId, Value:AttributeName (AttributeId의 중복이 존재함)
 			if (!attributeIdToDefiningAttributeDTOMap.containsKey(attributeId)) {
-				attributeIdToDefiningAttributeDTOMap.put(
-						attributeId, 
-						newDefiningAttributeDTO(attributeId, attributeName, null));
+				DefiningAttributeDTO newDto = newDefiningAttributeDTO(attributeId, attributeName, null);
+				newDto.setCardinality(cardinality);
+				attributeIdToDefiningAttributeDTOMap.put(attributeId, newDto);
 			}
 			
 			// AttributeId별 Range 리스트 구성
