@@ -107,7 +107,7 @@ public interface LatestRefsetMemberRepository extends JpaRepository<LatestRefset
 			"WHERE VERSION = CONCAT(?1, '-', ?2) " +
 			"AND REFSET_ID = '900000000000456007' " +
 			"AND REFERENCED_COMPONENT_ID = ?3 " +
-			"ORDER BY CAST(FIELD3_VALUE AS UNSIGNED) ASC", nativeQuery = true)
+			"ORDER BY NULLIF(FIELD3_VALUE,'')::integer ASC NULLS LAST", nativeQuery = true)
 	List<LatestRefsetMember> findByEditionAndVersionAndRefsetId(String string, String effectiveTime, String refsetId);
 
 	
@@ -120,20 +120,18 @@ public interface LatestRefsetMemberRepository extends JpaRepository<LatestRefset
 	 * @param refsetId
 	 * @return
 	 */
-	@Query(value = 
-			
+	@Query(value =
 			"SELECT COUNT(*) " +
-			"FROM REFERENCESET_ACTIVE   " +
+			"FROM REFERENCESET_ACTIVE " +
 			"WHERE VERSION = CONCAT(?1, '-', ?2) " +
 			"AND REFSET_ID = ?3 " +
-			"AND (MATCH (REFERENCED_COMPONENT_NAME) AGAINST (?4 IN BOOLEAN MODE))", nativeQuery = true)
-			
-int findCountByEditionAndVersionAndRefsetIdAndTerm(String edition, String version, String refsetId, String term);
-	
-	
+			"AND REFERENCED_COMPONENT_NAME ILIKE '%' || ?4 || '%'", nativeQuery = true)
+	int findCountByEditionAndVersionAndRefsetIdAndTerm(String edition, String version, String refsetId, String term);
+
+
 	/**
-	 * 멤버 검색
-	 * 
+	 * 멤버 검색 (ILIKE + pg_trgm 인덱스 활용)
+	 *
 	 * @param string
 	 * @param effectiveTime
 	 * @param refsetId
@@ -142,12 +140,12 @@ int findCountByEditionAndVersionAndRefsetIdAndTerm(String edition, String versio
 	 * @param limit
 	 * @return
 	 */
-	@Query(value = 
+	@Query(value =
 			"SELECT * " +
-			"FROM REFERENCESET_ACTIVE   " +
+			"FROM REFERENCESET_ACTIVE " +
 			"WHERE VERSION = CONCAT(?1, '-', ?2) " +
 			"AND REFSET_ID = ?3 " +
-			"AND (MATCH (REFERENCED_COMPONENT_NAME) AGAINST (?4 IN BOOLEAN MODE)) " +
+			"AND REFERENCED_COMPONENT_NAME ILIKE '%' || ?4 || '%' " +
 			"LIMIT ?6 OFFSET ?5", nativeQuery = true)
-	List<LatestRefsetMember> findByEditionAndVersionAndRefsetIdAndTermAndOffsetAndLimit(String string, String effectiveTime,String refsetId, String term, int offset, int limit);
+	List<LatestRefsetMember> findByEditionAndVersionAndRefsetIdAndTermAndOffsetAndLimit(String string, String effectiveTime, String refsetId, String term, int offset, int limit);
 }

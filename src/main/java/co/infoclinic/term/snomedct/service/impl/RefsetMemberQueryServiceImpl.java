@@ -499,18 +499,9 @@ public class RefsetMemberQueryServiceImpl implements RefsetMemberQueryService {
 				}
 				
 				if (!isNumeric) {
-					List<String> queryPieces = Arrays.asList(value.split(" "));
-					int queryPiecesSize = queryPieces != null ? queryPieces.size():0;
-					for (int i = 0; i < queryPiecesSize; i++) {
-						if (i == 0) {
-							word = "+" + queryPieces.get(i);
-						} else {
-							word += " " + queryPieces.get(i);
-						}
-					}
+					word = value;
 				}
-				
-				
+
 				list = latestMbrRepo.findByEditionAndVersionAndRefsetIdAndTermAndOffsetAndLimit("INT", effectiveTime, refsetId, word, pageRequest.getOffset(), pageRequest.getPageSize());
 				totalCount = latestMbrRepo.findCountByEditionAndVersionAndRefsetIdAndTerm("INT", effectiveTime, refsetId, word);
 			} else {
