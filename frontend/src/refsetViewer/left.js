@@ -194,7 +194,7 @@ export default function Left(props) {
                         {childNodes || [<div key="stub" />]}
                       </TreeItem>
                     ) : (
-                      <TreeItem onLabelClick={(e)=> {e.preventDefault();} } classes={{label:classes.treeItemLabel}} nodeId={props.nodeId} label={props.label}>
+                      <TreeItem onLabelClick={(e)=> {e.preventDefault();} } classes={{label:classes.treeItemLabelBold}} nodeId={props.nodeId} label={props.label}>
                         {childNodes || [<div key="stub" />]}
                       </TreeItem>
                     )
