@@ -66,7 +66,7 @@ export default function Left(props) {
         const childId = expandingNodes[0];
         setTimeout(() => {
           axios
-            .get(`/children/SNOMEDCT/${childId}`)
+            .get(`http://api.infoclinic.co/children/SNOMEDCT/${childId}`)
             .then(result =>
               setChildNodes(
                 result.data
@@ -101,7 +101,7 @@ export default function Left(props) {
           <Grid item style={{padding:"0 0 0 0", margin:"0"}}>
           { (item.descendantCount === 0)
             ? (
-              <Typography className={classes.label}
+              <Typography className={classes.label} style={{ fontWeight: 'bold' }}
                 onClick={(e)=> {props.setRefset({name:item.term, id:item.conceptId, desc:0});} }
               >{item.term}</Typography>
             ) : (
@@ -120,7 +120,7 @@ export default function Left(props) {
     if (props.nodeId === undefined) {
     setTimeout(() => {
       axios
-        .get(`/children/SNOMEDCT/900000000000455006`)
+        .get(`http://api.infoclinic.co/children/SNOMEDCT/900000000000455006`)
         .then(result =>
           setChildNodes(
             result.data
