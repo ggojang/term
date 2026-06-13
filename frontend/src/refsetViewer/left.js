@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { makeStyles } from '@material-ui/core/styles';
 import TreeView from '@material-ui/lab/TreeView';
@@ -6,25 +6,27 @@ import TreeItem from '@material-ui/lab/TreeItem';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 
+const ROOT_ID = '900000000000455006';
+
 const useStyles = makeStyles(() => ({
   treeView: {
     fontSize: 'small',
     margin: '0 0 1px 0',
     userSelect: 'none',
   },
-  label: {
+  labelNormal: {
     fontSize: '0.88em',
-    fontWeight: 'bold',
+    fontWeight: 'normal',
     lineHeight: 1.8,
-    cursor: 'pointer',
+    color: '#37474f',
   },
-  labelCategory: {
+  labelBoldCategory: {
     fontSize: '0.88em',
     fontWeight: 'bold',
     lineHeight: 1.8,
     color: '#37474f',
   },
-  labelLeaf: {
+  labelBoldLeaf: {
     fontSize: '0.88em',
     fontWeight: 'bold',
     lineHeight: 1.8,
@@ -35,41 +37,78 @@ const useStyles = makeStyles(() => ({
 
 export default function Left({ setRefset }) {
   const classes = useStyles();
-  const [tree, setTree] = useState([]);           // flat map: id → node data
-  const [children, setChildren] = useState({});   // id → [childId, ...]
-  const [expanded, setExpanded] = useState(['900000000000455006']);
-  const [loading, setLoading] = useState({});
 
-  // 최초: 루트 자식 로드
-  useEffect(() => {
-    fetchChildren('900000000000455006');
+  const [tree, setTree]         = useState({});   // id → { conceptId, term, descendantCount }
+  const [children, setChildren] = useState({});   // parentId → [childId, ...]
+  const [parents, setParents]   = useState({});   // childId → parentId
+  const [boldSet, setBoldSet]   = useState(new Set());
+  const [expanded, setExpanded] = useState([ROOT_ID]);
+
+  // 지정 노드부터 루트까지 bold 전파
+  const propagateBold = useCallback((startId, parentsMap) => {
+    setBoldSet(prev => {
+      const next = new Set(prev);
+      let cur = startId;
+      while (cur) {
+        if (next.has(cur)) break; // 이미 전파됨 → 중단
+        next.add(cur);
+        cur = parentsMap[cur];
+      }
+      return next;
+    });
   }, []);
 
-  function fetchChildren(parentId) {
-    if (loading[parentId]) return;
-    setLoading(prev => ({ ...prev, [parentId]: true }));
+  // 자식 노드 로드
+  const fetchChildren = useCallback((parentId, parentsMap) => {
     axios.get(`http://api.infoclinic.co/children/SNOMEDCT/${parentId}`)
       .then(res => {
         const nodes = res.data.sort((a, b) => a.term > b.term ? 1 : -1);
+
+        // tree 맵 갱신
         setTree(prev => {
           const next = { ...prev };
           nodes.forEach(n => { next[n.conceptId] = n; });
           return next;
         });
+
+        // children 맵 갱신
         setChildren(prev => ({
           ...prev,
           [parentId]: nodes.map(n => n.conceptId),
         }));
+
+        // parents 맵 갱신 & leaf이면 즉시 bold 전파
+        const newParents = { ...parentsMap };
+        nodes.forEach(n => { newParents[n.conceptId] = parentId; });
+        setParents(newParents);
+
+        nodes.forEach(n => {
+          if (n.descendantCount === 0) {
+            // leaf 노드 발견 → leaf + 모든 조상에 bold 전파
+            propagateBold(n.conceptId, newParents);
+          }
+        });
       });
-  }
+  }, [propagateBold]);
+
+  // 최초 루트 자식 로드
+  useEffect(() => {
+    fetchChildren(ROOT_ID, {});
+  }, []); // eslint-disable-line
 
   function handleToggle(e, nodeIds) {
-    // 새로 펼쳐지는 노드 찾아서 자식 로드
     const opening = nodeIds.filter(id => !expanded.includes(id));
-    opening.forEach(id => {
-      if (!children[id]) fetchChildren(id);
-    });
     setExpanded(nodeIds);
+    opening.forEach(id => {
+      if (!children[id]) fetchChildren(id, parents);
+    });
+  }
+
+  function labelClass(id) {
+    const node = tree[id];
+    if (!node) return classes.labelNormal;
+    if (!boldSet.has(id)) return classes.labelNormal;
+    return node.descendantCount === 0 ? classes.labelBoldLeaf : classes.labelBoldCategory;
   }
 
   function renderNode(id) {
@@ -78,26 +117,19 @@ export default function Left({ setRefset }) {
     const isLeaf = node.descendantCount === 0;
     const label = (
       <span
-        className={isLeaf ? classes.labelLeaf : classes.labelCategory}
+        className={labelClass(id)}
         onClick={() => setRefset({ name: node.term, id: node.conceptId, desc: isLeaf ? 0 : 1 })}
       >
         {node.term}{!isLeaf && ` (${node.descendantCount})`}
       </span>
     );
 
-    const nodeChildren = children[id];
     if (isLeaf) {
-      return (
-        <TreeItem
-          key={id}
-          nodeId={id}
-          label={label}
-          style={{ fontWeight: 'bold' }}
-        />
-      );
+      return <TreeItem key={id} nodeId={id} label={label} />;
     }
+    const nodeChildren = children[id];
     return (
-      <TreeItem key={id} nodeId={id} label={label} style={{ fontWeight: 'bold' }}>
+      <TreeItem key={id} nodeId={id} label={label}>
         {nodeChildren
           ? nodeChildren.map(cid => renderNode(cid))
           : <TreeItem nodeId={`${id}-loading`} label="..." />}
@@ -105,7 +137,7 @@ export default function Left({ setRefset }) {
     );
   }
 
-  const rootChildren = children['900000000000455006'];
+  const rootChildren = children[ROOT_ID];
 
   return (
     <TreeView
@@ -116,11 +148,11 @@ export default function Left({ setRefset }) {
       onNodeToggle={handleToggle}
     >
       <TreeItem
-        nodeId="900000000000455006"
+        nodeId={ROOT_ID}
         label={
           <span
-            className={classes.labelCategory}
-            onClick={() => setRefset({ name: 'Reference Set', id: '900000000000455006', desc: 1 })}
+            className={boldSet.has(ROOT_ID) ? classes.labelBoldCategory : classes.labelNormal}
+            onClick={() => setRefset({ name: 'Reference Set', id: ROOT_ID, desc: 1 })}
           >
             Reference Set (113)
           </span>
