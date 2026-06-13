@@ -8,6 +8,12 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,7 +48,7 @@ public class LoincDataLoader {
     private static final String JDBC_USER     = "postgres";
     private static final String JDBC_PASSWORD = "julab123!";
 
-    private static final int BATCH_SIZE = 2000;
+    private static final int BATCH_SIZE = 10000;
 
     // =========================================================================
     // 진입점 (단독 실행)
@@ -65,9 +71,18 @@ public class LoincDataLoader {
     // =========================================================================
 
     public static void load(Connection conn, String classFilePath, String loincBaseDir) throws Exception {
+        long t0 = System.currentTimeMillis();
         log.info("LOINC 적재 시작");
 
+        // 세션 최적화 (WAL 동기화 완화, 체크포인트 미룸)
+        try (Statement st = conn.createStatement()) {
+            st.execute("SET synchronous_commit = OFF");
+            st.execute("SET work_mem = '256MB'");
+            st.execute("SET maintenance_work_mem = '512MB'");
+        }
+
         truncateTables(conn);
+        dropIndexes(conn);
 
         // CLASS 적재 (항상)
         File classFile = new File(classFilePath);
@@ -81,12 +96,14 @@ public class LoincDataLoader {
 
         if (loincBaseDir == null || loincBaseDir.isEmpty()) {
             log.info("  loincBaseDir 미지정 → CLASS만 적재");
+            createIndexes(conn);
             return;
         }
 
         File base = new File(loincBaseDir);
         if (!base.exists()) {
             log.warning("  LOINC 기본 디렉토리 없음: " + base.getAbsolutePath() + " → 건너뜀");
+            createIndexes(conn);
             return;
         }
 
@@ -116,23 +133,26 @@ public class LoincDataLoader {
         loadCsvOptional(conn, new File(base, "AccessoryFiles/GroupFile/GroupAttributes.csv"),       (c, f) -> loadLGAttr(c, f));
         loadCsvOptional(conn, new File(base, "AccessoryFiles/GroupFile/GroupLoincTerms.csv"),       (c, f) -> loadLGTerms(c, f));
 
-        // LINGUISTIC_VARIANTS
+        // LINGUISTIC_VARIANTS (메타)
         loadCsvOptional(conn, new File(base, "AccessoryFiles/LinguisticVariants/LinguisticVariants.csv"),
                 (c, f) -> loadLinguisticVariants(c, f));
 
-        // LINGUISTIC_VARIANT (각 언어별 파일)
+        // LINGUISTIC_VARIANT (각 언어별 파일) — 병렬 로딩
         File lvDir = new File(base, "AccessoryFiles/LinguisticVariants");
         if (lvDir.exists()) {
-            for (File f : lvDir.listFiles()) {
-                if (f.getName().endsWith("LinguisticVariant.csv")) {
-                    loadLinguisticVariant(conn, f);
-                    conn.commit();
-                }
-            }
+            File[] lvFiles = Arrays.stream(lvDir.listFiles())
+                    .filter(f -> f.getName().endsWith("LinguisticVariant.csv"))
+                    .toArray(File[]::new);
+            loadLinguisticVariantsParallel(lvFiles);
         }
 
         // PANEL
         loadCsvOptional(conn, new File(base, "AccessoryFiles/PanelsAndForms/PanelsAndForms.csv"), (c, f) -> loadPanel(c, f));
+
+        // 인덱스 재생성 (빌드 SQL 전에 — HIERARCHY 빌드가 인덱스를 사용)
+        log.info("  인덱스 재생성 중...");
+        createIndexes(conn);
+        log.info("  인덱스 재생성 완료");
 
         // HIERARCHY 빌드
         buildHierarchy(conn);
@@ -153,6 +173,108 @@ public class LoincDataLoader {
         buildCounts(conn);
         conn.commit();
         log.info("  count 계산 완료");
+
+        log.info("LOINC 적재 완료: " + (System.currentTimeMillis() - t0) / 1000 + "초");
+    }
+
+    // =========================================================================
+    // 인덱스 DROP / CREATE (적재 전후)
+    // =========================================================================
+
+    private static final String[] INDEX_DROPS = {
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_HIER_CODE",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_HIER_PARENT",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_HIER_PATH",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_HIER_CHILDREN",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_HIER_DESCENDANT",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_HTMP_CODE",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_HTMP_PARENT",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_HTMP_PATH",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_HLG_CODE",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_HLG_PARENT",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_HLG_PATH",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_HLG_CHILDREN",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_HLG_DESCENDANT",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_LV_CODE",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_PANEL_CODE",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_PANEL_ID",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_PANEL_PARENT_ID",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_PANEL_PARENT_NAME",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_PANEL_PARENT_CODE",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_PANEL_PATH",
+        "DROP INDEX IF EXISTS loinc.IDX_LNC_PANEL_ROOT_CODE"
+    };
+
+    private static final String[] INDEX_CREATES = {
+        "CREATE INDEX IDX_LNC_HIER_CODE       ON loinc.HIERARCHY (CODE)",
+        "CREATE INDEX IDX_LNC_HIER_PARENT     ON loinc.HIERARCHY (PARENT)",
+        "CREATE INDEX IDX_LNC_HIER_PATH       ON loinc.HIERARCHY (PATH)",
+        "CREATE INDEX IDX_LNC_HIER_CHILDREN   ON loinc.HIERARCHY (CHILDREN_COUNT)",
+        "CREATE INDEX IDX_LNC_HIER_DESCENDANT ON loinc.HIERARCHY (DESCENDANT_COUNT)",
+        "CREATE INDEX IDX_LNC_HTMP_CODE       ON loinc.HIERARCHY_TMP (CODE)",
+        "CREATE INDEX IDX_LNC_HTMP_PARENT     ON loinc.HIERARCHY_TMP (PARENT)",
+        "CREATE INDEX IDX_LNC_HTMP_PATH       ON loinc.HIERARCHY_TMP (PATH)",
+        "CREATE INDEX IDX_LNC_HLG_CODE        ON loinc.HIERARCHY_LG (CODE)",
+        "CREATE INDEX IDX_LNC_HLG_PARENT      ON loinc.HIERARCHY_LG (PARENT)",
+        "CREATE INDEX IDX_LNC_HLG_PATH        ON loinc.HIERARCHY_LG (PATH)",
+        "CREATE INDEX IDX_LNC_HLG_CHILDREN    ON loinc.HIERARCHY_LG (CHILDREN_COUNT)",
+        "CREATE INDEX IDX_LNC_HLG_DESCENDANT  ON loinc.HIERARCHY_LG (DESCENDANT_COUNT)",
+        "CREATE INDEX IDX_LNC_LV_CODE         ON loinc.LINGUISTIC_VARIANT (CODE, ISO_LANG, ISO_COUNTRY)",
+        "CREATE INDEX IDX_LNC_PANEL_CODE        ON loinc.PANEL (CODE)",
+        "CREATE INDEX IDX_LNC_PANEL_ID          ON loinc.PANEL (ID)",
+        "CREATE INDEX IDX_LNC_PANEL_PARENT_ID   ON loinc.PANEL (PARENT_ID)",
+        "CREATE INDEX IDX_LNC_PANEL_PARENT_NAME ON loinc.PANEL (PARENT_NAME)",
+        "CREATE INDEX IDX_LNC_PANEL_PARENT_CODE ON loinc.PANEL (PARENT_CODE)",
+        "CREATE INDEX IDX_LNC_PANEL_PATH        ON loinc.PANEL (PATH)",
+        "CREATE INDEX IDX_LNC_PANEL_ROOT_CODE   ON loinc.PANEL (ROOT_CODE)"
+    };
+
+    private static void dropIndexes(Connection conn) throws Exception {
+        try (Statement st = conn.createStatement()) {
+            for (String sql : INDEX_DROPS) st.execute(sql);
+        }
+        conn.commit();
+        log.info("  인덱스 DROP 완료");
+    }
+
+    private static void createIndexes(Connection conn) throws Exception {
+        conn.setAutoCommit(true); // CREATE INDEX CONCURRENTLY 없이도 빠르게 처리
+        try (Statement st = conn.createStatement()) {
+            for (String sql : INDEX_CREATES) {
+                st.execute(sql);
+            }
+        }
+        conn.setAutoCommit(false);
+        log.info("  인덱스 CREATE 완료");
+    }
+
+    // =========================================================================
+    // LINGUISTIC_VARIANT 병렬 적재
+    // =========================================================================
+
+    private static void loadLinguisticVariantsParallel(File[] files) throws Exception {
+        int threads = Math.min(files.length, Runtime.getRuntime().availableProcessors());
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        List<Future<?>> futures = new ArrayList<>();
+        for (File f : files) {
+            final File lvFile = f;
+            futures.add(pool.submit(() -> {
+                try (Connection c = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD)) {
+                    c.setAutoCommit(false);
+                    try (Statement st = c.createStatement()) {
+                        st.execute("SET synchronous_commit = OFF");
+                    }
+                    loadLinguisticVariant(c, lvFile);
+                    c.commit();
+                    log.info("  완료(병렬): " + lvFile.getName());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                return null;
+            }));
+        }
+        pool.shutdown();
+        for (Future<?> fu : futures) fu.get(); // 예외 전파
     }
 
     // =========================================================================
@@ -276,18 +398,32 @@ public class LoincDataLoader {
     // LOINC 메인 테이블 적재
     // =========================================================================
 
+    // LOINC 2.82 CSV 실제 컬럼 (40개):
+    // 0:LOINC_NUM 1:COMPONENT 2:PROPERTY 3:TIME_ASPCT 4:SYSTEM 5:SCALE_TYP
+    // 6:METHOD_TYP 7:CLASS 8:VersionLastChanged 9:CHNG_TYPE 10:DefinitionDescription
+    // 11:STATUS 12:CONSUMER_NAME 13:CLASSTYPE(int) 14:FORMULA 15:EXMPL_ANSWERS
+    // 16:SURVEY_QUEST_TEXT 17:SURVEY_QUEST_SRC 18:UNITSREQUIRED 19:RELATEDNAMES2
+    // 20:SHORTNAME 21:ORDER_OBS 22:HL7_FIELD_SUBFIELD_ID 23:EXTERNAL_COPYRIGHT_NOTICE
+    // 24:EXAMPLE_UNITS 25:LONG_COMMON_NAME 26:EXAMPLE_UCUM_UNITS
+    // 27:STATUS_REASON 28:STATUS_TEXT 29:CHANGE_REASON_PUBLIC
+    // 30:COMMON_TEST_RANK(int) 31:COMMON_ORDER_RANK(int) 32:HL7_ATTACHMENT_STRUCTURE
+    // 33:EXTERNAL_COPYRIGHT_LINK 34:PanelType 35:AskAtOrderEntry
+    // 36:AssociatedObservations 37:VersionFirstReleased 38:ValidHL7AttachmentRequest
+    // 39:DisplayName
+    // (없는 컬럼: SUBMITTED_UNITS, CDISC_COMMON_TESTS, UNITS_AND_RANGE,
+    //             EXAMPLE_SI_UCUM_UNITS, COMMON_SI_TEST_RANK → NULL로 적재)
     private static void loadLoinc(Connection conn, File file) throws Exception {
         String sql = "INSERT INTO loinc.loinc (" +
             "code,component,property,time_aspect,system,scale_type,method_type," +
             "class_name,last_changed_version,change_type,definition_description,status," +
             "consumer_name,class_type,formula,example_answers,survey_quest_text,survey_quest_src," +
-            "units_required,submitted_units,related_names2,short_name,order_obs,cdisc_common_tests," +
+            "units_required,related_names2,short_name,order_obs," +
             "hl7_field_subfield_id,external_copyright_notice,example_units,long_common_name," +
-            "units_and_range,example_ucum_units,example_si_ucum_units,status_reason,status_text," +
-            "change_reason_public,common_test_rank,common_order_rank,common_si_test_rank," +
+            "example_ucum_units,status_reason,status_text," +
+            "change_reason_public,common_test_rank,common_order_rank," +
             "hl7_attachment_structure,external_copyright_link,panel_type,ask_at_order_entry," +
             "associated_observations,first_released_version,valid_hl7_attachment_request,display_name" +
-            ") VALUES (" + repeat("?", 45) + ")";
+            ") VALUES (" + repeat("?", 40) + ")";
         long count = 0;
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -297,14 +433,23 @@ public class LoincDataLoader {
                 line = line.replace("\r", "");
                 if (line.isEmpty()) continue;
                 String[] f = parseCsvLine(line);
+                // f[0]-f[12]: code~consumer_name (strings)
                 ps.setString(1, col(f, 0));
                 for (int i = 1; i <= 12; i++) ps.setString(i + 1, col(f, i));
-                ps.setObject(14, colInt(f, 13)); // class_type
-                for (int i = 14; i <= 32; i++) ps.setString(i + 1, col(f, i));
-                ps.setObject(34, colInt(f, 33)); // common_test_rank
-                ps.setObject(35, colInt(f, 34)); // common_order_rank
-                ps.setObject(36, colInt(f, 35)); // common_si_test_rank
-                for (int i = 36; i <= 44; i++) ps.setString(i + 1, col(f, i));
+                // f[13]: class_type (int)
+                ps.setObject(14, colInt(f, 13));
+                // f[14]-f[18]: formula~units_required (strings)
+                for (int i = 14; i <= 18; i++) ps.setString(i + 1, col(f, i));
+                // f[19]-f[25]: related_names2~long_common_name (strings) → ps[20]-ps[26]
+                for (int i = 19; i <= 25; i++) ps.setString(i + 1, col(f, i));
+                // f[26]-f[29]: example_ucum_units~change_reason_public (strings) → ps[27]-ps[30]
+                for (int i = 26; i <= 29; i++) ps.setString(i + 1, col(f, i));
+                // f[30]: common_test_rank (int) → ps[31]
+                ps.setObject(31, colInt(f, 30));
+                // f[31]: common_order_rank (int) → ps[32]
+                ps.setObject(32, colInt(f, 31));
+                // f[32]-f[39]: hl7_attachment~display_name (strings) → ps[33]-ps[40]
+                for (int i = 32; i <= 39; i++) ps.setString(i + 1, col(f, i));
                 ps.addBatch();
                 if (++count % BATCH_SIZE == 0) { ps.executeBatch(); conn.commit(); }
             }
@@ -677,9 +822,17 @@ public class LoincDataLoader {
     // =========================================================================
 
     private static void loadLinguisticVariant(Connection conn, File file) throws Exception {
+        // Filename format: {iso_lang2}{ISO_COUNTRY2}{number}LinguisticVariant.csv
+        // e.g., elGR17LinguisticVariant.csv → iso_lang="el", iso_country="GR"
+        String fname = file.getName();
+        String isoLang = fname.length() >= 2 ? fname.substring(0, 2) : "";
+        String isoCountry = fname.length() >= 4 ? fname.substring(2, 4) : "";
+
+        // CSV columns (12): LOINC_NUM, COMPONENT, PROPERTY, TIME_ASPCT, SYSTEM, SCALE_TYP,
+        //   METHOD_TYP, CLASS, SHORTNAME, LONG_COMMON_NAME, RELATEDNAMES2, LinguisticVariantDisplayName
         String sql = "INSERT INTO loinc.linguistic_variant (code, component, property, time_aspect, system," +
-                     " scale_type, method_type, class_name, short_name, long_common_name, iso_country, iso_lang," +
-                     " related_names2, lang) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     " scale_type, method_type, class_name, short_name, long_common_name, related_names2," +
+                     " lang, iso_lang, iso_country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         long count = 0;
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -689,7 +842,20 @@ public class LoincDataLoader {
                 line = line.replace("\r", "");
                 if (line.isEmpty()) continue;
                 String[] f = parseCsvLine(line);
-                for (int i = 0; i < 14; i++) ps.setString(i + 1, col(f, i));
+                ps.setString(1,  col(f, 0));   // code (LOINC_NUM)
+                ps.setString(2,  col(f, 1));   // component
+                ps.setString(3,  col(f, 2));   // property
+                ps.setString(4,  col(f, 3));   // time_aspect
+                ps.setString(5,  col(f, 4));   // system
+                ps.setString(6,  col(f, 5));   // scale_type
+                ps.setString(7,  col(f, 6));   // method_type
+                ps.setString(8,  col(f, 7));   // class_name
+                ps.setString(9,  col(f, 8));   // short_name
+                ps.setString(10, col(f, 9));   // long_common_name
+                ps.setString(11, col(f, 10));  // related_names2
+                ps.setString(12, col(f, 11));  // lang (LinguisticVariantDisplayName)
+                ps.setString(13, isoLang);
+                ps.setString(14, isoCountry);
                 ps.addBatch();
                 if (++count % BATCH_SIZE == 0) { ps.executeBatch(); conn.commit(); }
             }
