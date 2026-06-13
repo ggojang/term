@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { withStyles, makeStyles } from '@material-ui/core/styles';
 
@@ -28,11 +28,13 @@ const StyledTableCell = withStyles(() => ({
     fontSize: 12,
     fontWeight: 700,
     borderBottom: '2px solid #b0bec5',
-    padding: '8px 12px',
+    padding: '6px 10px',
+    whiteSpace: 'nowrap',
   },
   body: {
     fontSize: 12,
-    padding: '6px 12px',
+    padding: '4px 10px',
+    verticalAlign: 'middle',
   },
 }))(TableCell);
 
@@ -44,78 +46,88 @@ const StyledTableRow = withStyles(() => ({
 }))(TableRow);
 
 const useStyles = makeStyles(() => ({
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    height: '85vh',
+  },
   header: {
-    padding: '10px 14px 8px',
+    padding: '8px 14px 6px',
+    flexShrink: 0,
   },
   title: {
     fontWeight: 700,
-    fontSize: '0.95em',
+    fontSize: '0.93em',
     color: '#1a237e',
   },
   divider: {
     height: 3,
     backgroundColor: '#1976d2',
-    marginBottom: 10,
+    flexShrink: 0,
   },
   searchRow: {
     display: 'flex',
     alignItems: 'center',
     gap: 10,
-    padding: '0 14px 10px',
+    padding: '8px 14px',
+    flexShrink: 0,
   },
   searchField: {
     flex: 1,
-    maxWidth: 420,
+    maxWidth: 400,
     '& .MuiOutlinedInput-root': {
       borderRadius: 8,
-      fontSize: '0.88em',
-      height: 36,
+      fontSize: '0.85em',
+      height: 34,
     },
     '& .MuiOutlinedInput-input': {
-      padding: '8px 10px',
+      padding: '7px 10px',
     },
   },
   countChip: {
     fontSize: '0.78em',
-    height: 24,
+    height: 22,
     backgroundColor: '#e3f2fd',
     color: '#1565c0',
     fontWeight: 700,
   },
-  tableContainer: {
-    border: '1px solid #e0e0e0',
-    borderRadius: 6,
+  tableWrapper: {
+    flex: 1,
     overflow: 'hidden',
     margin: '0 14px',
+    display: 'flex',
+    flexDirection: 'column',
+    border: '1px solid #e0e0e0',
+    borderRadius: 6,
   },
-  idChip: {
-    fontSize: '0.75em',
-    height: 20,
-    backgroundColor: '#ede7f6',
-    color: '#4527a0',
-    fontFamily: 'monospace',
-    marginRight: 4,
-    borderRadius: 3,
-    padding: '0 4px',
-    display: 'inline-block',
-    verticalAlign: 'middle',
+  tableContainer: {
+    flex: 1,
+    overflow: 'auto',
   },
   noData: {
     textAlign: 'center',
     color: '#90a4ae',
     padding: '32px 0',
-    fontSize: '0.9em',
+    fontSize: '0.88em',
   },
   pagination: {
-    fontSize: '0.8em',
-    margin: '0 14px 0',
+    flexShrink: 0,
     borderTop: '1px solid #e0e0e0',
-    '& .MuiTablePagination-caption': { fontSize: '0.8em' },
-    '& .MuiTablePagination-select': { fontSize: '0.8em' },
+    '& .MuiTablePagination-caption': { fontSize: '0.78em' },
+    '& .MuiTablePagination-select': { fontSize: '0.78em' },
+    '& .MuiTablePagination-toolbar': { minHeight: 40 },
+  },
+  cellText: {
+    fontSize: '0.82em',
+    color: '#212121',
+  },
+  cellId: {
+    fontSize: '0.75em',
+    color: '#78909c',
+    fontFamily: 'monospace',
   },
 }));
 
-// 300ms 디바운스 훅
 function useDebounce(value, delay) {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -125,77 +137,60 @@ function useDebounce(value, delay) {
   return debounced;
 }
 
-const REFSET_DESCRIPTOR_ID = '900000000000456007';
-
 export default function Main({ refset }) {
   const classes = useStyles();
 
   const [inputValue, setInputValue] = useState('');
-  const [page, setPage] = useState(0);
-  const [size, setSize] = useState(25);
+  const [page, setPage]   = useState(0);
+  const [size, setSize]   = useState(25);
   const [loading, setLoading] = useState(false);
-  const [member, setMember] = useState(null);   // raw axios response
-  const [descript, setDescript] = useState(null);
-  const [columns, setColumns] = useState([]);   // [{title}]
-  const [rows, setRows] = useState([]);          // [[{id, name}]]
+  const [columns, setColumns] = useState([]);
+  const [rows, setRows]   = useState([]);
   const [total, setTotal] = useState(0);
 
   const q = useDebounce(inputValue, 300);
   const abortRef = useRef(null);
 
-  // ── Refset 변경 시 초기화 ──────────────────────────────────────────────────
+  // refset 변경 시 초기화 + descriptor 로드
   useEffect(() => {
     setInputValue('');
     setPage(0);
-    setSize(25);
-    setMember(null);
-    setDescript(null);
-    setColumns([]);
     setRows([]);
     setTotal(0);
+    setColumns([]);
 
-    // descriptor fetch
-    axios
-      .get(`http://api.infoclinic.co/members/SNOMEDCT?refcpntid=${refset.id}`)
-      .then(res => setDescript(res))
-      .catch(() => setDescript(null));
-  }, [refset.id]);
+    if (!refset?.id) return;
 
-  // ── Descriptor → columns 파싱 ─────────────────────────────────────────────
-  useEffect(() => {
-    if (!descript?.data) return;
-    const ref = [];
-    ref[REFSET_DESCRIPTOR_ID] = [];
-    descript.data.forEach((item, index, desc) => {
-      if (desc[index].extra?.['Attribute order']) {
-        const order = desc[index].extra['Attribute order'].id;
-        ref[REFSET_DESCRIPTOR_ID][order] = [];
-        for (let key in desc[index].extra) {
-          ref[REFSET_DESCRIPTOR_ID][order].push({
-            title: key,
-            id: desc[index].extra[key].id,
-            name: desc[index].extra[key].name,
-          });
+    axios.get(`http://api.infoclinic.co/members/SNOMEDCT?refcpntid=${refset.id}`)
+      .then(res => {
+        if (!res.data?.length) return;
+
+        // fields[0].name = attribute label (column name)
+        // fields[2].name = attribute order (numeric string "0","1","2"...)
+        const colMap = {};
+        res.data.forEach(item => {
+          const label = item.fields?.[0]?.name;
+          const orderStr = item.fields?.[2]?.name;
+          const order = parseInt(orderStr, 10);
+          if (label && !isNaN(order)) colMap[order] = label;
+        });
+
+        if (Object.keys(colMap).length > 0) {
+          const maxOrder = Math.max(...Object.keys(colMap).map(Number));
+          const cols = [];
+          for (let i = 0; i <= maxOrder; i++) {
+            cols.push(colMap[i] || `Column ${i + 1}`);
+          }
+          setColumns(cols);
         }
-      }
-    });
-    // column 제목 추출 (Attribute order 컬럼 포함하여 순서대로)
-    const cols = [];
-    if (ref[REFSET_DESCRIPTOR_ID]?.['0']) {
-      // 첫 번째 행의 컬럼명 = Referenced Component + 각 field
-      ref[REFSET_DESCRIPTOR_ID]['0'].forEach((col, idx) => {
-        if (idx === 0) cols.push('Referenced Component');
-        else cols.push((col.name || '').split('(')[0].trim());
-      });
-    }
-    setColumns(cols);
-  }, [descript]);
+      })
+      .catch(() => {});
+  }, [refset?.id]);
 
-  // ── Members fetch (refsetId / q / page / size 변경 시) ──────────────────────
+  // 멤버 검색
   useEffect(() => {
     if (!refset?.id || refset.desc !== 0) return;
 
-    // 이전 요청 취소
     if (abortRef.current) abortRef.current.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -203,57 +198,57 @@ export default function Main({ refset }) {
     setLoading(true);
     const qParam = inputValue.trim() || '*';
 
-    axios
-      .get(
-        `http://api.infoclinic.co/members/SNOMEDCT/${refset.id}?q=${encodeURIComponent(qParam)}&page=${page + 1}&size=${size}`,
-        { signal: controller.signal }
-      )
+    axios.get(
+      `http://api.infoclinic.co/members/SNOMEDCT/${refset.id}?q=${encodeURIComponent(qParam)}&page=${page + 1}&size=${size}`,
+      { signal: controller.signal }
+    )
       .then(res => {
-        setMember(res);
         setTotal(res.data?.totalElements || 0);
+        const content = res.data?.content || [];
+        setRows(content.map(item => {
+          const cells = [];
+          // col 0: referencedComponent
+          const rc = item.referencedComponent;
+          cells.push({ id: rc?.id, name: rc?.name });
+          // 추가 필드
+          (item.fields || []).forEach(f => {
+            cells.push({ id: f?.id, name: f?.name });
+          });
+          return cells;
+        }));
       })
       .catch(err => {
-        if (axios.isCancel && axios.isCancel(err)) return;
-        setMember(null);
-        setTotal(0);
+        if (!axios.isCancel?.(err)) { setRows([]); setTotal(0); }
       })
       .finally(() => setLoading(false));
-  }, [refset.id, q, page, size]); // eslint-disable-line
+  }, [refset?.id, q, page, size]); // eslint-disable-line
 
-  // ── member → rows 빌드 ────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!member?.data?.content || member.data.totalElements === 0) {
-      setRows([]);
-      return;
-    }
-    const built = member.data.content.map(item => {
-      const cells = [];
-      // col 0: Referenced Component
-      cells.push({ id: item.referencedComponent?.id, name: item.referencedComponent?.name });
-      // remaining fields
-      for (let key in item.fields) {
-        cells.push({ id: item.fields[key]?.id, name: item.fields[key]?.name });
-      }
-      return cells;
-    });
-    setRows(built);
-  }, [member]);
-
-  const handleClear = () => {
-    setInputValue('');
-    setPage(0);
-  };
-
-  const handleChangePage = (_, newPage) => setPage(newPage);
+  const handleClear = () => { setInputValue(''); setPage(0); };
+  const handleChangePage = (_, p) => setPage(p);
   const handleChangeSize = e => { setSize(+e.target.value); setPage(0); };
 
   const showTable = refset?.desc === 0;
 
+  // 컬럼 헤더: descriptor로부터 얻거나, 첫 행 기준으로 fallback
+  function getHeaders() {
+    if (columns.length > 0) return columns;
+    if (rows.length > 0) {
+      return rows[0].map((_, i) => i === 0 ? 'Referenced Component' : `Field ${i}`);
+    }
+    return [];
+  }
+
+  // 셀 표시: name 우선, 없으면 id를 회색 소자체로
+  function renderCell(cell) {
+    if (cell.name) return <span className={classes.cellText}>{cell.name}</span>;
+    if (cell.id)   return <span className={classes.cellId}>{cell.id}</span>;
+    return null;
+  }
+
   return (
-    <div>
+    <div className={classes.root}>
       {refset && (
-        <Grid item md={12}>
-          {/* Header */}
+        <>
           <Box className={classes.header}>
             <Typography className={classes.title}>{refset.name}</Typography>
           </Box>
@@ -261,7 +256,7 @@ export default function Main({ refset }) {
 
           {showTable && (
             <>
-              {/* Search bar */}
+              {/* 검색 바 */}
               <div className={classes.searchRow}>
                 <TextField
                   className={classes.searchField}
@@ -273,63 +268,48 @@ export default function Main({ refset }) {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <SearchIcon style={{ fontSize: 16, color: '#90a4ae' }} />
+                        <SearchIcon style={{ fontSize: 15, color: '#90a4ae' }} />
                       </InputAdornment>
                     ),
                     endAdornment: inputValue ? (
                       <InputAdornment position="end">
                         <IconButton size="small" onClick={handleClear}>
-                          <ClearIcon style={{ fontSize: 14 }} />
+                          <ClearIcon style={{ fontSize: 13 }} />
                         </IconButton>
                       </InputAdornment>
                     ) : null,
                   }}
                 />
                 {!loading && total > 0 && (
-                  <Chip
-                    label={`${total.toLocaleString()} 건`}
-                    className={classes.countChip}
-                    size="small"
-                  />
+                  <Chip label={`${total.toLocaleString()} 건`} className={classes.countChip} size="small" />
                 )}
               </div>
 
-              {/* Loading bar */}
-              {loading && <LinearProgress style={{ margin: '0 14px 6px', borderRadius: 2 }} />}
+              {loading && <LinearProgress style={{ margin: '0 14px 4px', borderRadius: 2 }} />}
 
-              {/* Table */}
+              {/* 테이블 + 페이지네이션 (함께 flex 박스 안에서 고정) */}
               {rows.length > 0 ? (
-                <>
+                <div className={classes.tableWrapper}>
                   <TableContainer className={classes.tableContainer}>
-                    <Table size="small">
+                    <Table size="small" stickyHeader>
                       <TableHead>
                         <TableRow>
-                          {columns.length > 0
-                            ? columns.map((col, i) => (
-                                <StyledTableCell key={i}>{col}</StyledTableCell>
-                              ))
-                            : rows[0].map((_, i) => (
-                                <StyledTableCell key={i}>Column {i + 1}</StyledTableCell>
-                              ))}
+                          {getHeaders().map((col, i) => (
+                            <StyledTableCell key={i}>{col}</StyledTableCell>
+                          ))}
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         {rows.map((row, ri) => (
                           <StyledTableRow key={ri}>
                             {row.map((cell, ci) => (
-                              <StyledTableCell key={ci}>
-                                {cell.id && (
-                                  <span className={classes.idChip}>{cell.id}</span>
-                                )}
-                                {cell.name || ''}
-                              </StyledTableCell>
+                              <StyledTableCell key={ci}>{renderCell(cell)}</StyledTableCell>
                             ))}
                           </StyledTableRow>
                         ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
-
                   <TablePagination
                     className={classes.pagination}
                     rowsPerPageOptions={[10, 25, 50, 100]}
@@ -341,7 +321,7 @@ export default function Main({ refset }) {
                     onChangeRowsPerPage={handleChangeSize}
                     labelRowsPerPage="페이지당:"
                   />
-                </>
+                </div>
               ) : (
                 !loading && (
                   <Typography className={classes.noData}>
@@ -351,7 +331,7 @@ export default function Main({ refset }) {
               )}
             </>
           )}
-        </Grid>
+        </>
       )}
     </div>
   );
