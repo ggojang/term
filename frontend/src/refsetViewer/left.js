@@ -18,20 +18,13 @@ const useStyles = makeStyles(() => ({
     fontSize: '0.88em',
     fontWeight: 'normal',
     lineHeight: 1.8,
-    color: '#37474f',
+    color: '#000',
   },
-  labelBoldCategory: {
+  labelBold: {
     fontSize: '0.88em',
     fontWeight: 'bold',
     lineHeight: 1.8,
-    color: '#37474f',
-  },
-  labelBoldLeaf: {
-    fontSize: '0.88em',
-    fontWeight: 'bold',
-    lineHeight: 1.8,
-    color: '#1a237e',
-    cursor: 'pointer',
+    color: '#000',
   },
 }));
 
@@ -105,10 +98,7 @@ export default function Left({ setRefset }) {
   }
 
   function labelClass(id) {
-    const node = tree[id];
-    if (!node) return classes.labelNormal;
-    if (!boldSet.has(id)) return classes.labelNormal;
-    return node.descendantCount === 0 ? classes.labelBoldLeaf : classes.labelBoldCategory;
+    return boldSet.has(id) ? classes.labelBold : classes.labelNormal;
   }
 
   function renderNode(id) {
@@ -151,7 +141,7 @@ export default function Left({ setRefset }) {
         nodeId={ROOT_ID}
         label={
           <span
-            className={boldSet.has(ROOT_ID) ? classes.labelBoldCategory : classes.labelNormal}
+            className={labelClass(ROOT_ID)}
             onClick={() => setRefset({ name: 'Reference Set', id: ROOT_ID, desc: 1 })}
           >
             Reference Set (113)
