@@ -753,7 +753,7 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 				"    AND D.EFFECTIVE_TIME = GD.MAX_ETIME " +
 				"    AND D.ACTIVE = 1 " +
 				"    AND D.LANGUAGE_CODE = '" + LANG + "' " +
-				"	GROUP BY D.CONCEPT_ID" + // add 2022,2,22 by Yu
+				"	GROUP BY D.CONCEPT_ID, D.TERM" + // add 2022,2,22 by Yu; D.TERM added for PostgreSQL compatibility
 				") AS D " +
 				"ON C.CONCEPT_ID = D.CONCEPT_ID " +
 				"LEFT JOIN ( " +
@@ -827,7 +827,7 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 				"  AND D.EFFECTIVE_TIME = GD.MAX_ETIME " +
 				"  AND D.ACTIVE = 1 " +
 				"  AND D.LANGUAGE_CODE = '" + LANG + "' " +
-				"  GROUP BY D.CONCEPT_ID" + // add 2022,2,22 by Yu
+				"  GROUP BY D.CONCEPT_ID, D.TERM" + // PostgreSQL: all SELECT columns must appear in GROUP BY
 				") AS D " +
 				"ON C.CONCEPT_ID = D.CONCEPT_ID " +
 				"LEFT JOIN ( ";
@@ -899,7 +899,7 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 				"  AND D.EFFECTIVE_TIME = GD.MAX_ETIME " +
 				"  AND D.ACTIVE = 1 " +
 				"  AND D.LANGUAGE_CODE = '" + LANG + "' " +
-				"  GROUP BY D.CONCEPT_ID" + // add 2022,2,22 by Yu
+				"  GROUP BY D.CONCEPT_ID, D.TERM" + // PostgreSQL: all SELECT columns must appear in GROUP BY
 				") AS D " +
 				"ON C.CONCEPT_ID = D.CONCEPT_ID " +
 				"LEFT JOIN ( ";
@@ -964,7 +964,7 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 				"  AND D.EFFECTIVE_TIME = GD.MAX_ETIME " +
 				"  AND D.ACTIVE = 1 " +
 				"  AND D.LANGUAGE_CODE = '" + LANG + "' " +
-				"  GROUP BY D.CONCEPT_ID" + // add 2022,2,22 by Yu
+				"  GROUP BY D.CONCEPT_ID, D.TERM" + // PostgreSQL: all SELECT columns must appear in GROUP BY
 				") AS D " +
 				"ON C.CONCEPT_ID = D.CONCEPT_ID " +
 				"LEFT JOIN ( ";
@@ -1046,7 +1046,7 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 				"  AND D.EFFECTIVE_TIME = GD.MAX_ETIME " +
 				"  AND D.ACTIVE = 1 " +
 				"  AND D.LANGUAGE_CODE = '" + LANG + "' " +
-				"  GROUP BY D.CONCEPT_ID" + // add 2022,2,22 by Yu
+				"  GROUP BY D.CONCEPT_ID, D.TERM" + // PostgreSQL: all SELECT columns must appear in GROUP BY
 				") AS D " +
 				"ON C.CONCEPT_ID = D.CONCEPT_ID " +
 				"LEFT JOIN ( ";
@@ -1129,7 +1129,7 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 				"  AND D.EFFECTIVE_TIME = GD.MAX_ETIME " +
 				"  AND D.ACTIVE = 1 " +
 				"  AND D.LANGUAGE_CODE = '" + LANG + "' " +
-				"  GROUP BY D.CONCEPT_ID" + // add 2022,2,22 by Yu
+				"  GROUP BY D.CONCEPT_ID, D.TERM" + // PostgreSQL: all SELECT columns must appear in GROUP BY
 				") AS D " +
 				"ON C.CONCEPT_ID = D.CONCEPT_ID " +
 				"LEFT JOIN ( " +
