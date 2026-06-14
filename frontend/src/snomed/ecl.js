@@ -121,10 +121,16 @@ export default function Ecl(props) {
       params: { ecl: expr, size: 500 },
     })
       .then(res => {
-        setResults(res.data || []);
+        const data = res.data;
+        if (Array.isArray(data)) {
+          setResults(data);
+        } else {
+          setError(data?.message || data?.error || '쿼리 오류: 표현식을 확인해주세요.');
+        }
       })
-      .catch(() => {
-        setError('쿼리 오류: 표현식을 확인해주세요.');
+      .catch(err => {
+        const msg = err.response?.data?.message || err.response?.data?.error || '쿼리 오류: 표현식을 확인해주세요.';
+        setError(msg);
       })
       .finally(() => setLoading(false));
   };

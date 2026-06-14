@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.http.ResponseEntity;
+
 import co.infoclinic.term.snomedct.api.QryApi;
 import co.infoclinic.term.snomedct.model.dto.ConceptViewDTO;
 import co.infoclinic.term.snomedct.repository.TransitiveClosureRepository;
@@ -58,7 +60,7 @@ public class ConstraintController {
 
 	@ApiOperation(value = "Get Entity List by ECL")
 	@RequestMapping(value = QryApi.API_GET_ENTITIES, method = RequestMethod.GET)
-	public List<ConceptViewDTO> getEntityListByECL(
+	public ResponseEntity<?> getEntityListByECL(
 			@RequestParam(value = "ecl", required = true) String ecl,
 			@RequestParam(value = QryApi.PARAM_PAGE, required = false, defaultValue = "1") int page,
 			@RequestParam(value = QryApi.PARAM_SIZE, required = false, defaultValue = "1000") int size,
@@ -67,15 +69,20 @@ public class ConstraintController {
 		if (StringUtils.isEmpty(ver)) {
 			ver = schemeSvc.getLatestVersion();
 		} else if (!schemeSvc.isValid(ver)) {
-			return new ArrayList<>();
+			return ResponseEntity.ok(new ArrayList<>());
 		}
 
 		String effectiveTime = schemeSvc.getEffectiveTime(ver);
 		try {
-			return evaluateECL(ecl.trim(), effectiveTime, page, size);
+			List<ConceptViewDTO> result = evaluateECL(ecl.trim(), effectiveTime, page, size);
+			return ResponseEntity.ok(result);
 		} catch (Exception e) {
-			log.warn("ECL parse error: {}", e.getMessage());
-			return new ArrayList<>();
+			String msg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+			log.warn("ECL parse error: {}", msg);
+			Map<String, String> body = new LinkedHashMap<String, String>();
+			body.put("error", "ECL syntax error");
+			body.put("message", msg);
+			return ResponseEntity.badRequest().body(body);
 		}
 	}
 

@@ -79,7 +79,9 @@ public class ECLParserUtil {
 		
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
 		ECLExpressionParser parser = new ECLExpressionParser(tokens);
-		
+		parser.removeErrorListeners();
+		parser.addErrorListener(ThrowErrorListener.TEL);
+
 		ECLVisitorUtil visitUtil = new ECLVisitorUtil();
 		ParseTree tree = null;
 		
