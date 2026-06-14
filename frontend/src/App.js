@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Snomed from './snomed/layout.js';
 import EHRLayout from './ehr/layout.js';
 import RefsetLayout from './refsetViewer/layout.js';
@@ -19,6 +19,9 @@ import Box from '@material-ui/core/Box';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
+  const mountedRef = useRef(false);
+  if (value === index) mountedRef.current = true;
+  if (!mountedRef.current) return null;
   return (
     <Typography
       component="div"
@@ -28,7 +31,7 @@ function TabPanel(props) {
       aria-labelledby={`action-tab-${index}`}
       {...other}
     >
-      {value === index && <Box>{children}</Box>}
+      <Box>{children}</Box>
     </Typography>
   );
 }
