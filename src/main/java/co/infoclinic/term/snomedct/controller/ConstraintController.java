@@ -146,11 +146,11 @@ public class ConstraintController {
 		return evaluateByKeyAndId(key, id, effectiveTime, page, size);
 	}
 
-	/** operator key + conceptId로 목록 조회 */
+	/** operator key + conceptId로 목록 조회 (LIMIT 없이 전체 반환) */
 	private List<ConceptViewDTO> evaluateByKeyAndId(String key, String id, String effectiveTime, int page, int size) {
 		switch (key) {
-			case "DESCENDANTOF":       return conceptService.getDescendantList(id, effectiveTime, page, size).getContent();
-			case "DESCENDANTORSELFOF": return conceptService.getDescendantListOrSelf(id, effectiveTime, page, size).getContent();
+			case "DESCENDANTOF":       return conceptService.getAllDescendantList(id, effectiveTime);
+			case "DESCENDANTORSELFOF": return conceptService.getAllDescendantListOrSelf(id, effectiveTime);
 			case "CHILDOF":            return conceptService.getChildren(id, effectiveTime);
 			case "CHILDORSELFOF":      return conceptService.getChildrenOrSelf(id, effectiveTime);
 			case "ANCESTOF":           return conceptService.getAncestorList(id, effectiveTime, page, size).getContent();

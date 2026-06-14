@@ -80,6 +80,9 @@ public interface ConceptRepositoryCustom {
 	 * @return
 	 */
 	List<ConceptViewDTO> findDescendantListByPathsAndEffectiveTime(List<String> paths, String effectiveTime, int offset, int limit);
+
+	/** LIMIT 없이 전체 하위 목록 조회 (ECL 전용) */
+	List<ConceptViewDTO> findAllDescendantListByPathsAndEffectiveTime(List<String> paths, String effectiveTime);
 	
 
 	/**

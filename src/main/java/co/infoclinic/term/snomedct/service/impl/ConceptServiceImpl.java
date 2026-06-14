@@ -243,6 +243,27 @@ public class ConceptServiceImpl implements ConceptService {
 		return getDescendantList(conceptId, effectiveTime, page, size, true);
 	}
 	
+	@Override
+	public List<ConceptViewDTO> getAllDescendantList(String conceptId, String effectiveTime) {
+		if (!SNOMEDCTComponentTypeEnum.isValidIdentifier(conceptId)) return new ArrayList<>();
+		List<String> paths = getPathList(conceptId);
+		if (CollectionUtils.isEmpty(paths)) return new ArrayList<>();
+		return conceptRepository.findAllDescendantListByPathsAndEffectiveTime(paths, effectiveTime);
+	}
+
+	@Override
+	public List<ConceptViewDTO> getAllDescendantListOrSelf(String conceptId, String effectiveTime) {
+		if (!SNOMEDCTComponentTypeEnum.isValidIdentifier(conceptId)) return new ArrayList<>();
+		List<ConceptViewDTO> result = new ArrayList<>();
+		ConceptViewDTO self = conceptRepository.findByConceptIdAndEffectiveTime(conceptId, effectiveTime);
+		if (self != null) result.add(self);
+		List<String> paths = getPathList(conceptId);
+		if (!CollectionUtils.isEmpty(paths)) {
+			result.addAll(conceptRepository.findAllDescendantListByPathsAndEffectiveTime(paths, effectiveTime));
+		}
+		return result;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see co.infoclinic.term.snomedct.service.ConceptService#getDescendantTree(java.lang.String, java.lang.String)

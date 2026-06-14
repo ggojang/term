@@ -110,6 +110,12 @@ public interface ConceptService {
 	 * @return
 	 */
 	Page<ConceptViewDTO> getDescendantList(String conceptId, String effectiveTime, int offset, int limit);
+
+	/** LIMIT 없이 전체 하위 목록 조회 (ECL 전용) */
+	List<ConceptViewDTO> getAllDescendantList(String conceptId, String effectiveTime);
+
+	/** self 포함, LIMIT 없이 전체 하위 목록 조회 (ECL 전용) */
+	List<ConceptViewDTO> getAllDescendantListOrSelf(String conceptId, String effectiveTime);
 	
 	
 	/**

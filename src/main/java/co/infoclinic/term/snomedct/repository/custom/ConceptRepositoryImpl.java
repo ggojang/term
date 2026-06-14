@@ -128,6 +128,12 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 		return getResultList(qry);
 	}
 
+	@Override
+	public List<ConceptViewDTO> findAllDescendantListByPathsAndEffectiveTime(List<String> paths, String effectiveTime) {
+		String qry = getAllDescendantListQuery(paths, effectiveTime);
+		return getResultList(qry);
+	}
+
 	
 	/*
 	 * (non-Javadoc)
@@ -1061,8 +1067,69 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 	}
 
 
+	/** LIMIT 없이 전체 하위 목록 조회 쿼리 (ECL 전용) */
+	private String getAllDescendantListQuery(List<String> paths, String effectiveTime) {
+		if (CollectionUtils.isEmpty(paths)) return "";
+
+		String closureQry = "SELECT DISTINCT(CONCEPT_ID), CHILDREN_COUNT, DESCENDANT_COUNT " +
+							"FROM TC " +
+							"WHERE PATH LIKE '" + paths.get(0) + "%' ";
+		for (int i = 1; i < paths.size(); i++) {
+			closureQry += "OR PATH LIKE '" + paths.get(i) + "%' ";
+		}
+		// LIMIT 없음
+
+		String qry = "SELECT C.*, D.TERM, MODULE.TERM AS MODULE_NAME, DEF.TERM AS DEF_NAME, T.CHILDREN_COUNT, T.DESCENDANT_COUNT " +
+				"FROM ( " +
+				"  SELECT C1.* " +
+				"  FROM CONCEPT AS C1 " +
+				"  INNER JOIN ( " +
+				"    SELECT IC.CONCEPT_ID, MAX(IC.EFFECTIVE_TIME) AS MAX_ETIME " +
+				"    FROM CONCEPT AS IC " +
+				"    INNER JOIN ( ";
+		qry += closureQry;
+		qry +=	"    ) AS T " +
+				"    ON IC.CONCEPT_ID = T.CONCEPT_ID " +
+				"    WHERE IC.EFFECTIVE_TIME <= '" + effectiveTime + "' " +
+				"    GROUP BY IC.CONCEPT_ID " +
+				"  ) AS C2 " +
+				"  ON C1.CONCEPT_ID = C2.CONCEPT_ID " +
+				"  AND C1.EFFECTIVE_TIME = C2.MAX_ETIME " +
+				"  AND C1.ACTIVE = 1 " +
+				") AS C " +
+				"INNER JOIN ( " +
+				"  SELECT D.CONCEPT_ID, D.TERM " +
+				"  FROM DESCRIPTION AS D " +
+				"  INNER JOIN ( " +
+				"    SELECT ID.DESCRIPTION_ID, MAX(ID.EFFECTIVE_TIME) AS MAX_ETIME " +
+				"    FROM DESCRIPTION AS ID " +
+				"    INNER JOIN ( ";
+		qry += closureQry;
+		qry +=	"    ) AS DD " +
+				"    ON ID.CONCEPT_ID = DD.CONCEPT_ID " +
+				"    WHERE ID.EFFECTIVE_TIME <= '" + effectiveTime + "' " +
+				"    AND ID.TYPE_ID = '" + SNOMEDCTUtils.DescriptionType.FullySpecifiedName + "' " +
+				"    GROUP BY ID.DESCRIPTION_ID " +
+				"  ) AS GD " +
+				"  ON D.DESCRIPTION_ID = GD.DESCRIPTION_ID " +
+				"  AND D.EFFECTIVE_TIME = GD.MAX_ETIME " +
+				"  AND D.ACTIVE = 1 " +
+				"  AND D.LANGUAGE_CODE = '" + LANG + "' " +
+				"  GROUP BY D.CONCEPT_ID, D.TERM " +
+				") AS D " +
+				"ON C.CONCEPT_ID = D.CONCEPT_ID " +
+				"LEFT JOIN ( ";
+		qry += closureQry;
+		qry +=  ") AS T " +
+				"ON C.CONCEPT_ID = T.CONCEPT_ID ";
+		qry += getModuleJoinQuery(effectiveTime);
+		qry += getDefinitionStatusJoinQuery(effectiveTime);
+		return qry;
+	}
+
+
 	/**
-	 * 
+	 *
 	 * @param conceptId
 	 * @param ids
 	 * @param effectiveTime
