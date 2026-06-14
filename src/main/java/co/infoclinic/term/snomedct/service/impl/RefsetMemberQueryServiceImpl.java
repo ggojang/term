@@ -23,7 +23,6 @@ import com.google.common.collect.Lists;
 
 import co.infoclinic.term.common.model.dto.Value;
 import co.infoclinic.term.common.utils.PropertiesUtil;
-import co.infoclinic.term.common.utils.SNOMEDCTComponentTypeEnum;
 import co.infoclinic.term.common.utils.SNOMEDCTUtils;
 import co.infoclinic.term.snomedct.model.converter.RefsetMemberConverter;
 import co.infoclinic.term.snomedct.model.dto.IdTermDTO;
@@ -488,22 +487,8 @@ public class RefsetMemberQueryServiceImpl implements RefsetMemberQueryService {
 			if (value != null) {
 				//pageRequest = new PageRequest(0, pageRequest.getPageSize());
 				//results = absRefsetRepo.findBySearchTerm(refsetId, value, pageRequest);
-				String word = "";
-				boolean isNumeric = StringUtils.isNumericSpace(value);
-				if (isNumeric) {
-					 if (SNOMEDCTComponentTypeEnum.CONCEPT.equals(SNOMEDCTComponentTypeEnum.getById(value)) || SNOMEDCTComponentTypeEnum.DESCRIPTION.equals(SNOMEDCTComponentTypeEnum.getById(value))) {
-					     
-					 } else {
-					    isNumeric = false;
-					 }
-				}
-				
-				if (!isNumeric) {
-					word = value;
-				}
-
-				list = latestMbrRepo.findByEditionAndVersionAndRefsetIdAndTermAndOffsetAndLimit("INT", effectiveTime, refsetId, word, pageRequest.getOffset(), pageRequest.getPageSize());
-				totalCount = latestMbrRepo.findCountByEditionAndVersionAndRefsetIdAndTerm("INT", effectiveTime, refsetId, word);
+				list = latestMbrRepo.findByEditionAndVersionAndRefsetIdAndTermAndOffsetAndLimit("INT", effectiveTime, refsetId, value, pageRequest.getOffset(), pageRequest.getPageSize());
+				totalCount = latestMbrRepo.findCountByEditionAndVersionAndRefsetIdAndTerm("INT", effectiveTime, refsetId, value);
 			} else {
 				//results = absRefsetRepo.findByRefsetId(refsetId, pageRequest);
 				list = latestMbrRepo.findByEditionAndVersionAndRefsetIdAndOffsetAndLimit("INT", effectiveTime, refsetId, pageRequest.getOffset(), pageRequest.getPageSize());
