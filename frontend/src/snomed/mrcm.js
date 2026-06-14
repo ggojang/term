@@ -76,11 +76,7 @@ function CardinalityBadge({ cardinality }) {
     <span style={{
       marginLeft: 6,
       fontSize: '0.78em',
-      color: '#1565c0',
-      background: '#e3f2fd',
-      borderRadius: 3,
-      padding: '1px 5px',
-      fontWeight: 'bold',
+      color: '#000',
       verticalAlign: 'middle',
     }}>
       [{cardinality}]

@@ -10,8 +10,8 @@ const ROOT_ID = '900000000000455006';
 
 const useStyles = makeStyles(() => ({
   treeView: { fontSize: 'small', margin: '0 0 1px 0', userSelect: 'none' },
-  bold:   { fontSize: '0.88em', fontWeight: 'normal', lineHeight: 1.8, color: '#000', cursor: 'pointer' },
-  normal: { fontSize: '0.88em', fontWeight: 'normal', lineHeight: 1.8, color: '#000', cursor: 'pointer' },
+  bold:   { fontSize: '0.9em', fontWeight: 'normal', color: '#000', cursor: 'pointer' },
+  normal: { fontSize: '0.9em', fontWeight: 'normal', color: '#000', cursor: 'pointer' },
 }));
 
 function fetchLevel(parentId) {
