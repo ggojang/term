@@ -56,15 +56,24 @@ public interface ConceptService {
 	 */
 	List<ConceptViewDTO> getChildren(String conceptId, String effectiveTime);
 
-	
+	/** 자식 + self 목록 (<<!) */
+	List<ConceptViewDTO> getChildrenOrSelf(String conceptId, String effectiveTime);
+
+
 	/**
 	 * Entity의 부모 목록 조회
-	 * 
+	 *
 	 * @param conceptId
 	 * @param effectiveTime
 	 * @return
 	 */
 	List<ConceptViewDTO> getParentList(String conceptId, String effectiveTime);
+
+	/** 부모 + self 목록 (>>!) */
+	List<ConceptViewDTO> getParentListOrSelf(String conceptId, String effectiveTime);
+
+	/** refset 멤버 목록 (^) */
+	List<ConceptViewDTO> getMemberOfList(String refsetId, String effectiveTime);
 
 	
 	/**

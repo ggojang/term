@@ -4,11 +4,13 @@ options {
 	language = Java;
 }
 
-DESCENDANTOF : '<' ;
+CHILDORSELFOF : '<<!' ;
+PARENTORSELFOF : '>>!' ;
 DESCENDANTORSELFOF : '<<' ;
+DESCENDANTOF : '<' ;
 CHILDOF : '<!' ;
-ANCESTOF : '>' ;
 ANCESTORSELFOF : '>>' ;
+ANCESTOF : '>' ;
 PARENTOF : '>!' ;
 MEMBEROF : '^' ;
 COLON : ':' ;
@@ -41,7 +43,7 @@ simpleExpression : focusConcept | constraintOperator focusConcept ;
 
 focusConcept : MEMBEROF conceptReference | conceptReference | ANY ;
 
-constraintOperator : DESCENDANTOF | DESCENDANTORSELFOF | CHILDOF | ANCESTOF | ANCESTORSELFOF | PARENTOF ;
+constraintOperator : CHILDORSELFOF | PARENTORSELFOF | DESCENDANTOF | DESCENDANTORSELFOF | CHILDOF | ANCESTOF | ANCESTORSELFOF | PARENTOF ;
 
 conceptReference : SCTID | SCTID TERM ;
 

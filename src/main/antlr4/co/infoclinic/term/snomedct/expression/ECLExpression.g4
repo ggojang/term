@@ -4,11 +4,13 @@ options {
 	language = Java;
 }
 
-DESCENDANTOF : '<' ;
+CHILDORSELFOF : '<<!' ;
+PARENTORSELFOF : '>>!' ;
 DESCENDANTORSELFOF : '<<' ;
+DESCENDANTOF : '<' ;
 CHILDOF : '<!' ;
-ANCESTOF : '>' ;
 ANCESTORSELFOF : '>>' ;
+ANCESTOF : '>' ;
 PARENTOF : '>!' ;
 MEMBEROF : '^' ;
 COLON : ':' ;
@@ -38,7 +40,7 @@ focusConcept : conceptReference ( PLUS conceptReference )* ;
 
 conceptReference : SCTID | SCTID TERM ;
 
-constraintOperator : DESCENDANTOF | DESCENDANTORSELFOF | CHILDOF | ANCESTOF | ANCESTORSELFOF | PARENTOF ;
+constraintOperator : CHILDORSELFOF | PARENTORSELFOF | DESCENDANTOF | DESCENDANTORSELFOF | CHILDOF | ANCESTOF | ANCESTORSELFOF | PARENTOF ;
 
 refinementOnly : ANY ( COLON refinement )? ;
 

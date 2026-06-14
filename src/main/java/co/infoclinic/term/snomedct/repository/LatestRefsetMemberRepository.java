@@ -148,4 +148,15 @@ public interface LatestRefsetMemberRepository extends JpaRepository<LatestRefset
 			"AND REFERENCED_COMPONENT_NAME ILIKE '%' || ?4 || '%' " +
 			"LIMIT ?6 OFFSET ?5", nativeQuery = true)
 	List<LatestRefsetMember> findByEditionAndVersionAndRefsetIdAndTermAndOffsetAndLimit(String string, String effectiveTime, String refsetId, String term, int offset, int limit);
+
+
+	/**
+	 * memberOf (^) - 특정 refset의 모든 멤버 REFERENCED_COMPONENT_ID 조회
+	 */
+	@Query(value =
+			"SELECT REFERENCED_COMPONENT_ID " +
+			"FROM REFERENCESET_ACTIVE " +
+			"WHERE VERSION = CONCAT('INT-', ?2) " +
+			"AND REFSET_ID = ?1", nativeQuery = true)
+	List<String> findMemberIdsByRefsetIdAndEffectiveTime(String refsetId, String effectiveTime);
 }

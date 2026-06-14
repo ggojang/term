@@ -29,6 +29,7 @@ import co.infoclinic.term.snomedct.model.dto.ConceptTreeDTO;
 import co.infoclinic.term.snomedct.model.dto.RelationshipViewDTO;
 import co.infoclinic.term.snomedct.model.entity.Concept;
 import co.infoclinic.term.snomedct.repository.ConceptRepository;
+import co.infoclinic.term.snomedct.repository.LatestRefsetMemberRepository;
 import co.infoclinic.term.snomedct.service.ConceptService;
 import co.infoclinic.term.snomedct.service.RelationshipService;
 import co.infoclinic.term.snomedct.service.TransitiveClosureService;
@@ -51,6 +52,9 @@ public class ConceptServiceImpl implements ConceptService {
 	/** DI: TransitiveClosure service */
 	@Autowired
 	private TransitiveClosureService tcSvc;
+
+	@Autowired
+	private LatestRefsetMemberRepository latestRefsetMemberRepo;
 	
 
 	// ---------------------------------------- 
@@ -127,27 +131,56 @@ public class ConceptServiceImpl implements ConceptService {
 	 */
 	@Override
 	public List<ConceptViewDTO> getChildren(String conceptId, String effectiveTime) {
-		// SCTID 규칙을 따르지 않는 경우 반환
 		if (!SNOMEDCTComponentTypeEnum.isValidIdentifier(conceptId)) {
 			return new ArrayList<ConceptViewDTO>();
 		}
-				
 		return conceptRepository.findChildrenByConceptIdAndEffectiveTime(conceptId, effectiveTime);
 	}
 
-	
+	@Override
+	public List<ConceptViewDTO> getChildrenOrSelf(String conceptId, String effectiveTime) {
+		if (!SNOMEDCTComponentTypeEnum.isValidIdentifier(conceptId)) {
+			return new ArrayList<ConceptViewDTO>();
+		}
+		List<ConceptViewDTO> result = new ArrayList<>(conceptRepository.findChildrenByConceptIdAndEffectiveTime(conceptId, effectiveTime));
+		ConceptViewDTO self = conceptRepository.findByConceptIdAndEffectiveTime(conceptId, effectiveTime);
+		if (self != null) result.add(0, self);
+		return result;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see co.infoclinic.term.snomedct.service.ConceptService#getParentList(java.lang.String, java.lang.String)
 	 */
 	@Override
 	public List<ConceptViewDTO> getParentList(String conceptId, String effectiveTime) {
-		// conceptId 값이 SCTID 규칙을 따르지 않는 경우
 		if (!SNOMEDCTComponentTypeEnum.isValidIdentifier(conceptId)) {
 			return new ArrayList<ConceptViewDTO>();
 		}
-
 		return conceptRepository.findParentListByConceptIdAndEffectiveTime(conceptId, effectiveTime);
+	}
+
+	@Override
+	public List<ConceptViewDTO> getParentListOrSelf(String conceptId, String effectiveTime) {
+		if (!SNOMEDCTComponentTypeEnum.isValidIdentifier(conceptId)) {
+			return new ArrayList<ConceptViewDTO>();
+		}
+		List<ConceptViewDTO> result = new ArrayList<>(conceptRepository.findParentListByConceptIdAndEffectiveTime(conceptId, effectiveTime));
+		ConceptViewDTO self = conceptRepository.findByConceptIdAndEffectiveTime(conceptId, effectiveTime);
+		if (self != null) result.add(0, self);
+		return result;
+	}
+
+	@Override
+	public List<ConceptViewDTO> getMemberOfList(String refsetId, String effectiveTime) {
+		List<String> memberIds = latestRefsetMemberRepo.findMemberIdsByRefsetIdAndEffectiveTime(refsetId, effectiveTime);
+		if (memberIds == null || memberIds.isEmpty()) return new ArrayList<>();
+		List<ConceptViewDTO> result = new ArrayList<>();
+		for (String id : memberIds) {
+			ConceptViewDTO dto = conceptRepository.findByConceptIdAndEffectiveTime(id, effectiveTime);
+			if (dto != null) result.add(dto);
+		}
+		return result;
 	}
 
 	
