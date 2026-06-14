@@ -245,6 +245,7 @@ export default function Main({ refset }) {
         <span className={classes.cellId}>{cell.id}</span>
         <span style={{ color: '#90a4ae', margin: '0 4px' }}>|</span>
         <span className={classes.cellText}>{cell.name}</span>
+        <span style={{ color: '#90a4ae', margin: '0 4px' }}>|</span>
       </span>
     );
     if (cell.id)   return <span className={classes.cellId}>{cell.id}</span>;
