@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import Search from './search.js';
 import Hierarchy from './hierarchy.js';
+import Ecl from './ecl.js';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import { MuiThemeProvider, createMuiTheme, makeStyles, useTheme } from '@material-ui/core/styles';
@@ -87,12 +88,17 @@ const useStyles = makeStyles((theme) => ({
   },
   tab1: {
     minHeight : '2vh',
-    minWidth: '100px',
+    minWidth: '80px',
     opacity: 0.5,
   },
   tab2: {
     minHeight : '2vh',
-    minWidth: '100px',
+    minWidth: '80px',
+    opacity: 0.5,
+  },
+  tab3: {
+    minHeight : '2vh',
+    minWidth: '80px',
     opacity: 0.5,
   },
   link: {
@@ -156,6 +162,7 @@ export default function Left(props) {
           >
             <Tab variant="body1" classes={{root: classes.tab1}} label="Search" {...a11yProps(0)} />
             <Tab variant="body1" classes={{root: classes.tab2}} label="Hierarchy" {...a11yProps(1)} />
+            <Tab variant="body1" classes={{root: classes.tab3}} label="ECL" {...a11yProps(2)} />
           </Tabs>
         </Toolbar>
         
@@ -176,6 +183,9 @@ export default function Left(props) {
           />
           </ErrorBoundary>
           </Container>
+        </TabPanel>
+        <TabPanel value={value} index={2}>
+          <Ecl setFromId={props.setFromId} />
         </TabPanel>
       </Grid>
     </Grid>
