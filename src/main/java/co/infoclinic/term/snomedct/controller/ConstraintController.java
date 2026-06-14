@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import co.infoclinic.term.snomedct.api.QryApi;
 import co.infoclinic.term.snomedct.model.dto.ConceptViewDTO;
+import co.infoclinic.term.snomedct.repository.TransitiveClosureRepository;
 import co.infoclinic.term.snomedct.service.ConceptService;
 import co.infoclinic.term.snomedct.service.SchemeService;
 import co.infoclinic.term.snomedct.utils.ECL1ParserUtil;
@@ -50,6 +51,9 @@ public class ConstraintController {
 
 	@Autowired
 	private SchemeService schemeSvc;
+
+	@Autowired
+	private TransitiveClosureRepository tcRepo;
 
 
 	@ApiOperation(value = "Get Entity List by ECL")
@@ -128,6 +132,22 @@ public class ConstraintController {
 		String key = paramMap.keySet().iterator().next();
 		String id  = paramMap.get(key).toString();
 
+		// refinement 포함 여부 확인 (e.g. "64572001:363698007=66754008")
+		if (id.contains(":")) {
+			int colonIdx = id.indexOf(":");
+			String focusId       = id.substring(0, colonIdx).trim();
+			String refinementStr = id.substring(colonIdx + 1).trim();
+			// 속성 조건을 만족하는 개념 목록을 먼저 구한 후 (보통 소수),
+			// 각 개념이 focus concept의 constraint 범위에 속하는지 TC PATH로 검증
+			List<ConceptViewDTO> attrList = evaluateRefinement(refinementStr, effectiveTime);
+			return filterByConstraint(attrList, key, focusId, effectiveTime);
+		}
+
+		return evaluateByKeyAndId(key, id, effectiveTime, page, size);
+	}
+
+	/** operator key + conceptId로 목록 조회 */
+	private List<ConceptViewDTO> evaluateByKeyAndId(String key, String id, String effectiveTime, int page, int size) {
 		switch (key) {
 			case "DESCENDANTOF":       return conceptService.getDescendantList(id, effectiveTime, page, size).getContent();
 			case "DESCENDANTORSELFOF": return conceptService.getDescendantListOrSelf(id, effectiveTime, page, size).getContent();
@@ -145,6 +165,69 @@ public class ConstraintController {
 			}
 			default: return new ArrayList<>();
 		}
+	}
+
+	/**
+	 * refinement 문자열 "attrId=valId,attrId2=valId2" 을 파싱해
+	 * 속성 조건을 만족하는 개념 목록 반환
+	 */
+	@SuppressWarnings("unchecked")
+	private List<ConceptViewDTO> evaluateRefinement(String refinementStr, String effectiveTime) {
+		// 여러 속성이 콤마로 연결된 경우 각각 AND 교집합
+		// 그룹 처리({...})는 일단 무시하고 non-group 속성만 처리
+		Map<String, Object> nonGroup = new LinkedHashMap<>();
+		String[] parts = refinementStr.split(",");
+		for (String part : parts) {
+			part = part.trim().replaceAll("\\{", "").replaceAll("\\}", "");
+			if (!part.contains("=")) continue;
+			String[] kv = part.split("=", 2);
+			if (kv.length == 2) {
+				nonGroup.put(kv[0].trim(), kv[1].trim());
+			}
+		}
+		if (nonGroup.isEmpty()) return new ArrayList<>();
+		Map<String, Object> paramMap = new LinkedHashMap<>();
+		paramMap.put("N", nonGroup);
+		return (List<ConceptViewDTO>) conceptService.getConceptList(paramMap, effectiveTime);
+	}
+
+	/**
+	 * 속성 결과 목록을 constraint operator + focusId 기준으로 TC PATH 검증하여 필터링.
+	 * 페이지 제한 없이 정확한 포함 여부를 판단한다.
+	 */
+	private List<ConceptViewDTO> filterByConstraint(List<ConceptViewDTO> candidates, String key, String focusId, String effectiveTime) {
+		List<ConceptViewDTO> result = new ArrayList<>();
+		for (ConceptViewDTO c : candidates) {
+			String cid = c.getConceptId();
+			boolean pass = false;
+			switch (key) {
+				case "DESCENDANTOF":
+					pass = !cid.equals(focusId) && tcRepo.findCountByCriteriaIdAndConceptId(focusId, cid) > 0;
+					break;
+				case "DESCENDANTORSELFOF":
+					pass = cid.equals(focusId) || tcRepo.findCountByCriteriaIdAndConceptId(focusId, cid) > 0;
+					break;
+				case "CHILDOF": {
+					List<ConceptViewDTO> parents = conceptService.getParentList(cid, effectiveTime);
+					pass = parents.stream().anyMatch(p -> focusId.equals(p.getConceptId()));
+					break;
+				}
+				case "CHILDORSELFOF": {
+					if (cid.equals(focusId)) { pass = true; break; }
+					List<ConceptViewDTO> parents = conceptService.getParentList(cid, effectiveTime);
+					pass = parents.stream().anyMatch(p -> focusId.equals(p.getConceptId()));
+					break;
+				}
+				case "SCTID":
+					pass = cid.equals(focusId);
+					break;
+				default:
+					pass = true;
+					break;
+			}
+			if (pass) result.add(c);
+		}
+		return result;
 	}
 
 	/** ECL1ParserUtil로 표현식 유형 감지 */
