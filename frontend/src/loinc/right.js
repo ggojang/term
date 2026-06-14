@@ -49,7 +49,7 @@ export default function PanelTree(props) {
     if (props.loincId) {
       setResult([]);
       axios
-      .get(`http://api.infoclinic.co/panel/LOINC/${props.loincId}`)
+      .get(`http://localhost:8080/panel/LOINC/${props.loincId}`)
       .then(result =>
         setResult(result)
       );

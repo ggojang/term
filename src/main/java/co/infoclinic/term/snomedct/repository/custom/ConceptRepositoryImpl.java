@@ -181,7 +181,7 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 					 "  INNER JOIN ( " +
 					 "    SELECT CONCEPT_ID, MAX(EFFECTIVE_TIME) AS MAX_ETIME " +
 					 "    FROM CONCEPT " +
-					 "    WHERE EFFECTIVE_TIME <= '20160731' " +
+					 "    WHERE EFFECTIVE_TIME <= '" + effectiveTime + "' " +
 					 "    GROUP BY CONCEPT_ID " +
 					 "  ) AS C2 " +
 					 "  ON C1.CONCEPT_ID = C2.CONCEPT_ID " +
@@ -437,27 +437,28 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 		String eVal = String.valueOf(e.getValue());
 		
 		// 1번째[0] 쿼리는 FROM절에 위치
+		// ECL 비그룹 속성 제약은 ANY relationship group에서 속성-값 쌍을 매칭 (group 0 포함)
 		qry = "SELECT DISTINCT(A.SOURCE_ID) " +
 			  "FROM ( " +
 			  "  SELECT SOURCE_ID " +
 			  "  FROM " + TBL_REL + " " +
 			  "  WHERE " + COL_ATTR + " = '" + eAttr + "' AND " + COL_VAL + " = '" + eVal + "' " +
-			  "  AND RELATIONSHIP_GROUP = 0 " +
+			  "  AND ACTIVE = 1 " +
 			  ") AS A ";
-		
+
 		// 2번째[1] 쿼리는 INNER JOIN절에 위치
 		for (int i = 1; i < listSize; i++) {
 			// i번째 Entry
 			e = list.get(i);
 			eAttr = e.getKey();
 			eVal = String.valueOf(e.getValue());
-			
+
 			// 이너조인 쿼리
 			String joinQry = "INNER JOIN ( " +
 							 "  SELECT SOURCE_ID " +
 							 "  FROM " + TBL_REL + " " +
 							 "  WHERE " + COL_ATTR + " = '" + eAttr + "' AND " + COL_VAL + " = '" + eVal + "' " +
-							 "  AND RELATIONSHIP_GROUP = 0 " +
+							 "  AND ACTIVE = 1 " +
 							 ") AS A" + (i) + " " +
 							 "ON A.SOURCE_ID = A" + (i++) + ".SOURCE_ID ";
 			
@@ -1230,21 +1231,23 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 	 * @param effectiveTime
 	 * @return
 	 */
+	// SNOMED CT에서 사용되는 MODULE_ID 목록 (고정값 — 전체 테이블 스캔 회피)
+	private static final String MODULE_IDS =
+		"'900000000000207008','900000000000012004','715152001','715515008'," +
+		"'718292005','721230008','784009001','816211006','827022005'," +
+		"'1157359004','1237620007','1303956008'";
+
 	private String getModuleJoinQuery(String effectiveTime) {
 		String query;
-		
+
 		query = "LEFT JOIN ( " +
 				"  SELECT CONCEPT_ID, TERM " +
 				"  FROM DESCRIPTION AS D " +
 				"  INNER JOIN ( " +
-				"	SELECT DESCRIPTION_ID, MAX(EFFECTIVE_TIME) AS MAX_ETIME " +
+				"    SELECT DESCRIPTION_ID, MAX(EFFECTIVE_TIME) AS MAX_ETIME " +
 				"    FROM DESCRIPTION AS ID " +
-				"    INNER JOIN ( " +
-				"		SELECT DISTINCT(MODULE_ID) " +
-				"		FROM DESCRIPTION " +
-				"    ) AS DD " +
-				"    ON ID.CONCEPT_ID = DD.MODULE_ID " +
-				"    WHERE ID.EFFECTIVE_TIME <= '" + effectiveTime + "' " +
+				"    WHERE ID.CONCEPT_ID IN (" + MODULE_IDS + ") " +
+				"    AND ID.EFFECTIVE_TIME <= '" + effectiveTime + "' " +
 				"    AND ID.TYPE_ID = '" + SNOMEDCTUtils.DescriptionType.FullySpecifiedName + "' " +
 				"    GROUP BY ID.DESCRIPTION_ID " +
 				"  ) AS GD " +
@@ -1254,7 +1257,7 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 				"  AND D.LANGUAGE_CODE = '" + LANG + "' " +
 				") AS MODULE " +
 				"ON C.MODULE_ID = MODULE.CONCEPT_ID ";
-		
+
 		return query;
 	}
 	
@@ -1266,21 +1269,21 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 	 * @param effectiveTime
 	 * @return
 	 */
+	// SNOMED CT 정의상태 ID (고정값 2개 — 전체 테이블 스캔 회피)
+	private static final String DEFINITION_STATUS_IDS =
+		"'900000000000073002','900000000000074008'";
+
 	private String getDefinitionStatusJoinQuery(String effectiveTime) {
 		String query;
-		
+
 		query = "LEFT JOIN ( " +
 				"  SELECT CONCEPT_ID, TERM " +
 				"  FROM DESCRIPTION AS D " +
 				"  INNER JOIN ( " +
-				"	SELECT ID.DESCRIPTION_ID, MAX(EFFECTIVE_TIME) AS MAX_ETIME " +
+				"    SELECT ID.DESCRIPTION_ID, MAX(EFFECTIVE_TIME) AS MAX_ETIME " +
 				"    FROM DESCRIPTION AS ID " +
-				"    INNER JOIN ( " +
-				"		SELECT DISTINCT(DEFINITION_STATUS_ID) " +
-				"		FROM CONCEPT " +
-				"    ) AS DD " +
-				"    ON ID.CONCEPT_ID = DD.DEFINITION_STATUS_ID " +
-				"    WHERE ID.EFFECTIVE_TIME <= '" + effectiveTime + "' " +
+				"    WHERE ID.CONCEPT_ID IN (" + DEFINITION_STATUS_IDS + ") " +
+				"    AND ID.EFFECTIVE_TIME <= '" + effectiveTime + "' " +
 				"    AND ID.TYPE_ID = '" + SNOMEDCTUtils.DescriptionType.FullySpecifiedName + "' " +
 				"    GROUP BY ID.DESCRIPTION_ID " +
 				"  ) AS GD " +
@@ -1290,7 +1293,7 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 				"  AND D.LANGUAGE_CODE = '" + LANG + "' " +
 				") AS DEF " +
 				"ON C.DEFINITION_STATUS_ID = DEF.CONCEPT_ID ";
-		
+
 		return query;
 	}
 

@@ -61,7 +61,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const BASE = window.location.hostname === 'localhost' ? '' : 'http://api.infoclinic.co';
+const BASE = 'http://localhost:8080';
 
 async function getMRCM(id) {
   const response = await axios.get(

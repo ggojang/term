@@ -8,7 +8,7 @@ import Typography from '@material-ui/core/Typography';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Container from '@material-ui/core/Container';
 
-const BASE = 'http://api.infoclinic.co';
+const BASE = 'http://localhost:8080';
 
 const EXAMPLES = [
   { label: '< 404684003', desc: 'Clinical finding의 하위' },

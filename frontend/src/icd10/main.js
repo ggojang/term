@@ -17,7 +17,7 @@ import Paper from '@material-ui/core/Paper';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Chip from '@material-ui/core/Chip';
 
-const BASE = window.location.hostname === 'localhost' ? '' : 'http://api.infoclinic.co';
+const BASE = 'http://localhost:8080';
 
 const KR_FLAG = ({ title }) => (
   <span title={title || 'KCD-9 확장 코드'} style={{ marginRight: 3, fontSize: '0.9em' }}>🇰🇷</span>

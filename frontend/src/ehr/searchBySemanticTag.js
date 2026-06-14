@@ -180,7 +180,7 @@ export default function SearchBySemanticTag(props) {
       }
 
       axios
-        .get(`http://api.infoclinic.co/search/SNOMEDCT?${opt}`)
+        .get(`http://localhost:8080/search/SNOMEDCT?${opt}`)
         .then(response => setResult(response));
     }
   }, [q, semanticType]);

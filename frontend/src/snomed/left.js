@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import Search from './search.js';
 import Hierarchy from './hierarchy.js';
 import Ecl from './ecl.js';
@@ -16,8 +16,13 @@ import { Link } from "react-router-dom";
 
 import ErrorBoundary from 'react-error-boundaries'
 
+// 처음 활성화된 이후로는 DOM을 유지(hidden)하여 탭 상태 보존.
+// 한 번도 활성화된 적 없는 탭은 렌더링하지 않아 초기 로드 속도 확보.
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
+  const mountedRef = useRef(false);
+  if (value === index) mountedRef.current = true;
+  if (!mountedRef.current) return null;
 
   return (
     <Typography

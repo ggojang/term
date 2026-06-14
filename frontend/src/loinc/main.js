@@ -132,7 +132,7 @@ export default function Main(props) {
         setPanel([]);
 
         axios
-          .get(`http://api.infoclinic.co/paths/LOINC/${props.loincId}`)
+          .get(`http://localhost:8080/paths/LOINC/${props.loincId}`)
           .then(response => setPath(response))
 
     }
@@ -144,33 +144,33 @@ export default function Main(props) {
       if (props.loincId.substring(0,2) === 'LP') {
         setCodeType('LP');
         axios
-          .get(`http://api.infoclinic.co/LP/LOINC/${props.loincId}`)
+          .get(`http://localhost:8080/LP/LOINC/${props.loincId}`)
           .then(response => setLP(response));
         axios
-          .get(`http://api.infoclinic.co/LPLINK/LOINC/${props.loincId}`)
+          .get(`http://localhost:8080/LPLINK/LOINC/${props.loincId}`)
           .then(response => setLPLink(response));
         axios
-          .get(`http://api.infoclinic.co/LPMAP/LOINC/${props.loincId}`)
+          .get(`http://localhost:8080/LPMAP/LOINC/${props.loincId}`)
           .then(response => setLPMap(response));
       } else {
         setCodeType('');
         axios
-          .get(`http://api.infoclinic.co/entity/LOINC/${props.loincId}`)
+          .get(`http://localhost:8080/entity/LOINC/${props.loincId}`)
           .then(response => setEntity(response));
         axios
-          .get(`http://api.infoclinic.co/LPLINK/LOINC/${props.loincId}`)
+          .get(`http://localhost:8080/LPLINK/LOINC/${props.loincId}`)
           .then(response => setLPLink(response));
         axios
-          .get(`http://api.infoclinic.co/LA/LOINC/${props.loincId}`)
+          .get(`http://localhost:8080/LA/LOINC/${props.loincId}`)
           .then(response => setLA(response));
         axios
-          .get(`http://api.infoclinic.co/LGTERM/LOINC/${props.loincId}`)
+          .get(`http://localhost:8080/LGTERM/LOINC/${props.loincId}`)
           .then(response => setLGTerm(response));
         axios
-          .get(`http://api.infoclinic.co/panel/LOINC/${props.loincId}`)
+          .get(`http://localhost:8080/panel/LOINC/${props.loincId}`)
           .then(response => setPanel(response));
         axios
-          .get(`http://api.infoclinic.co/LV/LOINC/${props.loincId}`)
+          .get(`http://localhost:8080/LV/LOINC/${props.loincId}`)
           .then(response => setLV(response));
       }
     }

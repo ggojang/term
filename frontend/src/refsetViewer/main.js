@@ -161,7 +161,7 @@ export default function Main({ refset }) {
 
     if (!refset?.id) return;
 
-    axios.get(`http://api.infoclinic.co/descriptors/SNOMEDCT/${refset.id}`)
+    axios.get(`http://localhost:8080/descriptors/SNOMEDCT/${refset.id}`)
       .then(res => {
         if (!res.data?.length) return;
 
@@ -200,7 +200,7 @@ export default function Main({ refset }) {
     const qParam = q.trim() || '*';
 
     axios.get(
-      `http://api.infoclinic.co/members/SNOMEDCT/${refset.id}?q=${encodeURIComponent(qParam)}&page=${page + 1}&size=${size}`,
+      `http://localhost:8080/members/SNOMEDCT/${refset.id}?q=${encodeURIComponent(qParam)}&page=${page + 1}&size=${size}`,
       { signal: controller.signal }
     )
       .then(res => {

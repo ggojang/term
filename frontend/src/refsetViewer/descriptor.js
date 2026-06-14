@@ -134,7 +134,7 @@ export default function Descriptor(props) {
 
   useEffect(() => {
     axios
-      .get(`http://api.infoclinic.co/members/SNOMEDCT?refcpntid=${props.refset.id}`)
+      .get(`http://localhost:8080/members/SNOMEDCT?refcpntid=${props.refset.id}`)
       .then(response => setDescript(response));
   }, [props.refset.id])
 

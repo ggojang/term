@@ -93,7 +93,7 @@ public class DescriptionServiceImpl implements DescriptionService {
 		}
 
 		List<Description> descriptions = null;
-		descriptions = getDescriptionListByComponentIdAndEffectiveTimeAndActive(componentId, effectiveTime, true);
+		descriptions = getDescriptionListByComponentIdAndEffectiveTimeAndActive(componentId, effectiveTime, 1);
 
 		return addLanguageReferencesetToDescription(descriptions, effectiveTime, isLangGroup);
 	}
@@ -471,7 +471,7 @@ public class DescriptionServiceImpl implements DescriptionService {
 	 * @param isActive
 	 * @return
 	 */
-	private List<Description> getDescriptionListByComponentIdAndEffectiveTimeAndActive(String componentId, String effectiveTime, boolean isActive) {
+	private List<Description> getDescriptionListByComponentIdAndEffectiveTimeAndActive(String componentId, String effectiveTime, int isActive) {
 		// SCTID 규칙을 따르지 않는 경우 반환
 		if (!SNOMEDCTComponentTypeEnum.isValidIdentifier(componentId)) {
 			return new ArrayList<Description>();

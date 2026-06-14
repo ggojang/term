@@ -83,17 +83,17 @@ public class TransitiveClosureServiceImpl implements TransitiveClosureService {
 	 * (non-Javadoc)
 	 * @see co.infoclinic.term.snomedct.service.TransitiveClosureService#getLanguageRefsetIdList()
 	 */
+	// 정적 Language Refset ID 목록 — 거의 변하지 않으므로 JVM 내 캐시
+	private volatile List<String> cachedLanguageRefsetIdList = null;
+
 	@Override
 	public List<String> getLanguageRefsetIdList() {
+		if (cachedLanguageRefsetIdList != null) return cachedLanguageRefsetIdList;
 		List<String> langRefsetIds = tcRepo.findLanguageRefsetIdList();
-		
-		if (langRefsetIds == null) {
-			langRefsetIds = new ArrayList<String>();
-		}
-		// Korean Language Refset Id
+		if (langRefsetIds == null) langRefsetIds = new ArrayList<String>();
 		langRefsetIds.add("247781000300103");
-		
-		return langRefsetIds;// != null ? langRefsetIds:new ArrayList<String>();
+		cachedLanguageRefsetIdList = langRefsetIds;
+		return cachedLanguageRefsetIdList;
 	}
 
 

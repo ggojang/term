@@ -118,7 +118,7 @@ export default function Search(props) {
     if (q.length > 1) {
       setPage(1);
       axios
-        .get(`http://api.infoclinic.co/search/LOINC?q=${q}&page=${page}&size=${size}`)
+        .get(`http://localhost:8080/search/LOINC?q=${q}&page=${page}&size=${size}`)
         .then(response => setSearchResult(response));
     }
   }, [q]);
@@ -126,7 +126,7 @@ export default function Search(props) {
   useEffect(() => {
     if (q.length > 1 && page > 1) {
       axios
-        .get(`http://api.infoclinic.co/search/LOINC?q=${q}&page=${page}&size=${size}`)
+        .get(`http://localhost:8080/search/LOINC?q=${q}&page=${page}&size=${size}`)
         .then(response => setSearchResult(response));
     }
   }, [page]);

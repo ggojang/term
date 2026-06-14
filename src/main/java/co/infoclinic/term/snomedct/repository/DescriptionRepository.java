@@ -86,7 +86,7 @@ public interface DescriptionRepository extends JpaRepository<Description, Long>,
 	                 "AND d.EFFECTIVE_TIME = groupDes.MAX_EFFECTIVE_TIME " +
 	                 "AND d.ACTIVE = ?3", nativeQuery = true)
 	List<Description> findDescriptionListByEffectiveTimeAndConceptIdAndActive(String effectiveTime, String conceptId,
-			boolean active);
+			int active);
  
 	/**
 	 * 특정 descriptionId와 EffectiveTime(적용일자)내의 가장 최신의 Description의 리스트를 반환하는 메소드
@@ -111,7 +111,7 @@ public interface DescriptionRepository extends JpaRepository<Description, Long>,
 	                 "AND d.EFFECTIVE_TIME = groupDes.MAX_EFFECTIVE_TIME " +
 	                 "AND d.ACTIVE = ?3", nativeQuery = true)
 	List<Description> findDescriptionListByEffectiveTimeAndDescriptionIdAndActive(String effectiveTime,
-			String descriptionId, boolean active);
+			String descriptionId, int active);
 
 	/**
 	 * 

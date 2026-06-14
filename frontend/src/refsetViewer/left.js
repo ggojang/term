@@ -16,7 +16,7 @@ const useStyles = makeStyles(() => ({
 
 function fetchLevel(parentId) {
   return axios
-    .get(`http://api.infoclinic.co/children/SNOMEDCT/${parentId}`)
+    .get(`http://localhost:8080/children/SNOMEDCT/${parentId}`)
     .then(res => ({ parentId, nodes: res.data.sort((a, b) => (a.term > b.term ? 1 : -1)) }));
 }
 

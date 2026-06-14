@@ -17,7 +17,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import RemoveIcon from '@material-ui/icons/Remove';
 
-const BASE = window.location.hostname === 'localhost' ? '' : 'http://api.infoclinic.co';
+const BASE = 'http://localhost:8080';
 
 const useStyles = makeStyles(() => ({
   container: {
