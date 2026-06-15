@@ -200,8 +200,7 @@ export default function Left({ setSelectedCode }) {
       </Tabs>
 
       {/* KCD-9 탭 */}
-      {tabValue === 0 && (
-        <div>
+      <div style={{ display: tabValue !== 0 ? 'none' : '' }}>
           <div style={{ padding: '6px 8px 4px 8px' }}>
             <TextField
               fullWidth
@@ -257,11 +256,9 @@ export default function Left({ setSelectedCode }) {
             </Box>
           )}
         </div>
-      )}
 
       {/* 신생물 형태분류 탭 */}
-      {tabValue === 1 && (
-        <div>
+      <div style={{ display: tabValue !== 1 ? 'none' : '' }}>
           <div style={{ padding: '6px 8px 4px 8px' }}>
             <TextField
               fullWidth
@@ -298,7 +295,6 @@ export default function Left({ setSelectedCode }) {
             ))}
           </Box>
         </div>
-      )}
     </Box>
   );
 }
