@@ -60,14 +60,9 @@ const useStyles = makeStyles((theme) => ({
     lineHeight: 2,
   },
   cardinality: {
-    display: 'inline-block',
     fontSize: '0.75em',
-    color: '#1565c0',
-    background: '#e3f2fd',
-    borderRadius: 3,
-    padding: '0 5px',
+    color: '#000',
     marginLeft: 6,
-    fontWeight: 'bold',
   },
 }));
 
