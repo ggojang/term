@@ -194,21 +194,16 @@ public class KcdDataLoader {
         log.info("kcd9_main 완료: chapter=" + chapter + " updated=" + updated + " inserted=" + inserted);
     }
 
-    /** 확장코드의 super_class 추정: 점을 제거하면서 기존 코드 중 가장 가까운 부모 탐색 */
+    /** 확장코드의 super_class 추정: 끝 문자를 하나씩 제거하며 기존 코드 탐색
+     *  A08.30 → A08.3(존재) → 반환
+     *  A08.301 → A08.30 → A08.3 → ... 순으로 탐색
+     */
     private static String deriveSuperClass(String code, Map<String, String> existingCodes) {
-        // A08.30 → A08.3 → A08 순으로 탐색
-        int lastDot = code.lastIndexOf('.');
-        if (lastDot > 0) {
-            String parent = code.substring(0, lastDot);
-            if (existingCodes.containsKey(parent)) return parent;
-            // 한 단계 더 위로
-            int prevDot = parent.lastIndexOf('.');
-            if (prevDot > 0) {
-                String grandParent = parent.substring(0, prevDot);
-                if (existingCodes.containsKey(grandParent)) return grandParent;
-            }
+        String candidate = code.substring(0, code.length() - 1);
+        while (candidate.length() > 0) {
+            if (existingCodes.containsKey(candidate)) return candidate;
+            candidate = candidate.substring(0, candidate.length() - 1);
         }
-        // 점이 없는 경우 (혹은 부모 못 찾은 경우)
         return code.length() >= 3 ? code.substring(0, 3) : code;
     }
 
