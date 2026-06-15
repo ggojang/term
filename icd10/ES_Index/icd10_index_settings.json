@@ -1,0 +1,106 @@
+{
+  "settings": {
+    "analysis": {
+      "tokenizer": {
+        "split_semicolon": {
+          "type": "pattern",
+          "pattern": "[;]"
+        }
+      },
+      "filter": {
+        "edge2_filter": {
+          "token_chars": [
+            "letter",
+            "digit"
+          ],
+          "min_gram": "2",
+          "type": "edgeNGram",
+          "max_gram": "2"
+        },
+        "edge3_filter": {
+          "token_chars": [
+            "letter",
+            "digit"
+          ],
+          "min_gram": "3",
+          "type": "edgeNGram",
+          "max_gram": "3"
+        },
+        "stopwords": {
+          "type": "stop",
+          "stopwords": "_english_"
+        },
+        "autocomplete_filter": {
+          "type": "edge_ngram",
+          "min_gram": "1",
+          "max_gram": "28"
+        }
+      },
+      "analyzer": {
+        "edge2_analyzer": {
+          "filter": [
+            "lowercase",
+            "edge2_filter"
+          ],
+          "type": "custom",
+          "tokenizer": "standard"
+        },
+        "stop_edge2_analyzer": {
+          "filter": [
+            "lowercase",
+            "stopwords",
+            "edge2_filter"
+          ],
+          "type": "custom",
+          "tokenizer": "standard"
+        },
+        "autocomplete": {
+          "filter": [
+            "lowercase",
+            "autocomplete_filter"
+          ],
+          "type": "custom",
+          "tokenizer": "standard"
+        },
+        "edge3_analyzer": {
+          "filter": [
+            "lowercase",
+            "edge3_filter"
+          ],
+          "type": "custom",
+          "tokenizer": "standard"
+        },
+        "raw_lowercase_analyzer": {
+          "filter": [
+            "lowercase"
+          ],
+          "type": "custom",
+          "tokenizer": "keyword"
+        },
+        "term_analyzer": {
+          "filter": [
+            "lowercase"
+          ],
+          "type": "custom",
+          "tokenizer": "whitespace"
+        },
+        "stop_edge3_analyzer": {
+          "filter": [
+            "lowercase",
+            "stopwords",
+            "edge3_filter"
+          ],
+          "type": "custom",
+          "tokenizer": "standard"
+        },
+        "split_semicolon_analyzer": {
+          "filter": [
+            "lowercase"
+          ],
+          "type": "custom",
+          "tokenizer": "split_semicolon"
+        }
+      }
+    }
+  }
+}

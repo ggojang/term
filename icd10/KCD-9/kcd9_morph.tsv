@@ -1,0 +1,958 @@
+CODE	KOREAN_LABEL	ENGLISH_LABEL
+M8000/0	양성 신생물	Neoplasm, benign
+M8000/1	양성 또는 악성이 불확실한 신생물	Neoplasm, uncertain whether benign or malignant
+M8000/3	악성 신생물	Neoplasm, malignant
+M8000/6	전이성 신생물	Neoplasm, metastatic
+M8001/0	양성종양세포	Tumour cells, benign
+M8001/1	양성 또는 악성이 불확실한 종양세포	Tumour cells, uncertain whether benign or malignant
+M8001/3	악성종양세포	Tumour cells, malignant
+M8002/3	소세포형의 악성종양	Malignant tumour, small cell type
+M8003/3	거대세포형의 악성종양	Malignant tumour, giant cell type
+M8004/3	방추세포형의 악성종양	Malignant tumour, spindle cell type
+M8005/0	투명세포 종양, NOS	Clear cell tumour NOS
+M8005/3	투명세포형의 악성종양	Malignant tumour, clear cell type
+M8010/0	양성 상피성 종양	Epithelial tumour, benign
+M8010/2	상피내 암종, NOS	Carcinoma in situ NOS
+M8010/3	암종, NOS	Carcinoma NOS
+M8010/6	전이성 암종, NOS	Carcinoma, metastatic NOS
+M8011/0	양성 상피종	Epithelioma, benign
+M8011/3	악성 상피종	Epithelioma, malignant
+M8012/3	대세포 암종, NOS	Large cell carcinoma NOS
+M8013/3	대세포 신경내분비 암종	Large cell neuroendocrine carcinoma
+M8014/3	간상 표현형을 동반한 대세포 암종	Large cell carcinoma with rhabdoid phenotype
+M8015/3	유리세포 암종	Glassy cell carcinoma
+M8020/3	미분화된 암종, NOS	Carcinoma, undifferentiated NOS
+M8021/3	역형성의 암종, NOS	Carcinoma, anaplastic NOS
+M8022/3	다형성 암종	Pleomorphic carcinoma
+M8023/3	고환내 핵 단백질(NUT) 관련 암종	Nuclear protein in testis(NUT) associated carcinoma
+M8030/3	거대세포 및 방추세포 암종	Giant cell and spindle cell carcinoma
+M8031/3	거대세포 암종	Giant cell carcinoma
+M8032/3	방추세포 암종, NOS	Spindle cell carcinoma NOS
+M8033/3	가육종성 암종	Pseudosarcomatous carcinoma
+M8034/3	다각형세포 암종	Polygonal cell carcinoma
+M8035/3	파골(뼈 파괴)세포 유사 거대세포를 동반한 암종	Carcinoma with osteoclast-like giant cells
+M8040/0	양성 소종양	Tumorlet, benign
+M8040/1	소종양, NOS	Tumorlet NOS
+M8041/3	소세포 암종, NOS	Small cell carcinoma NOS
+M8042/3	귀리세포 암종	Oat cell carcinoma
+M8043/3	방추세포형 소세포 암종	Small cell carcinoma, fusiform cell
+M8044/3	중간세포형 소세포 암종	Small cell carcinoma, intermediate cell
+M8045/3	복합형 소세포 암종	Combined small cell carcinoma
+M8046/3	비소세포 암종	Non-small cell carcinoma
+M8050/0	유두종(방광의 M8120/0 제외), NOS	Papilloma(except of bladder M8120/0) NOS
+M8050/2	유두상 상피내 암종	Papillary carcinoma in situ
+M8050/3	유두상 암종(갑상선의 M8260/3 제외), NOS	Papillary carcinoma(except of thyroid M8260/3) NOS
+M8051/0	사마귀모양의 유두종	Verrucous papilloma
+M8051/3	사마귀모양의 암종, NOS	Verrucous carcinoma NOS
+M8052/0	편평세포 유두종, NOS	Squamous cell papilloma NOS
+M8052/2	유두상 편평세포 암종, 비침범성	Papillary squamous cell carcinoma, non-invasive
+M8052/3	유두상 편평세포 암종	Papillary squamous cell carcinoma
+M8053/0	도립형 편평세포 유두종	Squamous cell papilloma, inverted
+M8054/0	사마귀모양 이상각화종	Warty dyskeratoma
+M8054/3	사마귀모양 암종	Warty carcinoma
+M8060/0	편평 유두종증	Squamous papillomatosis
+M8070/2	편평세포 상피내 암종, NOS	Squamous cell carcinoma in situ NOS
+M8070/3	편평세포 암종, NOS	Squamous cell carcinoma NOS
+M8070/6	전이성 편평세포 암종, NOS	Squamous cell carcinoma, metastatic NOS
+M8071/3	케라틴화형 편평세포 암종, NOS	Squamous cell carcinoma, keratinizing NOS
+M8072/0	대세포 극세포종	Large cell acanthoma
+M8072/3	비케라틴화형 대세포 편평세포 암종, NOS	Squamous cell carcinoma, large cell, non-keratinizing NOS
+M8073/3	비케라틴화형 소세포 편평세포 암종	Squamous cell carcinoma, small cell, non-keratinizing
+M8074/3	방추세포 편평세포 암종	Squamous cell carcinoma, spindle cell
+M8075/3	아데노이드 편평세포 암종	Squamous cell carcinoma, adenoid
+M8076/2	간질침범의 의심이 있는 편평세포 상피내 암종	Squamous cell carcinoma in situ with questionable stromal invasion
+M8076/3	미세침범의 편평세포 암종	Squamous cell carcinoma, microinvasive
+M8077/0	편평 상피내 신생물, 저등급	Squamous intraepithelial neoplasia, low grade
+M8077/2	편평 상피내 신생물, 고등급	Squamous intraepithelial neoplasia, high grade
+M8078/3	각 형성을 동반한 편평세포 암종	Squamous cell carcinoma with horn formation
+M8080/2	케이라홍색형성증	Queyrat erythroplasia
+M8081/2	보웬병	Bowen disease
+M8082/3	림프상피성 암종	Lymphoepithelial carcinoma
+M8083/3	기저세포모양 편평세포 암종	Basaloid squamous cell carcinoma
+M8084/0	투명세포 극세포종	Clear cell acanthoma
+M8084/3	투명세포형 편평세포 암종	Squamous cell carcinoma, clear cell type
+M8085/3	편평세포 암종, 사람유두종바이러스(HPV)양성	Squamous cell carcinoma, HPV positive
+M8086/3	편평세포 암종, 사람유두종바이러스(HPV)음성	Squamous cell carcinoma, HPV negative
+M8090/1	기저세포 종양	Basal cell tumour
+M8090/3	기저세포 암종(전립선의 M8147/3 제외), NOS	Basal cell carcinoma(except of prostate M8147/3), NOS
+M8091/3	표재성 기저세포 암종	Superficial basal cell carcinoma
+M8092/3	침윤성 기저세포 암종, NOS	Infiltrating basal cell carcinoma, NOS
+M8093/3	섬유상피성 기저세포 암종	Basal cell carcinoma, fibroepithelial
+M8094/3	기저편평세포 암종	Basosquamous carcinoma
+M8095/3	변형성 암종	Metatypical carcinoma
+M8096/0	야다손의 표피내 상피종	Intraepidermal epithelioma of Jadassohn
+M8097/3	결절성 기저세포 암종	Basal cell carcinoma, nodular
+M8098/3	아데노이드 기저 암종	Adenoid basal carcinoma
+M8100/0	모상피종	Trichoepithelioma
+M8100/3	모모세포성 암종	Trichoblastic carcinoma
+M8101/0	모낭종	Tricofolliculoma
+M8102/0	모초종	Trichilemmoma
+M8102/3	모초암종	Trichilemmocarcinoma
+M8103/0	모의 종양	Pilar tumour
+M8103/1	증식성 털집 낭	Proliferating trichilemmal cyst
+M8104/0	털집 극세포종	Pilar sheath acanthoma
+M8110/0	털바탕질종, NOS	Pilomatricoma, NOS
+M8110/3	털바탕질성 암종	Pilomatrical carcinoma
+M8120/0	요로상피성 유두종, NOS	Urothelial papilloma, NOS
+M8120/2	요로상피성 상피내 암종	Urothelial carcinoma in situ
+M8120/3	이행세포 암종, NOS	Transitional cell carcinoma, NOS
+M8121/0	외향성 비부비동 유두종	Sinonasal papilloma, exophytic
+M8121/1	도립형 비부비동 유두종	Sinonasal papilloma, inverted
+M8121/3	시나이더 암종	Schneiderian carcinoma
+M8122/3	육종모양 요로상피성 암종	Urothelial carcinoma, sarcomatoid
+M8123/3	기저세포모양 암종	Basaloid carcinoma
+M8124/3	배출강기원성 암종	Cloacogenic carcinoma
+M8130/1	저악성 잠재성의 유두상 요로상피성 신생물	Papillary urothelial neoplasm of low malignant potential
+M8130/2	비침범성 유두상 요로상피성 암종	Papillary urothelial carcinoma, non-invasive
+M8130/3	유두상 요로상피 암종	Papillary urothelial carcinoma
+M8131/3	미세유두상 요로상피성 암종	Urothelial carcinoma, micropapillary
+M8140/0	선종(뇌하수체의 M8272/0, 유두의 M8506/0, 난소망의 M9110/0 제외), NOS	Adenoma(except of pituitary M8272/0 or nipple M8506/0 or rete ovarii M9110/0), NOS
+M8140/1	비정형적 선종	Atypical adenoma
+M8140/2	상피내 선암종 NOS	Adenocarcinoma in situ, NOS
+M8140/3	선암종(항문선/관의 M8215/3 및 난소망의 M9110/3제외), NOS	Adenocarcinoma(except of anal glands/ducts M8215/3 or rete ovarii M9110/3), NOS
+M8140/6	전이성 선암종, NOS	Adenocarcinoma, metastatic, NOS
+M8141/3	경성 선암종	Scirrhous adenocarcinoma
+M8142/3	증식성 위벽염	Linitis plastica
+M8143/3	표재성 확산성 선암종	Superficial spreading adenocarcinoma
+M8144/0	창자형 선종	Adenoma, intestinal type
+M8144/3	창자형 선암종	Adenocarcinoma, intestinal type
+M8145/3	미만형 암종	Carcinoma, diffuse type
+M8146/0	단형성 선종	Monomorphic adenoma
+M8147/0	기저세포 선종	Basal cell adenoma
+M8147/3	기저세포 선암종	Basal cell adenocarcinoma
+M8148/2	선의 상피내 신생물, 고등급	Glandular intraepithelial neoplasia, high grade
+M8149/0	소관 선종	Canalicular adenoma
+M8150/0	췌장의 신경내분비 미세선종	Pancreatic neuroendocrine microadenoma
+M8150/3	비기능성 췌장의 신경내분비 종양	Pancreatic neuroendocrine tumor, nonfunctioning
+M8151/3	인슐린종, NOS	Insulinoma, NOS
+M8152/3	글루카곤종	Glucagonoma
+M8153/3	가스트린종	Gastrinoma
+M8154/3	혼합형 신경내분비 비-신경내분비 신생물(MiNEN)	Mixed neuroendocrine non-neuroendocrine neoplasm(MiNEN)
+M8155/3	혈관활성-장 폴리펩타이드(VIP)종, NOS	Vipoma, NOS
+M8156/3	소마토스타틴종	Somatostatinoma
+M8158/3	부신피질자극호르몬(ACTH) 분비성 종양	ACTH-producing tumor
+M8160/0	쓸개관(담관) 선종	Bile duct adenoma
+M8160/3	담관 암종	Cholangiocarcinoma
+M8161/0	쓸개관(담관) 낭선종	Bile duct cystadenoma
+M8161/3	쓸개관(담관) 낭선암종	Bile duct cystadenocarcinoma
+M8162/3	간문부 담관암종	Perihilar cholangiocarcinoma
+M8163/0	췌담도의 신생물, 비침범성	Pancreatobiliary neoplasm, non-invasive
+M8163/2	고등급 상피내 신생물이 동반된 췌담도형의 유두상 신생물	Papillary neoplasm, pancreatobiliary type, with high grade intraepithelial neoplasia
+M8163/3	췌담도형 암종	Pancreatobiliary type, carcinoma
+M8170/0	간세포 선종	Liver cell adenoma
+M8170/3	간세포성 암종, NOS	Hepatocellular carcinoma, NOS
+M8171/3	섬유층판성 간세포성 암종	Hepatocellular carcinoma, fibrolamellar
+M8172/3	경성 간세포성 암종	Hepatocellular carcinoma, scirrhous
+M8173/3	방추세포 변종 간세포성 암종	Hepatocellular carcinoma, spindle cell variant
+M8174/3	투명세포형 간세포성 암종	Hepatocellular carcinoma, clear cell type
+M8175/3	다형성형 간세포성 암종	Hepatocellular carcinoma, pleomorphic type
+M8180/3	혼합 간세포성 암종 및 담관암종	Combined hepatocellular carcinoma and cholangiocarcinoma
+M8190/0	섬유주 선종	Trabecular adenoma
+M8190/3	섬유주 선암종	Trabecular adenocarcinoma
+M8191/0	배아형 선종	Embryonal adenoma
+M8200/0	외분비성 피부 원주종	Eccrine dermal cylindroma
+M8200/3	아데노이드 낭성 암종	Adenoid cystic carcinoma
+M8201/2	사상의 상피내 암종	Cribriform carcinoma in situ
+M8201/3	사상의 암종, NOS	Cribriform carcinoma, NOS
+M8202/0	미세낭성 선종	Microcystic adenoma
+M8204/0	수유 선종	Lactating adenoma
+M8210/0	선종성 폴립, NOS	Adenomatous polyp, NOS
+M8210/2	선종성 폴립내의 상피내 선암종	Adenocarcinoma in situ in adenomatous polyp
+M8210/3	선종성 폴립내의 선암종	Adenocarcinoma in adenomatous polyp
+M8211/0	관상 선종, NOS	Tubular adenoma, NOS
+M8211/3	관상 선암종	Tubular adenocarcinoma
+M8212/0	편평 선종	Flat adenoma
+M8213/0	톱니모양 선종, NOS	Serrated adenoma, NOS
+M8213/3	톱니모양 선암종	Serrated adenocarcinoma
+M8214/3	벽세포 암종	Parietal cell carcinoma
+M8215/3	항문샘의 선암종	Adenocarcinoma of anal glands
+M8220/0	선종성 결장 폴립증	Adenomatous polyposis coli
+M8220/3	선종성 결장 폴립증내의 선암종	Adenocarcinoma in adenomatous polyposis coli
+M8221/0	다발성 선종성 폴립	Multiple adenomatous polyps
+M8221/3	다발성 선종성 폴립내의 선암종	Adenocarcinoma in multiple adenomatous polyps
+M8230/2	고형 관상 상피내 암종	Ductal carcinoma in situ, solid type
+M8230/3	고형 암종, NOS	Solid carcinoma, NOS
+M8231/3	단순 암종	Carcinoma simplex
+M8240/3	신경내분비 종양, NOS	Neuroendocrine tumor, NOS
+M8241/3	장크롬 친화성 세포 카르시노이드	Enterochromaffin cell carcinoid
+M8242/3	장크롬 친화성 유사세포 종양	Enterochromaffin-like cell tumor
+M8243/3	배상세포 카르시노이드	Goblet cell carcinoid
+M8244/3	혼합된 선내분비 암종	Mixed adenoneuroendocrine carcinoma
+M8245/1	관상 카르시노이드	Tubular carcinoid
+M8245/3	선카르시노이드 종양	Adenocarcinoid tumour
+M8246/3	신경내분비 암종, NOS	Neuroendocrine carcinoma, NOS
+M8247/3	메르켈세포 암종	Merkel cell carcinoma
+M8248/1	APUD종	Apudoma
+M8249/3	신경내분비 종양, 등급 2	Neuroendocrine tumor, grade 2
+M8250/1	폐선종증	Pulmonary adenomatosis
+M8250/2	비점액성 폐의 상피내 선암종	Adenocarcinoma in situ of lung, non-mucinous
+M8250/3	비늘모양 선암종	Lepidic adenocarcinoma
+M8251/0	포상 선종	Alveolar adenoma
+M8251/3	포상 선암종	Alveolar adenocarcinoma
+M8252/3	비점액성 기관세지-폐포성 암종	Bronchiolo-alveolar carcinoma, non-mucinous
+M8253/2	점액성 폐의 상피내 선암종	Adenocarcinoma in situ of lung, mucinous
+M8253/3	점액성 폐의 선암종	Adenocarcinoma of lung, mucinous
+M8254/3	혼합된 점액성 및 비점액성 폐의 선암종	Adenocarcinoma of lung, mixed mucinous and non-mucinous
+M8255/3	혼합 아형을 동반한 선암종	Adenocarcinoma with mixed subtypes
+M8256/3	비점액성 최소 침범 선암종	Minimally invasive adenocarcinoma, non-mucinous
+M8257/3	점액성 최소 침범 선암종	Minimally invasive adenocarcinoma, mucinous
+M8260/0	유두상 선종, NOS	Papillary adenoma, NOS
+M8260/1	공격성 유두상 종양	Aggressive papillary tumor
+M8260/3	유두상 선암종, NOS	Papillary adenocarcinoma, NOS
+M8261/0	융모상 선종, NOS	Villous adenoma, NOS
+M8261/2	융모상 선종내의 상피내 선암종	Adenocarcinoma in situ in villous adenoma
+M8261/3	융모상 선종내의 선암종	Adenocarcinoma in villous adenoma
+M8262/3	융모상 선암종	Villous adenocarcinoma
+M8263/0	관상융모상 선종, NOS	Tubulovillous adenoma, NOS
+M8263/2	관상융모상 선종내의 상피내 선암종	Adenocarcinoma in situ in tubulovillous adenoma
+M8263/3	관상융모상 선종내의 선암종	Adenocarcinoma in tubulovillous adenoma
+M8264/0	선성 유두종증	Papillomatosis, glandular
+M8265/3	미세유두상 암종, NOS	Micropapillary carcinoma, NOS
+M8270/0	혐색소성 선종	Chromophobe adenoma
+M8270/3	혐색소성 암종	Chromophobe carcinoma
+M8271/0	락토트로프 선종	Lactotroph adenoma
+M8272/0	뇌하수체 선종, NOS	Pituitary adenoma, NOS
+M8272/3	뇌하수체 암종, NOS	Pituitary carcinoma, NOS
+M8273/3	뇌하수체 모세포종	Pituitary blastoma
+M8280/0	호산성 선종	Acidophil adenoma
+M8280/3	호산성 암종	Acidophil carcinoma
+M8281/0	혼합형 호산성-호염기성 선종	Mixed acidophil-basophil adenoma
+M8281/3	혼합형 호산성-호염기성 암종	Mixed acidophil-basophil carcinoma
+M8290/0	호산세포성 선종	Oxyphilic adenoma
+M8290/3	호산세포성 선암종	Oxyphilic adenocarcinoma
+M8300/0	호염기성 선종	Basophil adenoma
+M8300/3	호염기성 암종	Basophil carcinoma
+M8310/0	투명세포 선종	Clear cell adenoma
+M8310/3	투명세포 선암종, NOS	Clear cell adenocarcinoma, NOS
+M8311/1	고신장형 종양	Hypernephroid tumour
+M8311/3	유전성 평활근종증 및 신장세포 암종(HLRCC) 관련 신장세포 암종	Hereditary leiomyomatosis and renal cell carcinoma(HLRCC)syndrome-associated renal cell carcinoma
+M8312/3	신장세포 암종, NOS	Renal cell carcinoma, NOS
+M8313/0	투명세포 선섬유종	Clear cell adenofibroma
+M8313/1	투명세포 경계형 종양	Clear cell borderline tumor
+M8313/3	투명세포 선암섬유종	Clear cell adenocarcinofibroma
+M8314/3	지방-과다 암종	Lipid-rich carcinoma
+M8315/3	글리코겐-과다 암종	Glycogen-rich carcinoma
+M8316/1	저악성 잠재성의 다방성 낭성 신장 신생물	Multilocular cystic renal neoplasm of low malignant potential
+M8316/3	낭-관련 신장세포 암종	Cyst-associated renal cell carcinoma
+M8317/3	혐색소형 신장세포 암종	Renal cell carcinoma, chromophobe type
+M8318/3	육종모양 신장세포 암종	Renal cell carcinoma, sarcomatoid
+M8319/3	집합관 암종	Collecting duct carcinoma
+M8320/3	과립세포 암종	Granular cell carcinoma
+M8321/0	주세포 선종	Chief cell adenoma
+M8322/0	물-투명세포 선종	Water-clear cell adenoma
+M8322/3	물-투명세포 선암종	Water-clear cell adenocarcinoma
+M8323/0	혼합세포 선종	Mixed cell adenoma
+M8323/1	투명세포 유두상 신장세포 암종	Clear cell papillary renal cell carcinoma
+M8323/3	혼합세포 선암종	Mixed cell adenocarcinoma
+M8324/0	지방선종	Lipoadenoma
+M8325/0	뒤콩팥(후신) 선종	Metanephric adenoma
+M8330/0	소포성 선종, NOS	Follicular adenoma, NOS
+M8330/1	비정형적 소포성 선종	Atypical follicular adenoma
+M8330/3	소포성 암종, NOS	Follicular carcinoma, NOS
+M8331/3	고분화된 소포성 선암종	Follicular adenocarcinoma, well differentiated
+M8332/3	섬유주 소포성 선암종	Follicular adenocarcinoma, trabecular
+M8333/0	미세소포성 선종, NOS	Microfollicular adenoma, NOS
+M8333/3	태아 선암종	Fetal adenocarcinoma
+M8334/0	대소포성 선종	Macrofollicular adenoma
+M8335/1	불확실한 악성 잠재성의 소포성 종양	Follicular tumor of uncertain malignant potential
+M8335/3	최소 침범 소포성 암종	Follicular carcinoma, minimally invasive
+M8336/1	유리질화 섬유주 종양	Hyalinizing trabecular tumor
+M8337/3	소분화된 갑상선 암종	Poorly differentiated thyroid carcinoma
+M8339/3	피막형성형 혈관침습성 소포성 암종	Follicular carcinoma, encapsulated, angio invasive
+M8340/3	소포성 변종성 유두상 암종	Papillary carcinoma, follicular variant
+M8341/3	유두상 미세암종	Papillary microcarcinoma
+M8342/3	종양세포성 변형 유두상 암종	Papillary carcinoma, oncocytic variant
+M8343/3	갑상선의 피막형성형 유두상 암종	Papillary carcinoma, encapsulated of thyroid
+M8344/3	원주세포 유두상 암종	Papillary carcinoma, columnar cell
+M8345/3	수질성 갑상선 암종	Medullary thyroid carcinoma
+M8346/3	혼합 수질성-소포성 암종	Mixed medullary-follicular carcinoma
+M8347/3	혼합 수질성-유두상 암종	Mixed medullary-papillary carcinoma
+M8348/1	불확실한 악성 잠재성의 고분화된 종양	Well differentiated tumor of uncertain malignant potential
+M8349/1	유두상 유사 핵 특징(NIFTP)을 동반한 비침범성 소포성 갑상선 신생물	Non-invasive follicular thyroid neoplasm with papillary-like nuclear features (NIFTP)
+M8350/3	비피막형성형 경화성 암종	Nonencapsulated sclerosing carcinoma
+M8360/1	다발성 내분비 선종	Multiple endocrine adenomas
+M8361/0	방사구체성 종양	Juxtaglomerular tumour
+M8370/0	부신피질 선종, NOS	Adrenal cortical adenoma, NOS
+M8370/3	부신피질 암종	Adrenal cortical carcinoma
+M8371/0	밀집세포형 부신피질 선종	Adrenal cortical adenoma, compact cell
+M8372/0	색소성 부신피질 선종	Adrenal cortical adenoma, pigmented
+M8373/0	투명세포형 부신피질 선종	Adrenal cortical adenoma, clear cell
+M8374/0	사구체세포형 부신피질 선종	Adrenal cortical adenoma, glomerulosa cell
+M8375/0	혼합세포형 부신피질 선종	Adrenal cortical adenoma, mixed cell
+M8380/0	자궁내막모양 선종, NOS	Endometrioid adenoma, NOS
+M8380/1	경계형 악성의 자궁내막모양 선종	Endometrioid adenoma, borderline malignancy
+M8380/3	자궁내막모양 선암종, NOS	Endometrioid adenocarcinoma, NOS
+M8381/0	자궁내막모양 선섬유종, NOS	Endometrioid adenofibroma, NOS
+M8381/1	경계형 악성의 자궁내막모양 선섬유종	Endometrioid adenofibroma, borderline malignancy
+M8381/3	악성 자궁내막모양 선섬유종	Endometrioid adenofibroma, malignant
+M8382/3	분비성 변종 자궁내막모양 선암종	Endometrioid adenocarcinoma, secretory variant
+M8383/3	섬모세포 변종 자궁내막모양 선암종	Endometrioid adenocarcinoma, ciliated cell variant
+M8384/3	자궁경관내막형 선암종, NOS	Adenocarcinoma, endocervical type, NOS
+M8390/0	피부부속물 선종	Skin appendage adenoma
+M8390/3	부속기 선암종, NOS	Adnexal adenocarcinoma, NOS
+M8391/0	소포성 섬유종	Follicular fibroma
+M8392/0	한선섬유선종	Syringofibroadenoma
+M8400/0	땀샘 선종	Sweat gland adenoma
+M8400/1	땀샘 종양, NOS	Sweat gland tumour, NOS
+M8400/3	땀샘 선암종	Sweat gland adenocarcinoma
+M8401/0	아포크린 선종	Apocrine adenoma
+M8401/3	아포크린 선암종	Apocrine adenocarcinoma
+M8402/0	한선종, NOS	Hidradenoma, NOS
+M8402/3	한선암종	Hidradenocarcinoma
+M8403/0	한선종, NOS	Spiradenoma, NOS
+M8403/3	악성 외분비 한선종	Malignant eccrine spiradenoma
+M8404/0	한선낭종	Hidrocystoma
+M8405/0	유두상 한선종	Papillary hidradenoma
+M8406/0	유두상 한낭선종	Syringocystadenoma papilliferum
+M8406/3	유두상 한낭선암종	Syringocystadenocarcinoma papilliferum
+M8407/0	한선종, NOS	Syringoma, NOS
+M8407/3	미세낭성 부속기 암종	Microcystic adnexal carcinoma
+M8408/0	외분비 유두상 선종	Eccrine papillary adenoma
+M8408/3	말단 유두상 선암종	Digital papillary adenocarcinoma
+M8409/0	땀구멍샘종, NOS	Poroma, NOS
+M8409/2	상피내 한공암종	Porocarcinoma in situ
+M8409/3	한공암종, NOS	Porocarcinoma, NOS
+M8410/0	피지종	Sebaceoma
+M8410/3	피지의 암종	Sebaceous carcinoma
+M8413/3	외분비 선암종	Eccrine adenocarcinoma
+M8420/0	귀지 선종	Ceruminous adenoma
+M8420/3	귀지 선암종	Ceruminous adenocarcinoma
+M8430/1	점액표피모양 종양	Mucoepidermoid tumour
+M8430/3	점액표피모양 암종	Mucoepidermoid carcinoma
+M8440/0	낭선종, NOS	Cystadenoma, NOS
+M8440/3	낭선암종, NOS	Cystadenocarcinoma, NOS
+M8441/0	장액성 낭선종, NOS	Serous cystadenoma, NOS
+M8441/2	장액성 상피내 암종	Serous intraepithelial carcinoma
+M8441/3	장액성 암종, NOS	Serous carcinoma, NOS
+M8442/1	장액성 경계형 종양, NOS	Serous borderline tumor, NOS
+M8443/0	투명세포 낭선종	Clear cell cystadenoma
+M8450/0	유두상 낭선종, NOS	Papillary cystadenoma, NOS
+M8450/3	유두상 낭선암종, NOS	Papillary cystadenocarcinoma, NOS
+M8451/1	경계형 악성의 유두상 낭선종	Papillary cystadenoma, borderline malignancy
+M8452/1	난소의 고형 가유두모양 종양	Solid pseudopapillary tumour of ovary
+M8452/3	췌장의 고형 가유두모양 신생물	Solid pseudopapillary neoplasm of pancreas
+M8453/0	관내 유두상-점액성 선종	Intraductal papillary-mucinous adenoma
+M8453/2	고등급 이형성을 동반한 관내 유두상-점액성 신생물	Intraductal papillary-mucinous neoplasm with high grade dysplasia
+M8453/3	침습성 암종과 관련된 관내 유두상-점액성 신생물	Intraductal papillary-mucinous neoplasm with an associated invasive carcinoma
+M8454/0	방실결절의 낭성 종양	Cystic tumour of atrio-ventricular node
+M8460/2	장액성 경계형 종양, 미세유두상 변형	Serous borderline tumor, micropapillary variant
+M8460/3	저등급 장액성 암종	Low grade serous carcinoma
+M8461/0	장액성 표면성 유두종	Serous surface papilloma
+M8461/3	고등급 장액성 암종	High grade serous carcinoma
+M8470/0	점액성 낭선종, NOS	Mucinous cystadenoma, NOS
+M8470/2	고등급 형성이상을 동반한 점액성 낭성 신생물	Mucinous cystic neoplasm with high grade dysplasia
+M8470/3	점액성 낭선암종, NOS	Mucinous cystadenocarcinoma, NOS
+M8472/1	경계형 악성의 점액성 낭성 종양	Mucinous cystic tumour of borderline malignancy
+M8474/0	장점액성 낭선종	Seromucinous cystadenoma
+M8474/1	장점액성 경계형 종양	Seromucinous borderline tumor
+M8474/3	장점액성 암종	Seromucinous carcinoma
+M8480/0	점액성 선종	Mucinous adenoma
+M8480/1	충수돌기의 저등급 점액성 신생물	Low grade appendiceal mucinous neoplasm
+M8480/3	점액성 선암종(폐의 M8253/3 제외)	Mucinous adenocarcinoma(except of lung M8253/3)
+M8480/6	복막 거짓 점액종	Pseudomyxoma peritonei
+M8481/3	점액소-생산 선암종	Mucin-producing adenocarcinoma
+M8482/3	위형 점액성 암종	Mucinous carcinoma, gastric type
+M8490/3	반지세포 암종	Signet ring cell carcinoma
+M8490/6	전이성 반지세포 암종	Metastatic signet ring cell carcinoma
+M8500/2	비침윤성 관내 암종, NOS	Intraductal carcinoma, noninfiltrating, NOS
+M8500/3	침윤성 관 암종, NOS	Infiltrating duct carcinoma, NOS
+M8501/2	비침윤성 면포암종	Comedocarcinoma, noninfiltrating
+M8501/3	면포암종, NOS	Comedocarcinoma, NOS
+M8502/3	분비성 암종	Secretory carcinoma
+M8503/0	관내 유두종	Intraductal papilloma
+M8503/2	비침윤성 관내 유두상 선암종	Noninfiltrating intraductal papillary adenocarcinoma
+M8503/3	침범을 동반한 관내 유두상 선암종	Intraductal papillary adenocarcinoma with invasion
+M8504/0	낭내 유두상 선종	Intracystic papillary adenoma
+M8504/2	피막형성형 유두상 암종(갑상선의 M8343/3 제외)	Encapsulated papillary carcinoma(except of thyroid M8343/3)
+M8504/3	침범을 동반한 피막형성형 유두상 암종(갑상선의 M8343/3 제외)	Encapsulated papillary carcinoma with invasion(except of thyroid M8343/3)
+M8505/0	관내 유두종증, NOS	Intraductal papillomatosis, NOS
+M8506/0	유두의 선종	Adenoma of nipple
+M8507/2	관내 미세유두상 암종	Intraductal micropapillary carcinoma
+M8507/3	유방의 침범성 미세유두상 암종	Invasive micropapillary carcinoma of breast
+M8508/3	낭성 과다분비성 암종	Cystic hypersecretory carcinoma
+M8509/2	고형 유두상 상피내 암종	Solid papillary carcinoma in situ
+M8509/3	침범을 동반한 고형 유두상 암종	Solid papillary carcinoma with invasion
+M8510/3	수질성 암종, NOS	Medullary carcinoma, NOS
+M8512/3	림프모양 간질을 동반한 수질성 암종	Medullary carcinoma with lymphoid stroma
+M8513/3	비정형적 수질성 암종	Atypical medullary carcinoma
+M8514/3	결합조직형성형 관 암종	Duct carcinoma, desmoplastic type
+M8519/2	다형성 소엽성 상피내 암종	Lobular carcinoma in situ, pleomorphic
+M8520/2	소엽성 상피내 암종, NOS	Lobular carcinoma in situ, NOS
+M8520/3	소엽성 암종, NOS	Lobular carcinoma, NOS
+M8521/3	침윤성 소관성 암종	Infiltrating ductular carcinoma
+M8522/2	관내암종 및 소엽성 상피내 암종	Intraductal carcinoma and lobular carcinoma in situ
+M8522/3	침윤성 관 및 소엽성 암종	Infiltrating duct and lobular carcinoma
+M8523/3	기타 다른 형태를 동반한 혼합 침윤성 관 암종	Infiltrating duct mixed with other types of carcinoma
+M8524/3	기타 다른 형태를 동반한 혼합 침윤성 소엽성 암종	Infiltrating lobular mixed with other types of carcinoma
+M8525/3	다형성 선암종	Polymorphous adenocarcinoma
+M8530/3	염증성 암종	Inflammatory carcinoma
+M8540/3	유방의 파제트병	Paget disease, mammary
+M8541/3	파제트병 및 유방의 침윤성 관 암종	Paget disease and infiltrating duct carcinoma of breast
+M8542/3	유방외의 파제트병(뼈 제외:비신생물성)	Paget disease, extramammary(except of bone: not neoplastic)
+M8543/3	파제트병 및 유방의 관내 암종	Paget disease and intraductal carcinoma of breast
+M8550/0	포상세포 선종	Acinar cell adenoma
+M8550/1	포상세포 종양	Acinar cell tumour
+M8550/3	포상세포 암종	Acinar cell carcinoma
+M8551/3	포상세포 낭선암종	Acinar cell cystadenocarcinoma
+M8552/3	포상-관상, 혼합된 암종	Mixed acinar-ductal carcinoma
+M8560/0	혼합 편평세포와 선성 유두종	Mixed squamous cell and glandular papilloma
+M8560/3	선편평세포 암종	Adenosquamous carcinoma
+M8561/0	선림프종	Adenolymphoma
+M8562/3	상피성-근상피성 암종	Epithelial-myoepithelial carcinoma
+M8563/0	림프선종	Lymphadenoma
+M8570/3	편평상피 화생을 동반한 선암종	Adenocarcinoma with squamous metaplasia
+M8571/3	연골성 및 골성 화생을 동반한 선암종	Adenocarcinoma with cartilaginous and osseous metaplasia
+M8572/3	방추세포 화생을 동반한 선암종	Adenocarcinoma with spindle cell metaplasia
+M8573/3	아포크린성 화생을 동반한 선암종	Adenocarcinoma with apocrine metaplasia
+M8574/3	신경내분비 분화를 동반한 선암종	Adenocarcinoma with neuroendocrine differentiation
+M8575/3	화생성 암종, NOS	Metaplastic carcinoma, NOS
+M8576/3	간모양의 선암종	Hepatoid adenocarcinoma
+M8580/0	현미경적 흉선종	Microscopic thymoma
+M8580/1	림프모양 간질을 동반한 미세결절성 흉선종	Micronodular thymoma with lymphoid stroma
+M8580/3	흉선종, NOS	Thymoma, NOS
+M8581/3	A형 흉선종	Thymoma, type A
+M8582/3	AB형 흉선종	Thymoma, type AB
+M8583/3	B1형 흉선종	Thymoma, type B1
+M8584/3	B2형 흉선종	Thymoma, type B2
+M8585/3	B3형 흉선종	Thymoma, type B3
+M8586/3	흉선 암종, NOS	Thymic carcinoma, NOS
+M8587/0	딴곳 과오종성의 흉선종	Ectopic hamartomatous thymoma
+M8588/3	흉선-유사 요소를 동반한 방추상피 종양	Spindle epithelial tumour with thymus-like element
+M8589/3	갑상선내 흉선 암종	Intrathyroid thymic carcinoma
+M8590/0	성기삭-간질성 종양, 양성	Sex cord-stromal tumor, benign
+M8590/1	성기삭-생식선 간질성 종양, NOS	Sex cord-gonadal stromal tumour, NOS
+M8591/1	불완전 분화된 성기삭-생식선 간질성 종양	Sex cord-gonadal stromal tumour, incompletely differentiated
+M8592/1	혼합 형태 성기삭-생식선 간질성 종양	Sex cord-gonadal stromal tumour, mixed forms
+M8593/1	소 성기삭 요소를 동반한 간질성 종양	Stromal tumour with minor sex cord elements
+M8594/1	혼합된 배아세포-성기삭-간질성 종양, NOS	Mixed germ cell-sex cord-stromal tumor, NOS
+M8600/0	난포막종, NOS	Thecoma, NOS
+M8600/3	악성 난포막종	Thecoma, malignant
+M8601/0	황체화형 난포막종	Thecoma, luteinized
+M8602/0	경화성 간질성 종양	Sclerosing stromal tumour
+M8610/0	황체종, NOS	Luteoma, NOS
+M8620/1	고환의 성인형 과립막 세포 종양	Adult granulosa cell tumor of testis
+M8620/3	난소의 성인형 과립막세포 종양	Adult granulosa cell tumor of ovary
+M8621/1	과립막세포-난포막세포 종양	Granulosa cell-theca cell tumour
+M8622/0	연소성 고환의 과립막세포 종양	Granulosa cell tumor of testis, juvenile
+M8622/1	연소성 과립막세포 종양(고환의 M8622/0 제외)	Granulosa cell tumour, juvenile (except of testis M8622/0)
+M8623/1	윤상 세관을 가진 성기삭 종양	Sex cord tumour with annular tubules
+M8630/0	양성 남성모세포종	Androblastoma, benign
+M8630/1	남성모세포종, NOS	Androblastoma, NOS
+M8630/3	악성 남성모세포종	Androblastoma, malignant
+M8631/0	고분화된 세르톨리-라이디히세포 종양	Sertoli-Leydig cell tumour, well differentiated
+M8631/1	중등도 분화형 세르톨리-라이디히세포 종양, NOS	Sertoli-Leydig cell tumour of intermediate differentiation, NOS
+M8631/3	소분화된 세르톨리-라이디히세포 종양	Sertoli-Leydig cell tumour, poorly differentiated
+M8632/1	기난드로모세포종	Gynandroblastoma
+M8633/1	그물모양 세르톨리-라이디히세포 종양	Sertoli-Leydig cell tumour, retiform
+M8634/1	이종요소를 가진 중간 분화형 세르톨리-라이디히세포 종양	Sertoli-Leydig cell tumor, intermediate differentiation, with heterologous elements
+M8634/3	이종요소를 가진 소분화된 세르톨리-라이디히세포 종양	Sertoli-Leydig cell tumour, poorly differentiated, with heterologous elements
+M8640/1	세르톨리세포 종양, NOS	Sertoli cell tumour, NOS
+M8640/3	세르톨리세포 암종	Sertoli cell carcinoma
+M8641/0	지질축적을 동반한 세르톨리세포 종양	Sertoli cell tumour with lipid storage
+M8642/1	대세포 석회화 세르톨리세포 종양	Large cell calcifying Sertoli cell tumour
+M8643/1	관내 대세포 유리질화 세르톨리세포 신생물	Intratubular large cell hyalinizing Sertoli cell neoplasia
+M8650/0	난소의 라이디히세포 종양, NOS	Leydig cell tumour of ovary, NOS
+M8650/1	고환의 라이디히세포 종양, NOS	Leydig cell tumour of testis, NOS
+M8650/3	악성 라이디히세포 종양	Leydig cell tumour, malignant
+M8660/0	문세포 종양	Hilus cell tumour
+M8670/0	난소의 지질세포 종양	Lipid cell tumour of ovary
+M8670/3	악성 스테로이드세포 종양	Steroid cell tumour, malignant
+M8671/0	부신 잔존물 종양	Adrenal rest tumour
+M8680/3	부신경절종, NOS	Paraganglioma, NOS
+M8681/3	교감신경성 부신경절종	Sympathetic paraganglioma
+M8682/3	부교감신경성 부신경절종	Parasympathetic paraganglioma
+M8683/0	신경절세포성 부신경절종	Gangliocytic paraganglioma
+M8690/3	중이 부신경절종	Middle ear paraganglioma
+M8691/3	대동맥 소체 종양	Aortic body tumor
+M8692/3	경동맥 소체 부신경절종	Carotid body paraganglioma
+M8693/3	부신외 부신경절종, NOS	Extra-adrenal paraganglioma, NOS
+M8700/3	크롬친화세포종, NOS	Pheochromocytoma, NOS
+M8710/3	사구맥관육종	Glomangiosarcoma
+M8711/0	사구 종양, NOS	Glomus tumour, NOS
+M8711/1	사구맥관종증	Glomangiomatosis
+M8711/3	악성 사구 종양	Glomus tumour, malignant
+M8712/0	사구맥관종	Glomangioma
+M8713/0	사구맥관근종	Glomangiomyoma
+M8714/0	양성 혈관주위 상피모양 종양	Perivascular epithelioid tumor, benign
+M8714/3	악성 혈관주위 상피모양 종양	Perivascular epithelioid tumor, malignant
+M8720/0	색소성 모반, NOS	Pigmented naevus, NOS
+M8720/2	상피내 흑색종	Melanoma in situ
+M8720/3	악성 흑색종(연부의 M9044/3 제외), NOS	Malignant melanoma(except of soft parts M9044/3), NOS
+M8721/3	결절성 흑색종	Nodular melanoma
+M8722/0	풍선세포 모반	Balloon cell naevus
+M8722/3	풍선세포 흑색종	Balloon cell melanoma
+M8723/0	달무리 모반	Halo naevus
+M8723/3	퇴행성 악성 흑색종	Malignant melanoma, regressing
+M8725/0	신경모반	Neuronaevus
+M8726/0	거대세포성 모반	Magnocellular naevus
+M8727/0	형성이상 모반	Dysplastic naevus
+M8728/0	수막성 멜라닌세포증	Meningeal melanocytosis
+M8728/1	수막성 멜라닌세포종	Meningeal melanocytoma
+M8728/3	수막성 멜라닌종증	Meningeal melanomatosis
+M8730/0	비색소성 모반	Nonpigmented naevus
+M8730/3	무흑색소성 흑색종	Amelanotic melanoma
+M8740/0	이행부 모반, NOS	Junctional naevus, NOS
+M8740/3	이행부 모반내 악성 흑색종	Malignant melanoma in junctional naevus
+M8741/2	전암성 흑색증, NOS	Precancerous melanosis, NOS
+M8741/3	전암성 흑색증내 악성 흑색종	Malignant melanoma in precancerous melanosis
+M8742/0	흑자양 멜라닌세포성 모반	Lentiginous melanocytic nevus
+M8742/2	흑색점 검정사마귀	Lentigo maligna
+M8742/3	흑색점 검정사마귀 흑색종	Lentigo maligna melanoma
+M8743/3	적게 누적된 일광 손상 흑색종	Low cumulative sun damage melanoma
+M8744/0	사지말단부 모반	Acral nevus
+M8744/3	사지말단부 흑색종	Acral melanoma
+M8745/3	결합조직형성 흑색종, NOS	Desmoplastic melanoma, NOS
+M8746/3	점막성 흑자양 흑색종	Mucosal lentiginous melanoma
+M8750/0	피부 모반	Dermal nevus
+M8760/0	복합모반	Compound naevus
+M8761/0	선천성 멜라닌세포성 모반, NOS	Congenital melanocytic nevus, NOS
+M8761/1	거대색소성 모반, NOS	Giant pigmented naevus, NOS
+M8761/3	거대 선천성 모반내 발생 악성 흑색종	Malignant melanoma arising in giant congenital nevus
+M8762/1	선천성 모반내의 증식성 피부 병변	Proliferative dermal lesion in congenital naevus
+M8770/0	상피모양 및 방추세포 모반	Epithelioid and spindle cell naevus
+M8770/3	악성 스피츠 종양	Malignant Spitz tumor
+M8771/0	상피모양 세포 모반	Epithelioid cell naevus
+M8771/3	상피모양 세포 흑색종	Epithelioid cell melanoma
+M8772/0	방추세포 모반, NOS	Spindle cell naevus, NOS
+M8772/3	방추세포 흑색종, NOS	Spindle cell melanoma, NOS
+M8773/3	A형 방추세포 흑색종	Spindle cell melanoma, type A
+M8774/3	B형 방추세포 흑색종	Spindle cell melanoma, type B
+M8780/0	청색모반, NOS	Blue naevus, NOS
+M8780/1	색소성 상피모양 멜라닌세포종	Pigmented epithelioid melanocytoma
+M8780/3	악성 청색모반	Blue naevus, malignant
+M8790/0	세포성 청색모반	Cellular blue naevus
+M8800/0	양성 연조직 종양	Soft tissue tumour, benign
+M8800/3	육종, NOS	Sarcoma, NOS
+M8801/3	방추세포 육종	Spindle cell sarcoma
+M8802/1	다형성 유리질화 혈관확장성 종양	Pleomorphic hyalinizing angiectatic tumor
+M8802/3	거대세포 육종(뼈의 M9250/3 제외)	Giant cell sarcoma(except of bone M9250/3)
+M8803/3	소세포 육종	Small cell sarcoma
+M8804/3	상피모양 육종	Epithelioid sarcoma
+M8805/3	미분화된 육종	Undifferentiated sarcoma
+M8806/3	결합조직형성 소원형세포 종양	Desmoplastic small round cell tumour
+M8810/0	섬유종(힘줄집의 M8813/0 제외), NOS	Fibroma(except of tendon sheath M8813/0), NOS
+M8810/1	세포성 섬유종	Cellular fibroma
+M8810/3	섬유육종, NOS	Fibrosarcoma, NOS
+M8811/0	섬유점액종	Fibromyxoma
+M8811/1	점액염증성 섬유모세포성 육종	Myxoinflammatory fibroblastic sarcoma
+M8811/3	점액섬유육종	Myxofibrosarcoma
+M8812/0	골막의 섬유종	Periosteal fibroma
+M8812/3	골막의 섬유육종	Periosteal fibrosarcoma
+M8813/0	힘줄집의 섬유종	Fibroma of tendon sheath
+M8813/3	근막 섬유육종	Fascial fibrosarcoma
+M8814/3	영아성 섬유육종	Infantile fibrosarcoma
+M8815/0	고립성 섬유성 종양/혈관주위세포종, 등급 1	Solitary fibrous tumor/Haemangiopericytoma, grade 1
+M8815/1	고립성 섬유성 종양, NOS	Solitary fibrous tumor, NOS
+M8815/3	악성 고립성 섬유성 종양	Solitary fibrous tumor, malignant
+M8816/0	석회화 건막성 섬유종	Calcifying aponeurotic fibroma
+M8817/0	석회화 섬유성 종양	Calcifying fibrous tumor
+M8820/0	탄력섬유종	Elastofibroma
+M8821/1	공격성 섬유종증	Aggressive fibromatosis
+M8822/1	복부섬유종증	Abdominal fibromatosis
+M8823/0	경화성 섬유종	Sclerotic fibroma
+M8823/1	결합조직형성 섬유종	Desmoplastic fibroma
+M8824/0	근섬유종	Myofibroma
+M8824/1	근섬유종증	Myofibromatosis
+M8825/0	근섬유모세포종	Myofibroblastoma
+M8825/1	근섬유모세포성 종양, NOS	Myofibroblastic tumour, NOS
+M8825/3	근섬유모세포성 육종	Myofibroblastic sarcoma
+M8826/0	혈관근섬유모세포종	Angiomyofibroblastoma
+M8827/1	기관지주위의 근섬유모세포성 종양	Myofibroblastic tumour, peribronchial
+M8830/0	양성 섬유성 조직구종, NOS	Benign fibrous histiocytoma, NOS
+M8830/1	비정형 섬유성 조직구종	Atypical fibrous histiocytoma
+M8830/3	악성 섬유성 조직구종	Malignant fibrous histiocytoma
+M8831/0	조직구종, NOS	Histiocytoma, NOS
+M8832/0	피부섬유종, NOS	Dermatofibroma, NOS
+M8832/1	융기성 피부섬유육종, NOS	Dermatofibrosarcoma protuberans, NOS
+M8832/3	섬유육종성 융기성 피부섬유육종	Dermatofibrosarcoma protuberans, fibrosarcomatous
+M8833/1	색소성 융기성 피부섬유육종	Pigmented dermatofibrosarcoma protuberans
+M8834/1	거대세포 섬유모세포종	Giant cell fibroblastoma
+M8835/1	총상의 섬유조직구 종양	Plexiform fibrohistiocytic tumour
+M8836/1	혈관종성 섬유성 조직구종	Angiomatoid fibrous histiocytoma
+M8840/0	점액종, NOS	Myxoma, NOS
+M8840/3	점액육종	Myxosarcoma
+M8841/0	혈관점액종, NOS	Angiomyxoma, NOS
+M8842/0	골화성 섬유점액모양 종양, NOS	Ossifying fibromyxoid tumour, NOS
+M8842/3	악성 골화성 섬유점액모양 종양	Ossifying fibromyxoid tumor, malignant
+M8850/0	지방종, NOS	Lipoma, NOS
+M8850/1	비정형적 지방종성 종양	Atypical lipomatous tumor
+M8850/3	지방육종, NOS	Liposarcoma, NOS
+M8851/0	섬유지방종	Fibrolipoma
+M8851/1	지방섬유종증	Lipofibromatosis
+M8851/3	고분화된 지방육종, NOS	Liposarcoma, well differentiated, NOS
+M8852/0	섬유점액 지방종	Fibromyxolipoma
+M8852/3	점액모양 지방육종	Myxoid liposarcoma
+M8853/3	원형세포 지방육종	Round cell liposarcoma
+M8854/0	다형성 지방종	Pleomorphic lipoma
+M8854/3	다형성 지방육종	Pleomorphic liposarcoma
+M8855/3	혼합된 지방육종	Mixed liposarcoma
+M8856/0	근육내 지방종	Intramuscular lipoma
+M8857/0	방추세포 지방종	Spindle cell lipoma
+M8857/3	섬유모세포성 지방육종	Fibroblastic liposarcoma
+M8858/3	역분화된 지방육종	Dedifferentiated liposarcoma
+M8860/0	혈관근지방종	Angiomyolipoma
+M8860/1	상피모양 혈관근지방종	Angiomyolipoma, epithelioid
+M8861/0	혈관지방종, NOS	Angiolipoma, NOS
+M8862/0	연골모양의 지방종	Chondroid lipoma
+M8870/0	골수지방종	Myelolipoma
+M8880/0	동면선종	Hibernoma
+M8881/0	지방모세포종증	Lipoblastomatosis
+M8890/0	평활근종, NOS	Leiomyoma, NOS
+M8890/1	평활근종증, NOS	Leiomyomatosis, NOS
+M8890/3	평활근육종, NOS	Leiomyosarcoma, NOS
+M8891/0	상피모양 평활근종	Epithelioid leiomyoma
+M8891/3	상피모양 평활근육종	Epithelioid leiomyosarcoma
+M8892/0	세포성 평활근종	Cellular leiomyoma
+M8893/0	진기한 평활근종	Bizarre leiomyoma
+M8894/0	혈관평활근종	Angioleiomyoma
+M8894/3	혈관근육종	Angiomyosarcoma
+M8895/0	근종	Myoma
+M8895/3	근육종	Myosarcoma
+M8896/0	점액모양의 평활근종	Myxoid leiomyoma
+M8896/3	점액모양의 평활근육종	Myxoid leiomyosarcoma
+M8897/1	불확실한 악성 잠재성의 평활근 종양	Smooth muscle tumour of uncertain malignant potential
+M8898/1	전이성 평활근종	Metastasizing leiomyoma
+M8900/0	횡문근종, NOS	Rhabdomyoma, NOS
+M8900/3	횡문근육종, NOS	Rhabdomyosarcoma, NOS
+M8901/3	성인형 다형성의 횡문근육종	Pleomorphic rhabdomyosarcoma, adult type
+M8902/3	혼합형 횡문근육종	Mixed type rhabdomyosarcoma
+M8903/0	태아 횡문근종	Fetal rhabdomyoma
+M8904/0	성인형 세포성 횡문근종	Adult cellular rhabdomyoma
+M8905/0	생식기 횡문근종	Genital rhabdomyoma
+M8910/3	배아형 횡문근육종, NOS	Embryonal rhabdomyosarcoma, NOS
+M8912/3	방추세포 횡문근육종	Spindle cell rhabdomyosarcoma
+M8920/3	포상 횡문근육종	Alveolar rhabdomyosarcoma
+M8921/3	외배엽중간엽종	Ectomesenchymoma
+M8930/0	자궁내막 간질성 소결절	Endometrial stromal nodule
+M8930/3	자궁내막 간질성 육종, NOS	Endometrial stromal sarcoma, NOS
+M8931/3	저등급 자궁내막 간질성 육종	Endometrial stromal sarcoma, low grade
+M8932/0	선근종, NOS	Adenomyoma, NOS
+M8933/3	선육종	Adenosarcoma
+M8934/3	암성섬유종	Carcinofibroma
+M8935/0	양성 간질성 종양	Stromal tumour, benign
+M8935/1	간질성 종양, NOS	Stromal tumour, NOS
+M8935/3	간질성 육종, NOS	Stromal sarcoma, NOS
+M8936/3	위장의 간질성 종양	Gastrointestinal stromal tumor
+M8940/0	다형성 선종	Pleomorphic adenoma
+M8940/3	악성 혼합형 종양, NOS	Mixed tumour, malignant, NOS
+M8941/3	다형성 선종외 암종	Carcinoma ex pleomorphic adenoma
+M8950/3	뮐러의 혼합성 종양	Mullerian mixed tumour
+M8951/3	중배엽성 혼합성 종양	Mesodermal mixed tumour
+M8959/0	양성 낭성 신종	Benign cystic nephroma
+M8959/1	낭성 부분 분화된 신모세포종	Cystic partially differentiated nephroblastoma
+M8959/3	악성 낭성 신종	Malignant cystic nephroma
+M8960/1	중배엽성 신종	Mesoblastic nephroma
+M8960/3	신모세포종, NOS	Nephroblastoma, NOS
+M8963/3	간상 종양, NOS	Rhabdoid tumor, NOS
+M8964/3	신장의 투명세포 육종	Clear cell sarcoma of kidney
+M8966/0	신수질성 사이질성세포 종양	Renomedullary interstitial cell tumour
+M8967/0	골화의 신장 종양	Ossifying renal tumour
+M8970/3	간모세포종, NOS	Hepatoblastoma, NOS
+M8971/3	췌장(이자)모세포종	Pancreatoblastoma
+M8972/3	폐 모세포종	Pulmonary blastoma
+M8973/3	가슴막폐 모세포종	Pleuropulmonary blastoma
+M8974/1	침모세포종	Sialoblastoma
+M8975/1	석회화 중첩 간질성-상피성 종양	Calcifying nested stromal-epithelial tumor
+M8980/3	암육종, NOS	Carcinosarcoma, NOS
+M8981/3	배아형 암육종	Carcinosarcoma, embryonal
+M8982/0	근상피종	Myoepithelioma
+M8982/3	근상피성 암종	Myoepithelial carcinoma
+M8983/0	선근상피종, NOS	Adenomyoepithelioma, NOS
+M8983/3	암종을 동반한 선근상피종	Adenomyoepithelioma with carcinoma
+M8990/0	양성 간엽종	Mesenchymoma, benign
+M8990/1	간엽종, NOS	Mesenchymoma, NOS
+M8990/3	악성 간엽종	Mesenchymoma, malignant
+M8991/3	배아형 육종	Embryonal sarcoma
+M9000/0	브레너 종양, NOS	Brenner tumour, NOS
+M9000/1	경계형 악성의 브레너 종양	Brenner tumour, borderline malignancy
+M9000/3	악성 브레너 종양	Brenner tumour, malignant
+M9010/0	섬유선종, NOS	Fibroadenoma, NOS
+M9011/0	소관내 섬유선종	Intracanalicular fibroadenoma
+M9012/0	소관주위 섬유선종	Pericanalicular fibroadenoma
+M9013/0	선섬유종, NOS	Adenofibroma, NOS
+M9014/0	장액성 선섬유종, NOS	Serous adenofibroma, NOS
+M9014/1	경계형 악성의 장액성 선섬유종	Serous adenofibroma of borderline malignancy
+M9014/3	장액성 선암섬유종	Serous adenocarcinofibroma
+M9015/0	점액성 선섬유종, NOS	Mucinous adenofibroma, NOS
+M9015/1	경계형 악성의 점액성 선섬유종	Mucinous adenofibroma of borderline malignancy
+M9015/3	점액성 선암섬유종	Mucinous adenocarcinofibroma
+M9016/0	거대 섬유선종	Giant fibroadenoma
+M9020/0	양성 엽상 종양	Phyllodes tumour, benign
+M9020/1	경계형 엽상 종양	Phyllodes tumour, borderline
+M9020/3	악성 엽상 종양	Phyllodes tumour, malignant
+M9030/0	연소성 섬유선종	Juvenile fibroadenoma
+M9040/0	양성 윤활막종	Synovioma, benign
+M9040/3	윤활막 육종, NOS	Synovial sarcoma, NOS
+M9041/3	방추세포형 윤활막 육종	Synovial sarcoma, spindle cell
+M9042/3	상피모양 세포형 윤활막 육종	Synovial sarcoma, epithelioid cell
+M9043/3	이상형 윤활막 육종	Synovial sarcoma, biphasic
+M9044/3	투명세포 육종(신장의 M8964/3 제외), NOS	Clear cell sarcoma(except of kidney M8964/3), NOS
+M9045/3	이중표현형 비부비동 육종	Biphenotypic sinonasal sarcoma
+M9050/0	양성 중피종	Mesothelioma, benign
+M9050/3	악성 중피종	Mesothelioma, malignant
+M9051/0	양성 섬유성 중피종	Fibrous mesothelioma, benign
+M9051/3	악성 섬유성 중피종	Fibrous mesothelioma, malignant
+M9052/0	양성 상피모양 중피종	Epithelioid mesothelioma, benign
+M9052/1	흉막의 고분화된 유두상 중피종	Well differentiated papillary mesothelioma of pleura
+M9052/3	악성 상피모양 중피종	Epithelioid mesothelioma, malignant
+M9053/3	악성 이상형 중피종	Mesothelioma, biphasic, malignant
+M9054/0	선종양 종양, NOS	Adenomatoid tumour, NOS
+M9060/3	미분화 세포종	Dysgerminoma
+M9061/3	고환종, NOS	Seminoma, NOS
+M9062/3	역형성의 고환종	Seminoma, anaplastic
+M9063/3	정모세포성 고환종	Spermatocytic seminoma
+M9064/2	관내 악성 생식세포	Intratubular malignant germ cells
+M9064/3	배아종	Germinoma
+M9065/3	비고환종성 생식세포 종양	Germ cell tumour, nonseminomatous
+M9070/3	배아형 암종, NOS	Embryonal carcinoma, NOS
+M9071/3	난황 낭 종양, NOS	Yolk sac tumour, NOS
+M9072/3	다배아종	Polyembryoma
+M9073/1	생식선모세포종	Gonadoblastoma
+M9080/0	양성 기형종	Teratoma, benign
+M9080/1	기형종, NOS	Teratoma, NOS
+M9080/3	악성 기형종, NOS	Teratoma, malignant, NOS
+M9081/3	기형암종	Teratocarcinoma
+M9082/3	미분화된 악성 기형종	Malignant teratoma, undifferentiated
+M9083/3	중간형 악성 기형종	Malignant teratoma, intermediate
+M9084/0	유피낭, NOS	Dermoid cyst, NOS
+M9084/3	악성 전환을 동반한 기형종	Teratoma with malignant transformation
+M9085/3	혼합된 생식세포 종양	Mixed germ cell tumour
+M9086/3	혈액학적 악성 관련을 동반한 배아세포 종양	Germ cell tumor with associated haematological malignancy
+M9090/0	난소갑상선종, NOS	Struma ovarii, NOS
+M9090/3	악성 난소갑상선종	Struma ovarii, malignant
+M9091/1	갑상샘종성 카르시노이드	Strumal carcinoid
+M9100/0	포상기태, NOS	Hydatidiform mole, NOS
+M9100/1	침습성 포상기태	Invasive hydatidiform mole
+M9100/3	융모막암종, NOS	Choriocarcinoma, NOS
+M9101/3	기타 생식세포 요소를 동반한 복합융모막암종	Choriocarcinoma combined with other germ cell elements
+M9102/3	영양막성 악성 기형종	Malignant teratoma, trophoblastic
+M9103/0	부분적 포상기태	Partial hydatidiform mole
+M9104/1	태반부위 영양막 종양	Placental site trophoblastic tumour
+M9105/3	상피모양의 영양막 종양	Trophoblastic tumour, epithelioid
+M9110/0	난소망의 선종	Adenoma of rete ovarii
+M9110/1	볼프 종양	Wolffian tumor
+M9110/3	악성 중신종	Mesonephroma, malignant
+M9120/0	혈관종, NOS	Haemangioma, NOS
+M9120/3	혈관육종	Haemangiosarcoma
+M9121/0	해면상 혈관종	Cavernous haemangioma
+M9122/0	정맥성 혈관종	Venous haemangioma
+M9123/0	포도상 혈관종	Racemose haemangioma
+M9124/3	쿠퍼세포육종	Kupffer cell sarcoma
+M9125/0	상피모양 혈관종	Epithelioid haemangioma
+M9130/0	양성 혈관내피종	Haemangioendothelioma, benign
+M9130/1	혈관내피종, NOS	Haemangioendothelioma, NOS
+M9130/3	악성 혈관내피종	Haemangioendothelioma, malignant
+M9131/0	모세관성 혈관종	Capillary haemangioma
+M9132/0	근육내 혈관종	Intramuscular haemangioma
+M9133/3	상피모양 혈관내피종, NOS	Epithelioid hemangioendothelioma, NOS
+M9135/1	유두상 림프내 혈관내피종	Papillary intralymphatic angioendothelioma
+M9136/1	방추세포 혈관내피종	Spindle cell haemangioendothelioma
+M9137/0	근내막종	Myointimoma
+M9137/3	내막 육종	Intimal sarcoma
+M9138/1	거짓근원성(상피모양 육종-유사) 혈관내피종	Pseudomyogenic(epithelioid sarcoma-like) haemangioendothelioma
+M9140/3	카포시육종	Kaposi sarcoma
+M9141/0	각화혈관종	Angiokeratoma
+M9142/0	사마귀모양의 각화성 혈관종	Verrucous keratotic haemangioma
+M9160/0	혈관섬유종, NOS	Angiofibroma, NOS
+M9161/0	후천성 토리 혈관종	Acquired tufted haemangioma
+M9161/1	혈관모세포종	Haemangioblastoma
+M9170/0	림프관종, NOS	Lymphangioma, NOS
+M9170/3	림프관육종	Lymphangiosarcoma
+M9171/0	모세관성 림프관종	Capillary lymphangioma
+M9172/0	해면상 림프관종	Cavernous lymphangioma
+M9173/0	낭성 림프관종	Cystic lymphangioma
+M9174/0	림프관근종	Lymphangiomyoma
+M9174/1	림프관평활근종증	Lymphangioleiomyomatosis
+M9175/0	혈림프관종	Haemolymphangioma
+M9180/0	골종, NOS	Osteoma, NOS
+M9180/3	골육종, NOS	Osteosarcoma, NOS
+M9181/3	연골모세포성 골육종	Chondroblastic osteosarcoma
+M9182/3	섬유모세포성 골육종	Fibroblastic osteosarcoma
+M9183/3	모세혈관 확장성 골육종	Telangiectatic osteosarcoma
+M9184/3	뼈의 파제트병에서 온 골육종	Osteosarcoma in Paget disease of bone
+M9185/3	소세포 골육종	Small cell osteosarcoma
+M9186/3	중심성 골육종, NOS	Central osteosarcoma, NOS
+M9187/3	저등급 중심성 골육종	Low grade central osteosarcoma
+M9191/0	골모양의 골종, NOS	Osteoid osteoma, NOS
+M9192/3	골막주위의 골육종	Parosteal osteosarcoma
+M9193/3	골막의 골육종	Periosteal osteosarcoma
+M9194/3	고 등급 표면 골육종	High grade surface osteosarcoma
+M9195/3	피질내 골육종	Intracortical osteosarcoma
+M9200/0	골모세포종, NOS	Osteoblastoma, NOS
+M9200/1	공격성 골모세포종	Aggressive osteoblastoma
+M9210/0	골연골종	Osteochondroma
+M9210/1	골연골종증, NOS	Osteochondromatosis, NOS
+M9211/0	골연골점액종	Osteochondromyxoma
+M9212/0	특이한 골막주위의 골연골종성 증식	Bizarre parosteal osteochondromatous proliferation
+M9220/0	연골종, NOS	Chondroma, NOS
+M9220/1	연골종증, NOS	Chondromatosis, NOS
+M9220/3	연골육종, NOS	Chondrosarcoma, NOS
+M9221/0	골막의 연골종	Periosteal chondroma
+M9221/3	골막의 연골육종	Periosteal chondrosarcoma
+M9222/1	비정형적 연골성 종양	Atypical cartilaginous tumor
+M9230/1	연골모세포종, NOS	Chondroblastoma, NOS
+M9230/3	악성 연골모세포종	Chondroblastoma, malignant
+M9231/3	점액모양 연골육종	Myxoid chondrosarcoma
+M9240/3	간엽성 연골육종	Mesenchymal chondrosarcoma
+M9241/0	연골점액모양의 섬유종	Chondromyxoid fibroma
+M9242/3	투명세포 연골육종	Clear cell chondrosarcoma
+M9243/3	역분화된 연골육종	Dedifferentiated chondrosarcoma
+M9250/1	뼈의 거대세포 종양, NOS	Giant cell tumour of bone, NOS
+M9250/3	뼈의 악성 거대세포 종양	Giant cell tumour of bone, malignant
+M9251/1	연부의 거대세포 종양, NOS	Giant cell tumour of soft parts, NOS
+M9251/3	연부의 악성 거대세포 종양	Malignant giant cell tumour of soft parts
+M9252/0	힘줄 윤활막 거대세포 종양, NOS	Tenosynovial giant cell tumour, NOS
+M9252/1	미만성 힘줄윤활막 거대세포 종양	Tenosynovial giant cell tumor, diffuse
+M9252/3	악성 힘줄 윤활막 거대세포 종양	Malignant tenosynovial giant cell tumour
+M9261/3	긴뼈의 에나멜상피종	Adamantinoma of long bones
+M9262/0	골화성 섬유종	Ossifying fibroma
+M9270/0	양성 치원성 종양	Odontogenic tumour, benign
+M9270/1	치원성 종양, NOS	Odontogenic tumour, NOS
+M9270/3	악성 치원성 종양	Odontogenic tumour, malignant
+M9271/0	에나멜모세포성 섬유상아종	Ameloblastic fibrodentinoma
+M9272/0	백악질(시멘트질)종, NOS	Cementoma, NOS
+M9273/0	양성 백악질(시멘트질)모세포종	Cementoblastoma, benign
+M9274/0	시멘트질-골화 섬유종	Cemento-ossifying fibroma
+M9275/0	거대형 백악질(시멘트질)종	Gigantiform cementoma
+M9280/0	치아종, NOS	Odontoma, NOS
+M9281/0	화합물 치아종	Compound odontoma
+M9282/0	복합성 치아종	Complex odontoma
+M9290/0	에나멜모세포성 섬유-치아종	Ameloblastic fibro-odontoma
+M9290/3	에나멜모세포성 치아육종	Ameloblastic odontosarcoma
+M9300/0	선종양 치원성 종양	Adenomatoid odontogenic tumour
+M9301/0	석회화 치원성 낭	Calcifying odontogenic cyst
+M9302/0	상아질형성의 유령세포 종양	Dentinogenic ghost cell tumor
+M9302/3	유령세포 치원성 암종	Ghost cell odontogenic carcinoma
+M9310/0	에나멜모세포종, NOS	Ameloblastoma, NOS
+M9310/3	전이성 에나멜모세포종	Ameloblastoma, metastasizing
+M9311/0	치아에나멜모세포종	Odontoameloblastoma
+M9312/0	편평 치원성 종양	Squamous odontogenic tumour
+M9320/0	치원성 점액종	Odontogenic myxoma
+M9321/0	치원성 섬유종, NOS	Odontogenic fibroma, NOS
+M9322/0	말초 치원성 섬유종	Peripheral odontogenic fibroma
+M9330/0	에나멜모세포성 섬유종	Ameloblastic fibroma
+M9330/3	에나멜모세포성 섬유육종	Ameloblastic fibrosarcoma
+M9340/0	석회화 상피성 치원성 종양	Calcifying epithelial odontogenic tumour
+M9341/3	투명세포 치원성 암종	Clear cell odontogenic carcinoma
+M9342/3	치원성 암육종	Odontogenic carcinosarcoma
+M9350/1	두개인두종	Craniopharyngioma
+M9351/1	에나멜상피종성 두개인두종	Craniopharyngioma, adamantinomatous
+M9352/1	유두상 두개인두종	Craniopharyngioma, papillary
+M9360/1	송과체종	Pinealoma
+M9361/1	송과체세포종	Pineocytoma
+M9362/3	송과체모세포종	Pineoblastoma
+M9363/0	흑색증성 신경외배엽성 종양	Melanotic neuroectodermal tumour
+M9364/3	유잉 육종	Ewing sarcoma
+M9365/3	아스킨 종양	Askin tumour
+M9370/0	양성 척삭세포 종양	Benign notochordal cell tumor
+M9370/3	척삭종, NOS	Chordoma, NOS
+M9371/3	연골모양 척삭종	Chondroid chordoma
+M9372/3	역분화된 척삭종	Dedifferentiated chordoma
+M9373/0	척삭주위종	Parachordoma
+M9380/3	악성 신경교종	Glioma, malignant
+M9381/3	대뇌신경교종증	Gliomatosis cerebri
+M9382/3	희소성상세포종, NOS	Oligoastrocytoma, NOS
+M9383/1	뇌실막밑세포종	Subependymoma
+M9384/1	뇌실막밑 거대세포 성상세포종	Subependymal giant cell astrocytoma
+M9385/3	H3 K27M-돌연변이 미만성 중간선 신경교종	Diffuse midline glioma, H3 K27M-mutant
+M9390/0	맥락막 얼기 유두종, NOS	Choroid plexus papilloma, NOS
+M9390/1	비정형적 맥락막 얼기 유두종	Atypical choroid plexus papilloma
+M9390/3	맥락막 얼기 암종	Choroid plexus carcinoma
+M9391/1	안장 뇌실막세포종	Sellar ependymoma
+M9391/3	뇌실막세포종, NOS	Ependymoma, NOS
+M9392/3	역형성의 뇌실막세포종	Ependymoma, anaplastic
+M9393/3	유두상 뇌실막세포종	Papillary ependymoma
+M9394/1	점액유두상 뇌실막세포종	Myxopapillary ependymoma
+M9395/3	송과선 부분의 유두상 종양	Papillary tumor of pineal region
+M9396/3	RELA 유합-양성 뇌실막세포종	Ependymoma, RELA fusion positive
+M9400/3	성상세포종, NOS	Astrocytoma, NOS
+M9401/3	역형성의 성상세포종, NOS	Astrocytoma, anaplastic, NOS
+M9410/3	원형질성 성상세포종, NOS	Protoplasmic astrocytoma, NOS
+M9411/3	팽대세포성 성상세포종, NOS	Gemistocytic astrocytoma, NOS
+M9412/1	결합조직형성 영아의 성상세포종	Desmoplastic infantile astrocytoma
+M9413/0	배아형성장애 신경상피성 종양	Dysembryoplastic neuroepithelial tumour
+M9420/3	원섬유성 성상세포종	Fibrillary astrocytoma
+M9421/1	모양세포성 성상세포종	Pilocytic astrocytoma
+M9423/3	극성 해면모세포종	Polar spongioblastoma
+M9424/3	다형성의 황색성상세포종, NOS	Pleomorphic xanthoastrocytoma, NOS
+M9425/3	모양점액성 성상세포종	Pilomyxoid astrocytoma
+M9430/3	성상모세포종	Astroblastoma
+M9431/1	혈관중심성 신경교종	Angiocentric glioma
+M9432/1	뇌하수체종	Pituicytoma
+M9440/3	교모세포종 NOS	Glioblastoma, NOS
+M9441/3	거대세포 교모세포종	Giant cell glioblastoma
+M9442/1	교섬유종	Gliofibroma
+M9442/3	신경교육종	Gliosarcoma
+M9444/1	척삭모양 신경교종	Chordoid glioma
+M9445/3	동위구연산염 탈수소효소(IDH)-돌연변이 교모세포종	Glioblastoma, IDH-mutant
+M9450/3	희소돌기아교세포종, NOS	Oligodendroglioma, NOS
+M9451/3	역형성의 희소돌기아교세포종, NOS	Oligodendroglioma, anaplastic, NOS
+M9460/3	희소돌기아교모세포종	Oligodendroblastoma
+M9470/3	수모세포종, NOS	Medulloblastoma, NOS
+M9471/3	결합조직형성 결절성 수모세포종	Desmoplastic nodular medulloblastoma
+M9472/3	수질근육모세포종	Medullomyoblastoma
+M9473/3	중추신경계통(CNS) 배아형 종양, NOS	CNS embryonal tumor, NOS
+M9474/3	대세포 수모세포종	Large cell medulloblastoma
+M9475/3	WNT-활성 수모세포종, NOS	Medulloblastoma, WNT-activated, NOS
+M9476/3	SHH-활성 및 TP53-돌연변이 수모세포종	Medulloblastoma, SHH-activated and TP53-mutant
+M9477/3	비-WNT/비-SHH 수모세포종	Medulloblastoma, non-WNT/non-SHH
+M9478/3	C19MC 변화가 있는 다층의 장미모양을 동반한 배아형 종양	Embryonal tumor with multilayered rosettes with C19MC alteration
+M9480/3	소뇌육종, NOS	Cerebellar sarcoma, NOS
+M9490/0	신경절신경종	Ganglioneuroma
+M9490/3	신경절신경모세포종	Ganglioneuroblastoma
+M9491/0	신경절신경종증	Ganglioneuromatosis
+M9492/0	신경절세포종, NOS	Gangliocytoma, NOS
+M9493/0	소뇌의 형성이상 신경절세포종	Dysplastic gangliocytoma of cerebellum (Lhermitte-Duclos)
+M9500/3	신경모세포종, NOS	Neuroblastoma, NOS
+M9501/0	양성 수질상피종	Medulloepithelioma, benign
+M9501/3	수질상피종, NOS	Medulloepithelioma, NOS
+M9502/0	양성 기형모양 수질상피종	Teratoid medulloepithelioma, benign
+M9502/3	기형모양 수질상피종, NOS	Teratoid medulloepithelioma, NOS
+M9503/3	신경상피종, NOS	Neuroepithelioma, NOS
+M9504/3	해면신경모세포종	Spongioneuroblastoma
+M9505/1	신경절교종, NOS	Ganglioglioma, NOS
+M9505/3	역형성의 신경절교종	Ganglioglioma, anaplastic
+M9506/1	중심성 신경세포종	Central neurocytoma
+M9507/0	파치니 종양	Pacinian tumour
+M9508/3	비정형 기형모양/간상의 종양	Atypical teratoid/rhabdoid tumour
+M9509/1	유두상 교신경성 종양	Papillary glioneuronal tumor
+M9510/0	망막세포종	Retinocytoma
+M9510/3	망막모세포종, NOS	Retinoblastoma, NOS
+M9511/3	분화된 망막모세포종	Retinoblastoma, differentiated
+M9512/3	미분화된 망막모세포종	Retinoblastoma, undifferentiated
+M9513/3	미만성 망막모세포종	Retinoblastoma, diffuse
+M9514/1	자연퇴행된 망막모세포종	Retinoblastoma, spontaneously regressed
+M9520/3	후각 신경인성 종양	Olfactory neurogenic tumour
+M9521/3	후각 신경세포종	Olfactory neurocytoma
+M9522/3	후각 신경모세포종	Olfactory neuroblastoma
+M9523/3	후각 신경상피종	Olfactory neuroepithelioma
+M9530/0	수막종, NOS	Meningioma, NOS
+M9530/3	악성 수막종	Meningioma, malignant
+M9531/0	수막세포성 수막종	Meningothelial meningioma
+M9532/0	섬유성 수막종	Fibrous meningioma
+M9533/0	사종성 수막종	Psammomatous meningioma
+M9534/0	혈관종성 수막종	Angiomatous meningioma
+M9535/0	혈관모세포성 수막종	Haemangioblastic meningioma
+M9537/0	이행성 수막종	Transitional meningioma
+M9538/1	투명세포 수막종	Clear cell meningioma
+M9538/3	유두상 수막종	Papillary meningioma
+M9539/1	비정형적 수막종	Atypical meningioma
+M9539/3	수막성 육종증	Meningeal sarcomatosis
+M9540/0	신경섬유종, NOS	Neurofibroma, NOS
+M9540/3	악성 말초 신경집 종양, NOS	Malignant peripheral nerve sheath tumour, NOS
+M9541/0	흑색증의 신경섬유종	Melanotic neurofibroma
+M9542/3	상피모양 악성 말초 신경집 종양	Malignant peripheral nerve sheath tumor, epithelioid
+M9550/0	총상 신경섬유종	Plexiform neurofibroma
+M9560/0	신경초종, NOS	Schwannoma, NOS
+M9560/1	멜라닌성 신경초종	Melanotic schwannoma
+M9560/3	악성 신경(섬유)초종	Neurilemmoma, malignant
+M9561/3	횡문근모세포성 분화를 동반한 악성 말초 신경집 종양	Malignant peripheral nerve sheath tumour with rhabdomyoblastic differentiation
+M9562/0	신경집 점액종	Nerve sheath myxoma
+M9563/0	신경집 종양, NOS	Nerve sheath tumor, NOS
+M9570/0	신경종, NOS	Neuroma, NOS
+M9571/0	신경다발막종, NOS	Perineurioma, NOS
+M9571/3	악성 신경다발막종	Perineurioma, malignant
+M9580/0	과립 세포 종양(안장부위의 M9582/0 제외), NOS	Granular cell tumour(except of sellar region M9582/0), NOS
+M9580/3	악성 과립 세포 종양	Granular cell tumour, malignant
+M9581/3	포상 연조직 육종	Alveolar soft part sarcoma
+M9582/0	안장부위 과립 세포 종양	Granular cell tumour of the sellar region

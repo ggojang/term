@@ -1,0 +1,13 @@
+echo "cd ../Extension & cp & vi loinc_x.yz_class.csv # refer to Userguide"
+
+# If you need to check Group Root, look into MySQL_additional2.sql and "GroupFile/GroupLoincTerms.csv" 
+# IF you need to check LinguisticVariants, look into MySQLLoader.sql and "LinguisticVariants/" 
+
+echo "vi MySQLLoader.sql # change version"
+echo "vi MySQL_additional3.sql # change version"
+echo "./loincImporter.sh"
+
+echo "cd ~/resources/LOINC_Import_Script"
+echo "vi startup.sh #change ES_IDX version"
+echo "vi *.conf #change ES_IDX version"
+echo "./startup.sh" 

@@ -1,0 +1,48 @@
+{
+		"term_icd10_type": {
+			"properties": {
+				"code": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"kind": {
+					"type": "string",
+					"index": "not_analyzed"
+				},
+				"label": {
+					"type": "string",
+					"analyzer": "term_analyzer",
+					"fields": {
+						"autocomplete": {
+							"type": "string",
+							"analyzer": "autocomplete"
+						},
+						"edge2": {
+							"type": "string",
+							"analyzer": "edge2_analyzer"
+						},
+						"edge3": {
+							"type": "string",
+							"analyzer": "edge3_analyzer"
+						},
+						"raw": {
+							"type": "string",
+							"index": "not_analyzed"
+						},
+						"raw_lc": {
+							"type": "string",
+							"analyzer": "raw_lowercase_analyzer"
+						},
+						"stop_edge2": {
+							"type": "string",
+							"analyzer": "stop_edge2_analyzer"
+						},
+						"stop_edge3": {
+							"type": "string",
+							"analyzer": "stop_edge3_analyzer"
+						}
+					}
+				}
+			}
+		}
+}

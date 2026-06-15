@@ -1,0 +1,434 @@
+TYPE	NAME	ABBREVIATION	TERM
+1	Laboratory	ABXBACT	Antibiotic susceptibilities
+1	Laboratory	ALLERGY	Response to antigens
+1	Laboratory	BLDBK	Blood bank
+1	Laboratory	BLDBK.GENOTYPING	Blood bank genotyping
+1	Laboratory	CELLMARK	Cell surface models
+1	Laboratory	CHAL	Challenge tests
+1	Laboratory	CHAL.ROUTINE	Routine challenge tests
+1	Laboratory	CHALSKIN	Skin challenge tests
+1	Laboratory	CHEM	Chemistry
+1	Laboratory	COAG	Coagulation study
+1	Laboratory	CYTO	Cytology
+1	Laboratory	DRUG-TOX	Drug levels & Toxicology
+1	Laboratory	DRUGDOSE	Drug dose (for transmitting doses for pharmacokinetics)
+1	Laboratory	FERT	Fertility
+1	Laboratory	H&P.HX.LAB	History relevant to laboratory testing
+1	Laboratory	HEM-BC	Hematology and Cell counts
+1	Laboratory	HL7.CYTOGEN	Clinical cytogenetic report
+1	Laboratory	HL7.GENETICS	Clinical genetic report
+1	Laboratory	HLA	HLA tissue typing antigens and antibodies
+1	Laboratory	HNA	Human neutrophil alloantigens
+1	Laboratory	HPA	HPA typing
+1	Laboratory	LABORDERS	Laboratory order
+1	Laboratory	LABORDERS.ONTOLOGY	LABORDERS.ONTOLOGY
+1	Laboratory	MICRO	Microbiology
+1	Laboratory	MISC	Miscellaneous
+1	Laboratory	MOLPATH	Molecular pathology
+1	Laboratory	MOLPATH.DEL	Deletions
+1	Laboratory	MOLPATH.DELDUP	Gene deletions or duplications
+1	Laboratory	MOLPATH.INV	Gene inversion
+1	Laboratory	MOLPATH.MISC	Gene miscellaneous
+1	Laboratory	MOLPATH.MUT	Gene mutation
+1	Laboratory	MOLPATH.NUCREPEAT	Nucleotide repeats
+1	Laboratory	MOLPATH.PHARMG	Pharmacogenomics
+1	Laboratory	MOLPATH.REARRANGE	Gene rearrangement
+1	Laboratory	MOLPATH.TRISOMY	Gene chromosome trisomy
+1	Laboratory	MOLPATH.TRNLOC	Gene translocation
+1	Laboratory	NR STATS	Normal range statistics
+1	Laboratory	PANEL.ABXBACT	Susceptibility order sets
+1	Laboratory	PANEL.ALLERGY	Allergy order set
+1	Laboratory	PANEL.BLDBK	Blood bank order set
+1	Laboratory	PANEL.BLDBK.GENOTYPE	Blood bank genotyping panel
+1	Laboratory	PANEL.CELLMARK	Cell marker order sets
+1	Laboratory	PANEL.CHAL	Challenge order set
+1	Laboratory	PANEL.CHEM	Chemistry order set
+1	Laboratory	PANEL.COAG	Coagulation order set
+1	Laboratory	PANEL.DRUG-TOX	Drug level & Toxicology order set
+1	Laboratory	PANEL.FERT	Fertility testing order set
+1	Laboratory	PANEL.HEDIS	Healthcare Effectiveness Data and Information Set order set
+1	Laboratory	PANEL.HEM-BC	Hematology & blood count order set
+1	Laboratory	PANEL.HL7.CYTOGEN	HL7 cytogenetics panel
+1	Laboratory	PANEL.HL7.GENETICS	HL7 genetics panel
+1	Laboratory	PANEL.HLA	HLA order set
+1	Laboratory	PANEL.HNA	HNA order set
+1	Laboratory	PANEL.HPA	HPA order set
+1	Laboratory	PANEL.MICRO	Microbiology order set
+1	Laboratory	PANEL.MISC	Miscellaneous order set
+1	Laboratory	PANEL.MOLPATH	Molecular pathology order set
+1	Laboratory	PANEL.MOLPATH.PHARMG	Pharmacogenomics panel
+1	Laboratory	PANEL.OBS	Obstetrics order set
+1	Laboratory	PANEL.PATH	Pathology order set
+1	Laboratory	PANEL.SERO	Serology order set
+1	Laboratory	PANEL.SPEC	Specimen set
+1	Laboratory	PANEL.UA	Urinalysis order set
+1	Laboratory	PATH	Pathology
+1	Laboratory	PATH.HISTO	Histology
+1	Laboratory	PATH.PROTOCOLS.BRST	Pathology protocols - breast
+1	Laboratory	PATH.PROTOCOLS.GENER	Pathology protocols - general
+1	Laboratory	PATH.PROTOCOLS.PROST	Pathology protocols - prostate
+1	Laboratory	PATH.PROTOCOLS.SKIN	Pathology protocols - skin
+1	Laboratory	SERO	Serology (antibodies and most antigens except blood bank and infectious agents)
+1	Laboratory	SPEC	Specimen characteristics
+1	Laboratory	UA	Urinalysis
+2	Clinical	ADMIN	Administrative
+2	Clinical	ADMIN.DEMOG	Demographics
+2	Clinical	ADMIN.FACILITY	Facility
+2	Clinical	ADMIN.ID	Identification numbers
+2	Clinical	ADMIN.PATIENT	ADMIN.PATIENT
+2	Clinical	ADMIN.PATIENT.DEMOG	Patient demographics
+2	Clinical	ADMIN.PATIENT.ID	ADMIN.PATIENT.ID
+2	Clinical	APTA	American Physical Therapy Association(APTA)
+2	Clinical	ART	Antiretroviral therapy
+2	Clinical	AUDIO	Audiology
+2	Clinical	BDYCRC.ATOM	General body circumference
+2	Clinical	BDYCRC.MOLEC	Specific body circumference
+2	Clinical	BDYHGT.ATOM	General body height(length)
+2	Clinical	BDYHGT.MOLEC	Specific body height(length)
+2	Clinical	BDYSURF.ATOM	General body surface area
+2	Clinical	BDYTMP.ATOM	General body temperature
+2	Clinical	BDYTMP.MOLEC	Specific body temperature
+2	Clinical	BDYTMP.TIMED.MOLEC	Timed Specific body temperature
+2	Clinical	BDYWGT.ATOM	General body weight
+2	Clinical	BDYWGT.MOLEC	Specific body weight
+2	Clinical	BP.ATOM	General General blood pressure
+2	Clinical	BP.CENT.MOLEC	Specific central blood pressur
+2	Clinical	BP.MOLEC	Specific blood pressure
+2	Clinical	BP.PSTN.MOLEC	Specific position blood pressure
+2	Clinical	BP.TIMED.MOLEC	Timed specific blood pressure
+2	Clinical	BP.VENOUS.MOLEC	Specific venous blood pressur
+2	Clinical	CARD.PROC	Cardiac procedures
+2	Clinical	CARD.RISK	Cardiac risk
+2	Clinical	CARD.US	Cardiac Ultrasound(was US.ECHO)
+2	Clinical	CARD.US.DICOM	DICOM Simplified Adult Echo Report concepts
+2	Clinical	CARDIO-PULM	Cardiopulmonary
+2	Clinical	CLIN	Clinical
+2	Clinical	CLIN.RISK	Clinical Risk
+2	Clinical	CLIN.VET	Clinical Veterinary terms
+2	Clinical	CLINTRIAL	Clinical trials
+2	Clinical	DENTAL	Dental
+2	Clinical	DEVICES	Devices
+2	Clinical	DOC.ADM	Administrative document
+2	Clinical	DOC.MISC	Miscellaneous document
+2	Clinical	DOC.ONTOLOGY	Document Ontology
+2	Clinical	DOC.PUBLICHEALTH	Public health documentation
+2	Clinical	DOC.QUALITY	Quality documents
+2	Clinical	DOC.REF	Referral documentation
+2	Clinical	DOC.REF.CTP	Clinical Trial Protocol reference document
+2	Clinical	DOCUMENT.REGULATORY	Regulatory document
+2	Clinical	ED	Emergency Department(DEEDS) variables
+2	Clinical	EKG.ATOM	General EKG
+2	Clinical	EKG.IMP	Impression
+2	Clinical	EKG.MEAS	EKG measurements
+2	Clinical	ENDO.GI	Endoscopy
+2	Clinical	ENDO.PULM	ENDO.PULM
+2	Clinical	EYE	Ophthalmology and Optometry
+2	Clinical	EYE.ANGIO	Eye angiography
+2	Clinical	EYE.ANGIO.NEI	NEI eyeGENE electrooculogram
+2	Clinical	EYE.CONTACT_LENS	Contact lens
+2	Clinical	EYE.EOG.NEI	NEI eyeGENE electrooculogram
+2	Clinical	EYE.ERG	Electroretinogram
+2	Clinical	EYE.ERG.NEI	NEI eyeGENE electroretinogram
+2	Clinical	EYE.GLASSES	Eyeglasses
+2	Clinical	EYE.HETEROPHORIA	Heterophoria
+2	Clinical	EYE.HX	Eye history
+2	Clinical	EYE.HX.NEI	NEI eyeGENE eye history
+2	Clinical	EYE.LENSOMETRY	Lensometry
+2	Clinical	EYE.OCT	Ophthalmology Optical Coherence Tomography
+2	Clinical	EYE.OCT.NEI	NEI eyeGENE optical coherence tomography
+2	Clinical	EYE.PX	Eye physical exam
+2	Clinical	EYE.PX.NEI	NEI eyeGENE eye physical exam
+2	Clinical	EYE.REFRACTION	Refraction
+2	Clinical	EYE.REFRACTION.NEI	NEI eyeGENE refractio
+2	Clinical	EYE.RETINAL_RX	Retinal laser photocoagulatio
+2	Clinical	EYE.SLITLAMP.NEI	NEI eyeGENE slit lamp biomicroscopy
+2	Clinical	EYE.SPECULAR MICROSCOPY	EYE.SPECULAR MICROSCOPY
+2	Clinical	EYE.TONOMETRY	Tonometry
+2	Clinical	EYE.TONOMETRY.NEI	NEI eyeGENE tonometry
+2	Clinical	EYE.US	Eye ultrasound
+2	Clinical	EYE.VISUAL_FIELD	Visual field
+2	Clinical	EYE.VISUAL_FIELD.NEI	NEI eyeGENE visual field
+2	Clinical	FUNCTION	Physical function
+2	Clinical	GEN.US	General ultrasound
+2	Clinical	GI	Gastroenterology
+2	Clinical	H&P.HX	History
+2	Clinical	H&P.PX	Physical exam
+2	Clinical	H&P.SURG PROC	Surgical procedure history
+2	Clinical	HEMODYN.ATOM	General hemodynamics
+2	Clinical	HEMODYN.MOLEC	Specific hemodynamics
+2	Clinical	HL7.CCDA	HL7 Consolidated Clinical Document Architecture (CCDA)
+2	Clinical	HL7.SMP	HL7 Standardization Medication Profile (SMP)
+2	Clinical	HRTRATE.ATOM	General heart rate
+2	Clinical	HRTRATE.MOLEC	Specific heart rate
+2	Clinical	HRTRATE.PSTN.MOLEC	Heart rate taken in specific position
+2	Clinical	HRTRATE.TIMED.MOL	Timed specific Heart rate
+2	Clinical 	ICU	ICU
+2	Clinical	IEEE Rosetta	IEEE Rosetta
+2	Clinical	IO_IN_SALTS+CALS	Intake of salts + calories
+2	Clinical	IO_IN.ATOM	General intake
+2	Clinical	IO_IN.INFUS	Infusion pump intake
+2	Clinical	IO_IN.MOLEC	Specific intake	
+2	Clinical	IO_IN.SUMMARY	Intake summary
+2	Clinical	IO_IN.TIMED.MOLEC	Timed specific intake
+2	Clinical	IO_OUT.ATOM	General output
+2	Clinical	IO_OUT.MOLEC	Specific output
+2	Clinical	IO_OUT.TIMED.MOLE	Timed specific output
+2	Clinical	IO.TUBE	Intake and Output - tube
+2	Clinical	MEDS	Medications
+2	Clinical	NEMSIS	National Emergency Medical Service Information System (NEMSIS)
+2	Clinical	NEONAT	Neonatology
+2	Clinical	NEURO	Neurology
+2	Clinical	NIH.COGNITIVE	NIH - cognitive
+2	Clinical	NIH.MOTOR	NIH - motor
+2	Clinical	NIH.SENSORY	NIH - sensory
+2	Clinical	NUTRITION&DIETETICS	Nutrition and Dietetics
+2	Clinical	OB.US	OB ultrasound
+2	Clinical	OBGYN	Obstetric and Gynecology
+2	Clinical	ONCOLOGY	Oncology
+2	Clinical	PANEL.ADMIN	Administrative information panel
+2	Clinical	PANEL.APTA	American Physical Therapy Associationi(APTA) panel
+2	Clinical	PANEL.ART	Antiretroviral therapy Panels
+2	Clinical	PANEL.BDYTMP	Temperature Panel
+2	Clinical	PANEL.BP	Blood pressure Panels
+2	Clinical	PANEL.CARDIAC	Cardiac Panels
+2	Clinical	PANEL.CLIN	Clinical panels
+2	Clinical	PANEL.CLIN.RISK	Clinical Risk Panel
+2	Clinical	PANEL.CLIN.VET	PANEL.CLIN.VET
+2	Clinical	PANEL.CV	CV Panels
+2	Clinical	PANEL.DEVICES	Panel.devices
+2	Clinical	PANEL.DOC	Documents panels
+2	Clinical	PANEL.ED	Emergency Department(DEEDS) panel
+2	Clinical	PANEL.EYE	Ophthalmology panels
+2	Clinical	PANEL.FUNCTION	Function panel
+2	Clinical	PANEL.H&P	HandP panels
+2	Clinical	PANEL.HL7.CCDA	HL7 Consolidated Clinical Document Architecture(CCDA) set
+2	Clinical	PANEL.IEEE ROSETTA	IEEE Rosetta panels
+2	Clinical	PANEL.IO	IO Panels
+2	Clinical	PANEL.MEDS	PANEL.MEDS
+2	Clinical	PANEL.NEMSIS	National Emergency Medical Service Information System(NEMSIS) panels
+2	Clinical	PANEL.NEONAT	Neonatal Apgar panels
+2	Clinical	PANEL.NEURO	Neurology panels
+2	Clinical	PANEL.NIH.COGNITIVE	PANEL.NIH.COGNITIVE
+2	Clinical	PANEL.NIH.MOTOR	PANEL.NIH.MOTOR
+2	Clinical	PANEL.NUTRITION&DIET	Nutrition and dietetics panels
+2	Clinical	PANEL.OB.US	Ob Ultrasound Panel
+2	Clinical	PANEL.ONCO	Oncology panels
+2	Clinical	PANEL.PATIENT SAFETY	Patient safety panel
+2	Clinical	PANEL.PHENX	Consensus measures for Phenotypes and eXposures(PhenX) panels
+2	Clinical	PANEL.PHR	Public Health Record Panels
+2	Clinical	PANEL.PULM	Pulmonary panels
+2	Clinical	PANEL.RAD	Radiology panels
+2	Clinical	PANEL.SURG	Surgery panels
+2	Clinical	PANEL.TRAUMA	Trauma panel
+2	Clinical	PANEL.TUMRRGT	Tumor Registry Panels
+2	Clinical	PANEL.UPDRS	Unified Parkinson's Disease Rating Scale(UPDRS) panel
+2	Clinical	PANEL.US.URO	Urology US Panel
+2	Clinical	PANEL.VACCIN	Vaccination records panel
+2	Clinical	PANEL.VITALS	Vital Signs Panels
+2	Clinical	PATIENT SAFETY	Patient safety
+2	Clinical	PHENX	Consensus measures for Phenotypes and eXposures(PhenX)
+2	Clinical	PUBLICHEALTH	Public Health
+2	Clinical	PULM	Respiratory measures and Ventilator management
+2	Clinical	RAD	Radiology
+2	Clinical	RESP.ATOM	General respiratory
+2	Clinical	RESP.MOLEC	Specific respiratory
+2	Clinical	RESP.TIMED.MOLEC	Timed specific respiratory
+2	Clinical	SKNFLD.MOLEC	Specific skin fold
+2	Clinical	SURG	Surgery
+2	Clinical	TRAUMA	Trauma
+2	Clinical	TRNSPLNT.ORGAN	Organ transplant
+2	Clinical	TUMRRGT	Tumor registry(NAACCR)
+2	Clinical	UPDRS	Unified Parkinson's Disease Rating Scale(UPDRS)
+2	Clinical	US.URO	Ultrasound
+2	Clinical	VACCIN	Vaccination records
+2	Clinical	VOLUME.MOLEC	Specific volume
+3	Claims Attachment	ATTACH	HIPAA Attachment
+3	Claims Attachment	ATTACH.AMB	Ambulance attachment
+3	Claims Attachment	ATTACH.CARD	Cardiac attachment
+3	Claims Attachment	ATTACH.CLINRPT	Clinical report attachment
+3	Claims Attachment	ATTACH.CPHS	Children's Preventative Health System attachment
+3	Claims Attachment	ATTACH.ED	Emergency department attachment
+3	Claims Attachment	ATTACH.GI	Gastrointestinal attachment
+3	Claims Attachment	ATTACH.LAB	Laboratory attachment
+3	Claims Attachment	ATTACH.MEDS	Medication attachment
+3	Claims Attachment	ATTACH.MODIFIER	Modifier attachment
+3	Claims Attachment	ATTACH.OBS	Obstetrics attachment
+3	Claims Attachment	ATTACH.PERIODONTAL	Periodontal attachment
+3	Claims Attachment	ATTACH.REHAB	Rehabilitation attachment
+3	Claims Attachment	ATTACH.REHAB.ABUSE	Alcohol/Substance abuse rehabilitation attachment
+3	Claims Attachment	ATTACH.REHAB.CARDIAC	Cardiac rehabilitation attachment
+3	Claims Attachment	ATTACH.REHAB.NURS	Specialized nursing attachment
+3	Claims Attachment	ATTACH.REHAB.OT	Occupational therapy attachment
+3	Claims Attachment	ATTACH.REHAB.PSYCH	Psychiatric rehabilitation attachment
+3	Claims Attachment	ATTACH.REHAB.PT	Physical rehabilitation attachment
+3	Claims Attachment	ATTACH.REHAB.PULM	Pulmonary rehabilitation attachment
+3	Claims Attachment	ATTACH.REHAB.RT	Respiratory rehabilitation attachment
+3	Claims Attachment	ATTACH.REHAB.SOCIAL	Medical social work attachment
+3	Claims Attachment	ATTACH.REHAB.SPEECH	Speech therapy rehabilitation attachment
+3	Claims Attachment	ATTACH.RESP	Respiratory attachment
+3	Claims Attachment	PANEL.ATTACH.MOD	HIPAA attachment request modifier code sets
+4	Surveys	MEPS	MEPS
+4	Surveys	PANEL.SURVEY.ACT	Asthma Control Test(ACT) set
+4	Surveys	PANEL.SURVEY.ADVAULT	ADVault survey set
+4	Surveys	PANEL.SURVEY.AHRQ	Agency for Healthcare Research and Quality (AHRQ) survey set
+4	Surveys	PANEL.SURVEY.ALSFRSR	ALS Functional Rating Scale - Revised set
+4	Surveys	PANEL.SURVEY.AMNART	American National Adult Reading Test (AmNART) set
+4	Surveys	PANEL.SURVEY.BDI	Beck Depression Inventory (BDI) set	
+4	Surveys	PANEL.SURVEY.BIMS	Brief Interview for Mental Health Status (BIMS) set
+4	Surveys	PANEL.SURVEY.BPI	Brief Pain Inventory (BPI) set
+4	Surveys	PANEL.SURVEY.BRIEF	BRIEF Health Literacy Screening Tool set
+4	Surveys	PANEL.SURVEY.CAM	Confusion Assessment Method (CAM) set
+4	Surveys	PANEL.SURVEY.CARE	Continuity Assessment Record and Evaluation (CARE) set
+4	Surveys	PANEL.SURVEY.CBS-8	Columbia Behavior Scale for Dementia (CBS-8) set
+4	Surveys	PANEL.SURVEY.CDC	Centers for Disease Control (CDC) set
+4	Surveys	PANEL.SURVEY.CESD	Center for Epidemiological Studies Depression (CESD) set
+4	Surveys	PANEL.SURVEY.CHILD-PUGH	Child–Pugh set
+4	Surveys	PANEL.SURVEY.CMS	Centers for Medicare & Medicaid Services set
+4	Surveys	PANEL.SURVEY.CNPI	Checklist of Nonverbal Pain Indicators (CNPI) set
+4	Surveys	PANEL.SURVEY.COOP	Dartmouth Cooperative Functional Status Test (COOP) set
+4	Surveys	PANEL.SURVEY.COVID	COVID-19 related surveys
+4	Surveys	PANEL.SURVEY.CSSRS	Columbia Suicide Severity Rating Scale (CSSRS) set
+4	Surveys	PANEL.SURVEY.DAST	Drug Abuse Screening Test set
+4	Surveys	PANEL.SURVEY.DUKE-AD	Duke Anxiety Depression Scale (DUKE-AD) set
+4	Surveys	PANEL.SURVEY.EPDS	Edinburgh Postnatal Depression Scale Set
+4	Surveys	PANEL.SURVEY.ESRD	End Stage Renal Disease (ESRD) facility survey set
+4	Surveys	PANEL.SURVEY.GDS	Geriatric Depression Scale (GDS) set
+4	Surveys	PANEL.SURVEY.GNHLTH	General Healthy survey set
+4	Surveys	PANEL.SURVEY.GPCOG	General Practitioner Assessment of Cognition (GPCOG) set
+4	Surveys	PANEL.SURVEY.HAQ	Health Assessment Questionnaire (HAQ) set
+4	Surveys	PANEL.SURVEY.HARK	Humiliation, Afraid, Rape, and Kick (HARK) set
+4	Surveya	PANEL.SURVEY.HENDRICH	PANEL.SURVEY.HENDRICH
+4	Surveys	PANEL.SURVEY.HHCC	Home Health Care Classification set
+4	Surveys	PANEL.SURVEY.HHS	Department of Health and Humsn Services set
+4	Surveys	PANEL.SURVEY.HITS	HITS Survey set
+4	Surveys	PANEL.SURVEY.HIV-SSC	Signs and Symptoms checklist for persons living with HIV set
+4	Surveys	PANEL.SURVEY.IPAQ	International Physical Activity Questionnaire (IPAQ) set
+4	Surveys	PANEL.SURVEY.LIV-HIV	Living with HIV set
+4	Surveys	PANEL.SURVEY.LKSS	Lysholm Kneww Scoring Scale(LKSS) set
+4	Surveys	PANEL.SURVEY.MDS	Minimum Data Set for Nursing Home Resident Assessment and Care Screening set
+4	Surveys	PANEL.SURVEY.MEPS	PANEL.SURVEY.MEPS
+4	Surveys	PANEL.SURVEY.MFS	Morse Fall Scale set
+4	Surveys	PANEL.SURVEY.MLHFQ	Minnesota Living with Heart Failure Questionnaire (MLHFQ) set
+4	Surveys	PANEL.SURVEY.MTLHLTH	Mental Health survey set
+4	Surveys	PANEL.SURVEY.NEURO	Neurological survey set
+4	Surveys	PANEL.SURVEY.NEUROQ	Quality of Life Outcomes in Neurological Disorders (NeuroQol) set
+4	Surveys	PANEL.SURVEY.NHANES	National Health and Nutrition Examination Survey (NHANES) set
+4	Surveys	PANEL.SURVEY.NICHQ	ADHD Questionnaire panels
+4	Surveys	PANEL.SURVEY.NIDA	National Institute on Drug Abuse set
+4	Surveys	PANEL.SURVEY.NIH.EMO	NIH Toolbox Emotion Domain panels
+4	Surveys	PANEL.SURVEY.NMMDS	Nursing Management Minimum Data set
+4	Surveys	PANEL.SURVEY.NORTON	Norton Scale survey set
+4	Surveys	PANEL.SURVEY.NSRAS	Neonatal Skin Risk Assessment Scale survey
+4	Surveys	PANEL.SURVEY.OASIS	Outcome and Assessment Information Survey set
+4	Surveys	PANEL.SURVEY.OMAHA	OMAHA survey set
+4	Surveys	PANEL.SURVEY.OPTIMAL	Outpatient Physical Therapy Improvement in Movement a Assessment Log set
+4	Surveys	PANEL.SURVEY.ORTHOPEDICS	Oethopedic survey panels
+4	Surveys	PANEL.SURVEY.PAS	Patient Activity Scale (PAS) set
+4	Surveys	PANEL.SURVEY.PASII	Patient Activity Scale II (PAS-II) set
+4	Surveys	PANEL.SURVEY.PCORI	Patient-Centered Outcomes Research Institute (PCORI) set
+4	Surveys	PANEL.SURVEY.PCORNET	Patient Centered Outcomes Research Network (PCORnet) Common Data Model (CDM) set
+4	Surveys	PANEL.SURVEY.PHQ	Patient Health Questionnaire set
+4	Surveys	PANEL.SURVEY.PNDS	Perioperative Nursing Data Set outcomes panel
+4	Surveys	PANEL.SURVEY.PROMIS	Patient Reported Outcomes Measurement System set
+4	Surveys	PANEL.SURVEY.PROWL	Patient Reported Ourcomes with LASIK sets
+4	Surveys	PANEL.SURVEY.QAM	Quality Audit Marker set
+4	Surveys	PANEL.SURVEY.QRDA	Quality Health Reporting Document Architecture set
+4	Surveys	PANEL.SURVEY.R-OURCOMES	R-Outcomes set
+4	Surveys	PANEL.SURVEY.RFC	Residual Functional Capacity set
+4	Surveys	PANEL.SURVEY.RMDQ	Roland Morris Disability Questionnaire set
+4	Surveys	PANEL.SURVEY.RSS	Ramsay Sedation Scale panel
+4	Surveys	PANEL.SURVEY.RUDAS	Rowland Universal Dementia Assessment Scale panel	
+4	Surveys	PANEL.SURVEY.SAMHSA	Substance Abuse and Mental Health Services Administration (SAMHSA) set
+4	Surveys	PANEL.SURVEY.SDOH	Social determinants of heath set
+4	Surveys	PANEL.SURVEY.SEEK	Safe Environtment for Every Kid
+4	Surveys	PANEL.SURVEY.SLP	Speech-language pathology(SLP) panels
+4	Surveys	PANEL.SURVEY.UNMETHELNEED	PANEL.SURVEY.UNMETHELNEED
+4	Surveys	PANEL.SURVEY.USSGFHT	United States Surgeon General Family Health Tool (USSGFHT) set
+4	Surveys	PANEL.SURVEY.WELLRX	WellRX Questionnaire set
+4	Surveys	PANEL.SURVEY.WHYMPI	PANEL.SURVEY.WHYMPI
+4	Surveys	PANEL.TIMP	Test of Infant Motor Performance(TIMP) set
+4	Surveys	SURVEY.AAOS	American Academy of Orthopaedic Surgeons (AAOS) survey
+4	Surveys	SURVEY.ACT	Asthma Control Test (ACT)
+4	Surveys	SURVEY.ADHD	Attention Deficit Hyperactivity Disorder (ADHD)
+4	Surveys	SURVEY.ADVAULT	ADVault survey
+4	Surveys	SURVEY.AHRQ	Agency for Healthcare Research and Quality (AHRQ) survey
+4	Surveys	SURVEY.ALSFRSR	ALS Functional Rating Scale - Revised
+4	Surveys	SURVEY.AMNART	American National Adult Reading Test (AmNART)
+4	Surveys	SURVEY.BCAT	SURVEY.BCAT
+4	Surveys	SURVEY.BDI	Beck Depression Inventory (BDI)
+4	Surveys	SURVEY.BPI	Brief Pain Inventory (BPI)
+4	Surveys	SURVEY.BRIEF	BRIEF survey
+4	Surveys	SURVEY.CARE	Continuity Assessment Record and Evaluation (CARE) survey
+4	Surveys	SURVEY.CBS-8	Columbia Behavior Scale for Dementia survey
+4	Surveys	SURVEY.CDC	Centers for Disease Control (CDC) survey
+4	Surveys	SURVEY.CERNER	Cerner survey
+4	Surveys	SURVEY.CESD	Center for Epidemiological Studies Depression (CESD) survey
+4	Surveys	SURVEY.CHILD-PUGH	Child-Pugh survey
+4	Surveys	SURVEY.CMS	Centers for Medicare & Medicaid Services (CMS) survey
+4	Surveys	SURVEY.CNPI	Checklist of Nonverbal Pain Indicators survey
+4	Surveys	SURVEY.COOP	Dartmouth Cooperative Functional Status Test (COOP)
+4	Surveys	SURVEY.COVID	COVID-19 related survey questions
+4	Surveys	SURVEY.CSSRS	Columbia Suicide Severity Rating Scale (CSSRS)
+4	Surveys	SURVEY.DAST	Drug Abuse Screening Test (DAST)
+4	Surveys	SURVEY.DUKE-AD	Duke Anxiety Depression Scale (DUKE-AD)
+4	Surveys	SURVEY.EPDS	Edinburgh Postnatal Depression Scale (EPDS)
+4	Surveys	SURVEY.ESRD	End Stage Renal Disease (ESRD) facility survey
+4	Surveys	SURVEY.GDS	Geriatric Depression Scale (GDS) survey
+4	Surveys	SURVEY.GNHLTH	General Health survey
+4	Surveys	SURVEY.GPCOG	General Practitioner Assessment of Cognition (GPCOG)
+4	Surveys	SURVEY.HAQ	Health Assessment Questionnaire (HAQ)
+4	Surveys	SURVEY.HARK	Humiliation, Afraid, Rape, and Kick (HARK)
+4	Surveys	SURVEY.HHS	Department of Health and Human Services (HHS) survey
+4	Surveys	SURVEY.HITS	HITS Survey
+4	Surveys	SURVEY.HWS	Healthy Weight Summary (HWS)
+4	Surveys	SURVEY.IPAQ	International Physical Activity Questionnaire (IPAQ)
+4	Surveys	SURVEY.LKSS	Lysholm Knee Scoring Scale survey
+4	Surveys	SURVEY.MDS	Minimum Data Set (MDS) for Nursing Home Resident Assessment and Care Screening survey
+4	Surveys	SURVEY.MFS	Morse Fall Scale (MFS) survey
+4	Surveys	SURVEY.MISC	Miscellaneous survey
+4	Surveys	SURVEY.MLHFQ	Minnesota Living with Heart Failure Questionnaire (MLHFQ)
+4	Surveys	SURVEY.MTLHLTH	Mental Health survey
+4	Surveys	SURVEY.NEURO	Neurological survey
+4	Surveys	SURVEY.NEUROQ	Quality of Life Outcomes in Neurological Disorders (NeuroQol) survey
+4	Surveys	SURVEY.NHANES	National Health and Nutrition Examination Survey (NHANES)
+4	Surveys	SURVEY.NHCS	National Health Care Survey (NHCS)
+4	Surveys	SURVEY.NICHQ	ADHD Questionnaire
+4	Surveys	SURVEY.NIDA	National Institure of Drug Abuse
+4	Surveys	SURVEY.NIH_TOOLBOX	NIH Toolbox
+4	Surveys	SURVEY.NIH.EMO	NIH Toolbox Emotion Domain
+4	Surveys	SURVEY.NMMDS	Nursing Management Minimum Data Survey (NMMDS)
+4	Surveys	SURVEY.NORTON	Norton Scale survey
+4	Surveys	SURVEY.NSRAS	Neonatal Skin Risk Assessment Scale (NSRAS)
+4	Surveys	SURVEY.NURSE.HHCC	Home Health Care Classification (HHCC) survey
+4	Surveys	SURVEY.NURSE.HIV-SSC	Signs and Symptoms Checklist (SSC) for persons living with HIV survey
+4	Surveys	SURVEY.NURSE.LIV-HIV	Living with HIV survey
+4	Surveys	SURVEY.NURSE.OMAHA	OMAHA survey
+4	Surveys	SURVEY.NURSE.QAM	Quality Audit Marker (QAM) survey
+4	Surveys	SURVEY.OASIS	Outcome and Assessment Information Survey (OASIS)
+4	Surveys	SURVEY.OPTIMAL	Outpatient Physical Therapy Improvement in Movement and Assessment Log (OPTIMAL)
+4	Surveys	SURVEY.ORTHOPEDICS	Orthopedics surveys
+4	Surveys	SURVEY.PAIN	Pain surveys
+4	Surveys	SURVEY.PAS	Patient Activity Scale (PAS)
+4	Surveys	SURVEY.PASII	Patient Activity Scale II (PAS-II)
+4	Surveys	SURVEY.PCORNET	Patient Centered Outcomes Research Network (PCORnet) Common Data Model (CDM)
+4	Surveys	SURVEY.PEG	Pain intensity, Enjoyment of life, General activity (PEG)
+4	Surveys	SURVEY.PHQ	Patient Health Questionnaire (PHQ)
+4	Surveys	SURVEY.PNDS	Perioperative Nursing Dara Set(PNDS) survey
+4	Surveys	SURVEY.PRAPARE	Protocol for Responding to and Assessing Patients Assets Risks and Experiences (PRAPARE)
+4	Surveys	SURVEY.PROMIS	Patient Reported Outcomes Measurement System (PROMIS) survey
+4	Surveys	SURVEY.PROWL	Patient Reported Outcomes with LASIC surveys
+4	Surveys	SURVEY.QRDA	Quality Health Reporting Document Architecture (QRDA) survey
+4	Surveys	SURVEY.R-OUTCOMES	R-Outcomes survey
+4	Surveys	SURVEY.RFC	Residual Functional Capacity (RFC) survey
+4	Surveys	SURVEY.RMDQ	Roland Morris Disability Questionnaire
+4	Surveys	SURVEY.RSS	Ramsay Sedation Scale
+4	Surveys	SURVEY.RUDAS	Rowland Universal Dementia Assessment Scale (RUDAS)
+4	Surveys	SURVEY.SAMHSA	Substance Abuse and Mental Health Services Administration (SAMHSA) survey
+4	Surveys	SURVEY.SDOH	Social Determinants of Health
+4	Surveys	SURVEY.SEEK	Safe Environment for Every Kid
+4	Surveys	SURVEY.SLP	Speech-language parthology(SLP) surveys
+4	Surveys	SURVEY.UNMETHELNEED	SURVEY.UNMETHELNEED
+4	Surveys	SURVEY.USSGFHT	United States Surgeon General Family Health Tool (USSGFHT) survey
+4	Surveys	SURVEY.WELLRX	WellRX Questionnaire
+4	Surveys	SURVEY.WHYMPI	SURVEY.WHYMPI
+4	Surveys	TIMP	Test of Infant Motor Performance(TIMP) survey

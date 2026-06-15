@@ -1,0 +1,5 @@
+/Users/seungjong.yu/github/term_backend/icd10/bin
+ClaMLParser: Running....
+Reading XML from /Users/seungjong.yu/github/term_backend/icd10/bin/icd102019en.xml
+ClaMLParser: Writing File
+ClaMLParser: Done
