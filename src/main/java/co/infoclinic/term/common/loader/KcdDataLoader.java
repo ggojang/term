@@ -32,7 +32,7 @@ public class KcdDataLoader {
 
     public static void main(String[] args) throws Exception {
         String dir = args.length > 0 ? args[0]
-                : "/Users/seungjong.yu/github/term_backend/icd10/KCD-9";
+                : "/Users/seungjong.yu/github/term/icd10/KCD-9";
 
         try (Connection conn = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD)) {
             conn.setAutoCommit(false);
