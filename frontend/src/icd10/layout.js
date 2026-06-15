@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Left from './left.js';
 import Main from './main.js';
 import { makeStyles } from '@material-ui/core/styles';
@@ -11,9 +11,8 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-export default function Icd10Layout() {
+export default function Icd10Layout({ selectedCode, setSelectedCode }) {
   const classes = useStyles();
-  const [selectedCode, setSelectedCode] = useState('');
 
   return (
     <Grid container>
