@@ -84,7 +84,7 @@ export default function Children(props) {
       const childId = expandingNodes[0];
       setTimeout(() => {
         axios
-          .get(`http://api.infoclinic.co/children/SNOMEDCT/${childId}`)
+          .get(`/children/SNOMEDCT/${childId}`)
           .then(result =>
             setChildNodes(
               result.data
@@ -130,7 +130,7 @@ export default function Children(props) {
 
         setTimeout(() => {
           axios
-            .get(`http://api.infoclinic.co/children/SNOMEDCT/${props.firstId}`)
+            .get(`/children/SNOMEDCT/${props.firstId}`)
             .then(result =>
               setChildNodes(
                 result.data

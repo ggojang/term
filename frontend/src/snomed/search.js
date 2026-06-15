@@ -184,7 +184,7 @@ export default function Search(props) {
       setListCheckBox({});
 
       axios
-        .get(`http://api.infoclinic.co/search/SNOMEDCT?match=${matchType}&state=${state}&q=${q}&page=${page}&size=${size}`)
+        .get(`/search/SNOMEDCT?match=${matchType}&state=${state}&q=${q}&page=${page}&size=${size}`)
         .then(response => setSearchResult(response));
     }
   }, [q, state, matchType]);
@@ -208,7 +208,7 @@ export default function Search(props) {
       console.log("page query: "+`match=${matchType}&state=${state}&q=${q}${tmp}&page=${page}&size=${size}`);
       */
       axios
-        .get(`http://api.infoclinic.co/search/SNOMEDCT?match=${matchType}&state=${state}&q=${q}${tmp}&page=${page}&size=${size}`)
+        .get(`/search/SNOMEDCT?match=${matchType}&state=${state}&q=${q}${tmp}&page=${page}&size=${size}`)
         .then(response => setSearchResult(response));
     }
   }, [page]);
@@ -275,7 +275,7 @@ export default function Search(props) {
       console.log("==> " + `match=${matchType}&state=${state}&q=${q}${tmp}&page=1&size=${size}`);
       */
       axios
-        .get(`http://api.infoclinic.co/search/SNOMEDCT?match=${matchType}&state=${state}&q=${q}${tmp}&page=1&size=${size}`)
+        .get(`/search/SNOMEDCT?match=${matchType}&state=${state}&q=${q}${tmp}&page=1&size=${size}`)
         .then(response => setSearchResult2(response));
 
     }

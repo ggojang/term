@@ -79,7 +79,7 @@ export default function Hierarchy(props) {
         const childId = expandingNodes[0];
         setTimeout(() => {
           axios
-            .get(`http://api.infoclinic.co/children/SNOMEDCT/${childId}`)
+            .get(`/children/SNOMEDCT/${childId}`)
             .then(result =>
               setChildNodes(
                 result.data
@@ -121,7 +121,7 @@ export default function Hierarchy(props) {
     if (props.nodeId === undefined) {
     setTimeout(() => {
       axios
-        .get(`http://api.infoclinic.co/children/SNOMEDCT/138875005`)
+        .get(`/children/SNOMEDCT/138875005`)
         .then(result =>
           setChildNodes(
             result.data

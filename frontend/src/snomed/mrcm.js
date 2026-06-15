@@ -63,7 +63,7 @@ const useStyles = makeStyles((theme) => ({
 
 async function getMRCM(id) {
   const response = await axios.get(
-    `http://api.infoclinic.co/allow/attributes/SNOMEDCT/${id}`
+    `/allow/attributes/SNOMEDCT/${id}`
   );
   return response.data;
 }

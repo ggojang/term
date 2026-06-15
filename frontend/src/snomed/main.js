@@ -127,42 +127,42 @@ const useStyles = makeStyles((theme) => ({
 
 async function getEntity(id) {
   const response = await axios.get(
-    `http://api.infoclinic.co/entity/SNOMEDCT/${id}`
+    `/entity/SNOMEDCT/${id}`
   );
   return response.data;
 }
 
 async function getDescriptions(id) {
   const response = await axios.get(
-    `http://api.infoclinic.co/descriptions/SNOMEDCT/${id}`
+    `/descriptions/SNOMEDCT/${id}`
   );
   return response.data;
 }
 
 async function getAssociations(id) {
   const response = await axios.get(
-    `http://api.infoclinic.co/associations/SNOMEDCT/${id}`
+    `/associations/SNOMEDCT/${id}`
   );
   return response.data;
 }
 
 async function getPostexpr(id) {
   const response = await axios.get(
-    `http://api.infoclinic.co/postexpr/SNOMEDCT/${id}`
+    `/postexpr/SNOMEDCT/${id}`
   );
   return response.data;
 }
 
 async function getMembers(id) {
   const response = await axios.get(
-    `http://api.infoclinic.co/members/SNOMEDCT?refcpntid=${id}`
+    `/members/SNOMEDCT?refcpntid=${id}`
   );
   return response.data;
 }
 
 async function getHistories(id) {
   const response = await axios.get(
-    `http://api.infoclinic.co/histories/SNOMEDCT/${id}`
+    `/histories/SNOMEDCT/${id}`
   );
   return response.data;
 }

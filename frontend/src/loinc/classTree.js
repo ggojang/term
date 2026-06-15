@@ -55,7 +55,7 @@ export default function ClassTree(props) {
         const childId = expandingNodes[0];
         setTimeout(() => {
           axios
-            .get(`http://api.infoclinic.co/children/LOINC/${childId}`)
+            .get(`/children/LOINC/${childId}`)
             .then(result =>
               setChildNodes(
                 result.data
@@ -89,7 +89,7 @@ export default function ClassTree(props) {
     if (props.nodeId === undefined) {
     setTimeout(() => {
       axios
-        .get(`http://api.infoclinic.co/children/LOINC/class`)
+        .get(`/children/LOINC/class`)
         .then(result =>
           setChildNodes(
             result.data

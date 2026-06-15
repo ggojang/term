@@ -146,7 +146,7 @@ export default function Main(props) {
     setPage(1);
     setSize(15);
     axios
-      .get(`http://api.infoclinic.co/members/SNOMEDCT?refcpntid=${props.refset.id}`)
+      .get(`/members/SNOMEDCT?refcpntid=${props.refset.id}`)
       .then(response => setDescript(response))
       .catch((ex) => { console.log('No descriptor', ex); });
   }, [props.refset.id])
@@ -154,7 +154,7 @@ export default function Main(props) {
   useEffect(() => {
     //setQ('*');
     axios
-      .get(`http://api.infoclinic.co/members/SNOMEDCT/${props.refset.id}?q=${q}&page=${page}&size=${size}`)
+      .get(`/members/SNOMEDCT/${props.refset.id}?q=${q}&page=${page}&size=${size}`)
       .then( (response) => { flag.current = "hasMemebr"; setMember(response) })
       .catch((ex) => { flag.current = "noMember";  setMember([]); console.log('No members', ex); });
   }, [descript])
@@ -197,7 +197,7 @@ export default function Main(props) {
     setPage(1);
     setSize(15);
     axios
-      .get(`http://api.infoclinic.co/members/SNOMEDCT/${props.refset.id}?q=${q}&page=${page}&size=${size}`)
+      .get(`/members/SNOMEDCT/${props.refset.id}?q=${q}&page=${page}&size=${size}`)
       .then( (response) => { flag.current = "hasMemebr"; setMember(response) })
       .catch((ex) => { flag.current = "noMember"; setMember([]); console.log('No members', ex); });
   }, [q])
@@ -205,7 +205,7 @@ export default function Main(props) {
   useEffect(() => {
     //setQ('*');
     axios
-      .get(`http://api.infoclinic.co/members/SNOMEDCT/${props.refset.id}?q=${q}&page=${page}&size=${size}`)
+      .get(`/members/SNOMEDCT/${props.refset.id}?q=${q}&page=${page}&size=${size}`)
       .then( (response) => { flag.current = "hasMemebr"; setMember(response) })
       .catch((ex) => { flag.current = "noMember"; setMember([]); console.log('No members', ex); });
   }, [page, size])

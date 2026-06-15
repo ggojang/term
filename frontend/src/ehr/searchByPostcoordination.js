@@ -170,7 +170,7 @@ export default function SearchByPostcoordination(props) {
       let opt = `match=FULLTEXT&state=ACTIVE&q=${q}&page=${page}&size=${size}`;
 
       axios
-        .get(`http://api.infoclinic.co/search/SNOMEDCT?${opt}`)
+        .get(`/search/SNOMEDCT?${opt}`)
         .then(response => setResult(response));
     }
   }, [q]);

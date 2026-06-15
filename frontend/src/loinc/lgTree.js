@@ -78,7 +78,7 @@ export default function LGTree(props) {
         const childId = expandingNodes[0];
         setTimeout(() => {
           axios
-            .get(`http://api.infoclinic.co/children/LOINC/${childId}`)
+            .get(`/children/LOINC/${childId}`)
             .then(result =>
               setChildNodes(
                 result.data
@@ -112,7 +112,7 @@ export default function LGTree(props) {
     if (props.nodeId === undefined) {
     setTimeout(() => {
       axios
-        .get(`http://api.infoclinic.co/children/LOINC/group`)
+        .get(`/children/LOINC/group`)
         .then(result =>
           setChildNodes(
             result.data

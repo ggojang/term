@@ -332,7 +332,7 @@ export default function Main(props) {
           i_count2++;
           promises.push(
            axios
-           .get(`http://api.infoclinic.co/postexpr/SNOMEDCT/${value2[j][1]}`)
+           .get(`/postexpr/SNOMEDCT/${value2[j][1]}`)
            .then(response => {
              tmp2.push([ch, response.data]);
            })
