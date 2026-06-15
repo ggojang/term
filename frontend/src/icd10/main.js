@@ -54,6 +54,13 @@ export default function Icd10Main({ code, setSelectedCode }) {
   const [ancestors, setAncestors] = useState([]);
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [chapters, setChapters] = useState([]);
+
+  useEffect(() => {
+    axios.get('/children/ICD10/root')
+      .then(res => setChapters(res.data || []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!code) return;
@@ -78,9 +85,31 @@ export default function Icd10Main({ code, setSelectedCode }) {
 
   if (!code) {
     return (
-      <Typography className={classes.placeholder}>
-        KCD-9 코드를 트리에서 선택하거나 검색하세요
-      </Typography>
+      <Box>
+        <Typography style={{ fontSize: '0.78em', color: '#888', marginBottom: 8 }}>
+          KCD-9 챕터 목록 — 트리에서 선택하거나 검색하세요
+        </Typography>
+        <TableContainer component={Paper} variant="outlined">
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <StyledTableCell style={{ width: 60 }}>Code</StyledTableCell>
+                <StyledTableCell>한국어</StyledTableCell>
+                <StyledTableCell>English</StyledTableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {chapters.map((ch) => (
+                <TableRow key={ch.code} hover style={{ cursor: 'pointer' }} onClick={() => setSelectedCode(ch.code)}>
+                  <TableCell style={{ fontSize: 11, fontWeight: 'bold', color: '#1565c0' }}>{ch.code}</TableCell>
+                  <TableCell style={{ fontSize: 11, fontWeight: 'bold' }}>{ch.koreanLabel || ''}</TableCell>
+                  <TableCell style={{ fontSize: 11, color: '#555' }}>{ch.label}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
     );
   }
 
