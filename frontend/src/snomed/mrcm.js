@@ -59,6 +59,16 @@ const useStyles = makeStyles((theme) => ({
   lineheight: {
     lineHeight: 2,
   },
+  cardinality: {
+    display: 'inline-block',
+    fontSize: '0.75em',
+    color: '#1565c0',
+    background: '#e3f2fd',
+    borderRadius: 3,
+    padding: '0 5px',
+    marginLeft: 6,
+    fontWeight: 'bold',
+  },
 }));
 
 async function getMRCM(id) {
@@ -97,6 +107,7 @@ export default function Mrcm(props) {
           let member = {};
           member["id"] = mr.id;
           member["name"] = mr.name;
+          member["cardinality"] = mr.cardinality || '';
           member["ranges"] = [];
           mr.ranges.map( (m, index3) => {
             member["ranges"].push({id:m.id, name:m.name});
@@ -149,6 +160,7 @@ export default function Mrcm(props) {
           fl.push(mr.id);
           member["id"] = mr.id;
           member["name"] = mr.name;
+          member["cardinality"] = mr.cardinality || '';
           member["ranges"] = [];
           mr.ranges.map( (m, index3) => {
             member["ranges"].push({id:m.id, name:m.name});
@@ -176,7 +188,7 @@ export default function Mrcm(props) {
             <div key={index}>
               { (mr.bold === "check")
                 ? (
-                  <TreeItem TransitionComponent="ul" classes={{label:classes.treeItemLabel}} nodeId={mr.id} label={<b>{mr.name}</b>} >
+                  <TreeItem TransitionComponent="ul" classes={{label:classes.treeItemLabel}} nodeId={mr.id} label={<b>{mr.name}{mr.cardinality && <span className={classes.cardinality}>{mr.cardinality}</span>}</b>} >
                   { mr.ranges.map((m, index2) => (
                     <div key={index2}>
                         <TreeItem endIcon={<RemoveIcon style={{ fontSize: 15 }}/>} classes={{label:classes.treeItemLabel}} nodeId={m.id} label={<b>{m.name}</b>} />
@@ -184,7 +196,7 @@ export default function Mrcm(props) {
                   ))}
                   </TreeItem>
                 ) : (
-                  <TreeItem classes={{label:classes.treeItemLabel}} nodeId={mr.id} label={mr.name} >
+                  <TreeItem classes={{label:classes.treeItemLabel}} nodeId={mr.id} label={<span>{mr.name}{mr.cardinality && <span className={classes.cardinality}>{mr.cardinality}</span>}</span>} >
                   { mr.ranges.map((m, index2) => (
                     <div key={index2}>
                         <TreeItem endIcon={<RemoveIcon style={{ fontSize: 15 }}/>} classes={{label:classes.treeItemLabel}} nodeId={m.id} label={m.name} />
@@ -207,7 +219,7 @@ export default function Mrcm(props) {
         <>
           { mrcm.map((mr, index) => (
             <div key={index}>
-              <TreeItem classes={{label:classes.treeItemLabel}} nodeId={mr.id} label={mr.name} >
+              <TreeItem classes={{label:classes.treeItemLabel}} nodeId={mr.id} label={<span>{mr.name}{mr.cardinality && <span className={classes.cardinality}>{mr.cardinality}</span>}</span>} >
               { mr.ranges.map((m, index2) => (
                 <div key={index2}>
                     <TreeItem endIcon={<RemoveIcon style={{ fontSize: 15 }}/>} classes={{label:classes.treeItemLabel}} nodeId={m.id} label={m.name} />
