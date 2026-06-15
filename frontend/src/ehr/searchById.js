@@ -163,7 +163,7 @@ export default function SearchById(props) {
       const opt = `match=PARTIAL&state=ACTIVE&q=${q}&page=${page}&size=${size}`;
 
       axios
-        .get(`http://localhost:8080/search/SNOMEDCT?${opt}`)
+        .get(`http://api.infoclinic.co/search/SNOMEDCT?${opt}`)
         .then(response => setResult(response));
     }
   }, [q]);

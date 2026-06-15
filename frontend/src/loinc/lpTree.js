@@ -78,7 +78,7 @@ export default function LPTree(props) {
         const childId = expandingNodes[0];
         setTimeout(() => {
           axios
-            .get(`http://localhost:8080/children/LOINC/${childId}`)
+            .get(`http://api.infoclinic.co/children/LOINC/${childId}`)
             .then(result =>
               setChildNodes(
                 result.data
@@ -111,7 +111,7 @@ export default function LPTree(props) {
     if (props.nodeId === undefined) {
     setTimeout(() => {
       axios
-        .get(`http://localhost:8080/children/LOINC/parts`)
+        .get(`http://api.infoclinic.co/children/LOINC/parts`)
         .then(result =>
           setChildNodes(
             result.data

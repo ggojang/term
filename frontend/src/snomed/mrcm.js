@@ -61,27 +61,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const BASE = 'http://localhost:8080';
-
 async function getMRCM(id) {
   const response = await axios.get(
-    `${BASE}/allow/attributes/SNOMEDCT/${id}`
+    `http://api.infoclinic.co/allow/attributes/SNOMEDCT/${id}`
   );
   return response.data;
-}
-
-function CardinalityBadge({ cardinality }) {
-  if (!cardinality) return null;
-  return (
-    <span style={{
-      marginLeft: 6,
-      fontSize: '0.78em',
-      color: '#000',
-      verticalAlign: 'middle',
-    }}>
-      [{cardinality}]
-    </span>
-  );
 }
 
 export default function Mrcm(props) {
@@ -113,7 +97,6 @@ export default function Mrcm(props) {
           let member = {};
           member["id"] = mr.id;
           member["name"] = mr.name;
-          member["cardinality"] = mr.cardinality;
           member["ranges"] = [];
           mr.ranges.map( (m, index3) => {
             member["ranges"].push({id:m.id, name:m.name});
@@ -166,7 +149,6 @@ export default function Mrcm(props) {
           fl.push(mr.id);
           member["id"] = mr.id;
           member["name"] = mr.name;
-          member["cardinality"] = mr.cardinality;
           member["ranges"] = [];
           mr.ranges.map( (m, index3) => {
             member["ranges"].push({id:m.id, name:m.name});
@@ -194,7 +176,7 @@ export default function Mrcm(props) {
             <div key={index}>
               { (mr.bold === "check")
                 ? (
-                  <TreeItem TransitionComponent="ul" classes={{label:classes.treeItemLabel}} nodeId={mr.id} label={<b>{mr.name}<CardinalityBadge cardinality={mr.cardinality} /></b>} >
+                  <TreeItem TransitionComponent="ul" classes={{label:classes.treeItemLabel}} nodeId={mr.id} label={<b>{mr.name}</b>} >
                   { mr.ranges.map((m, index2) => (
                     <div key={index2}>
                         <TreeItem endIcon={<RemoveIcon style={{ fontSize: 15 }}/>} classes={{label:classes.treeItemLabel}} nodeId={m.id} label={<b>{m.name}</b>} />
@@ -202,7 +184,7 @@ export default function Mrcm(props) {
                   ))}
                   </TreeItem>
                 ) : (
-                  <TreeItem classes={{label:classes.treeItemLabel}} nodeId={mr.id} label={<span>{mr.name}<CardinalityBadge cardinality={mr.cardinality} /></span>} >
+                  <TreeItem classes={{label:classes.treeItemLabel}} nodeId={mr.id} label={mr.name} >
                   { mr.ranges.map((m, index2) => (
                     <div key={index2}>
                         <TreeItem endIcon={<RemoveIcon style={{ fontSize: 15 }}/>} classes={{label:classes.treeItemLabel}} nodeId={m.id} label={m.name} />
@@ -225,7 +207,7 @@ export default function Mrcm(props) {
         <>
           { mrcm.map((mr, index) => (
             <div key={index}>
-              <TreeItem classes={{label:classes.treeItemLabel}} nodeId={mr.id} label={<span>{mr.name}<CardinalityBadge cardinality={mr.cardinality} /></span>} >
+              <TreeItem classes={{label:classes.treeItemLabel}} nodeId={mr.id} label={mr.name} >
               { mr.ranges.map((m, index2) => (
                 <div key={index2}>
                     <TreeItem endIcon={<RemoveIcon style={{ fontSize: 15 }}/>} classes={{label:classes.treeItemLabel}} nodeId={m.id} label={m.name} />

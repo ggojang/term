@@ -127,42 +127,42 @@ const useStyles = makeStyles((theme) => ({
 
 async function getEntity(id) {
   const response = await axios.get(
-    `http://localhost:8080/entity/SNOMEDCT/${id}`
+    `http://api.infoclinic.co/entity/SNOMEDCT/${id}`
   );
   return response.data;
 }
 
 async function getDescriptions(id) {
   const response = await axios.get(
-    `http://localhost:8080/descriptions/SNOMEDCT/${id}`
+    `http://api.infoclinic.co/descriptions/SNOMEDCT/${id}`
   );
   return response.data;
 }
 
 async function getAssociations(id) {
   const response = await axios.get(
-    `http://localhost:8080/associations/SNOMEDCT/${id}`
+    `http://api.infoclinic.co/associations/SNOMEDCT/${id}`
   );
   return response.data;
 }
 
 async function getPostexpr(id) {
   const response = await axios.get(
-    `http://localhost:8080/postexpr/SNOMEDCT/${id}`
+    `http://api.infoclinic.co/postexpr/SNOMEDCT/${id}`
   );
   return response.data;
 }
 
 async function getMembers(id) {
   const response = await axios.get(
-    `http://localhost:8080/members/SNOMEDCT?refcpntid=${id}`
+    `http://api.infoclinic.co/members/SNOMEDCT?refcpntid=${id}`
   );
   return response.data;
 }
 
 async function getHistories(id) {
   const response = await axios.get(
-    `http://localhost:8080/histories/SNOMEDCT/${id}`
+    `http://api.infoclinic.co/histories/SNOMEDCT/${id}`
   );
   return response.data;
 }

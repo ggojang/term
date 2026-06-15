@@ -160,7 +160,7 @@ export default function SearchByWordEquivalents(props) {
     if (q.length > 0) {
 
       setResult([]);
-      const opt_unused =
+      const opt =
       ` {
           "query": {
             "bool": {
@@ -191,10 +191,8 @@ export default function SearchByWordEquivalents(props) {
         }`;
 
         axios
-        .post("http://localhost:8080/map/SNOMEDCT/search", {q: q, size: size})
-        .then(response => {
-          setResult((response.data && response.data.hits) ? response.data.hits : []);
-        })
+        .post("http://115.68.120.16:19210/snomedct_20200309_test/_search", opt)
+        .then(response => {setResult(response)})
         .catch(error => {console.log(error)});
     }
   }, [q]);
@@ -244,12 +242,12 @@ export default function SearchByWordEquivalents(props) {
             <List dense style={{padding:"0 0 0 0"}}>
               { result.length !== 0 && q.length !==0 &&
                 <>
-                { result.map( (res,index) => (
+                { result.data.hits.hits.map( (res,index) => (
                   <div key={index}>
-                  { res.term !== res.fsn &&
+                  { res._source.term !== res._source.fsn &&
                     <ListItem dense disableGutters style={{height: "16px", padding:"0 0 0 0", margin:"0 0 0 0 "}}>
                       <ListItemLink href="#simple-list">
-                        <ListItemText primary={`${res.term} (${res.semanticTag})`} style={{padding:"0 0 0 0"}}/>
+                        <ListItemText primary={`${res._source.term} (${res._source.semanticTag})`} style={{padding:"0 0 0 0"}}/>
                       </ListItemLink>
                     </ListItem>
                   }

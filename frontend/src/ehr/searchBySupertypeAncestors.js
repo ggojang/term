@@ -180,7 +180,7 @@ export default function SearchBySupertypeAncestors(props) {
       }
 
       axios
-        .get(`http://localhost:8080/TC/SNOMEDCT/${opt}`)
+        .get(`http://localhost:4000/TC/SNOMEDCT/${opt}`)
         .then(response => setResult(response));
     }
   }, [q, superType]);

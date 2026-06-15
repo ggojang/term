@@ -1,135 +1,210 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect} from 'react';
 import axios from 'axios';
 import { makeStyles } from '@material-ui/core/styles';
+import clsx from 'clsx';
+import Grid from "@material-ui/core/Grid";
 import TreeView from '@material-ui/lab/TreeView';
-import TreeItem from '@material-ui/lab/TreeItem';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import RemoveIcon from '@material-ui/icons/Remove';
+import TreeItem from '@material-ui/lab/TreeItem';
+import IconButton from '@material-ui/core/IconButton';
+import Typography from '@material-ui/core/Typography';
+import { Link } from "react-router-dom";
 
-const ROOT_ID = '900000000000455006';
+import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
+import RemoveCircleOutlineIcon from '@material-ui/icons/RemoveCircleOutline';
 
-const useStyles = makeStyles(() => ({
-  treeView: { fontSize: 'small', margin: '0 0 1px 0', userSelect: 'none' },
-  bold:   { fontSize: '0.9em', fontWeight: 'normal', color: '#000', cursor: 'pointer' },
-  normal: { fontSize: '0.9em', fontWeight: 'normal', color: '#000', cursor: 'pointer' },
+const useStyles = makeStyles((theme) => ({
+  container: {
+    '-ms-overflow-style': 'none', /* IE and Edge */
+    scrollbarWidth: 'none', /* Firefox */
+    '&::-webkit-scrollbar': {
+        display: 'none', /* Chrome, Safari, Opera*/
+    },
+  },
+  treeItemLabel: {
+    fontSize: "0.9em",
+  },
+  treeItemSelected: {
+    backgroundColor: "#fff",
+  },
+  link: {
+    textDecoration: "none",
+    color: '#000',
+    /* '&:hover': {
+      color: '#3a87ad',
+    }, */
+  },
+  gridBorder: {
+    borderRight: "dotted 1px lightGray",
+  },
+  label: {
+    fontSize: '0.9em',
+  },
+  lineheight: {
+    lineHeight: 2,
+  },
 }));
 
-function fetchLevel(parentId) {
-  return axios
-    .get(`http://localhost:8080/children/SNOMEDCT/${parentId}`)
-    .then(res => ({ parentId, nodes: res.data.sort((a, b) => (a.term > b.term ? 1 : -1)) }));
-}
 
-export default function Left({ setRefset }) {
+
+export default function Left(props) {
+
   const classes = useStyles();
 
-  // 단일 ref 객체에 mutable 트리 데이터를 담아 React state 업데이트 횟수를 최소화
-  const dataRef = useRef({ tree: {}, children: {}, parents: {}, boldSet: new Set() });
+  const [childNodes, setChildNodes] = useState(null);
+  const [expanded, setExpanded] = useState([]);
 
-  const [, forceUpdate] = useState(0); // 렌더 트리거용
-  const [expanded, setExpanded] = useState([ROOT_ID]);
-
-  useEffect(() => {
-    const d = dataRef.current;
-    const visited = new Set([ROOT_ID]);
-    let queue = [ROOT_ID];
-
-    async function runBFS() {
-      while (queue.length > 0) {
-        const batch = queue;
-        queue = [];
-
-        const results = await Promise.all(batch.map(pid => fetchLevel(pid)));
-
-        let foundLeaf = false;
-        results.forEach(({ parentId, nodes }) => {
-          d.children[parentId] = nodes.map(n => n.conceptId);
-          nodes.forEach(n => {
-            d.tree[n.conceptId] = n;
-            d.parents[n.conceptId] = parentId;
-            if (n.descendantCount > 0 && !visited.has(n.conceptId)) {
-              visited.add(n.conceptId);
-              queue.push(n.conceptId);
-            }
-            if (n.descendantCount === 0) {
-              // leaf → 루트까지 bold 전파
-              let cur = n.conceptId;
-              while (cur && !d.boldSet.has(cur)) {
-                d.boldSet.add(cur);
-                cur = d.parents[cur];
-              }
-              if (!d.boldSet.has(ROOT_ID)) d.boldSet.add(ROOT_ID);
-              foundLeaf = true;
-            }
-          });
-        });
-
-        // 레벨 하나 처리할 때마다 즉시 리렌더 → bold가 단계적으로 나타남
-        forceUpdate(n => n + 1);
+  const handleChange = (event, nodes) => {
+    if (nodes.length !== 0) {
+      /*console.log("handleChange (nodes) => " + nodes + ", length : " + nodes.length);*/
+      setChildNodes(null);
+      const expandingNodes = nodes.filter(x => !expanded.includes(x));
+      setExpanded(nodes);
+      if (expandingNodes[0]) {
+        const childId = expandingNodes[0];
+        setTimeout(() => {
+          axios
+            .get(`http://api.infoclinic.co/children/SNOMEDCT/${childId}`)
+            .then(result =>
+              setChildNodes(
+                result.data
+                .sort((a,b) => a.term > b.term?1:-1)
+                .map( (node, index) => (
+                  <Left setRefset={props.setRefset} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.conceptId} nodeName={node.term} label={renderLabel(node)} count={node.descendantCount} date={node.dateCreated} />
+                ))
+              )
+            );
+        }, 50);
       }
     }
+  };
 
-    runBFS();
-  }, []); // eslint-disable-line
+  const handleAddButtonChange = (event) => {
+    console.log("Add");
+  };
 
-  function handleToggle(_, nodeIds) {
-    setExpanded(nodeIds);
+  const handleRemoveButtonChange = (event) => {
+    console.log("Remove");
+  };
+
+  const renderLabel = item => (
+    <Grid
+      container
+      direction="row"
+      justify="space-between"
+      alignItems="center"
+    >
+      <Grid item md={12}>
+        <Grid container wrap="nowrap" style={{padding:"0", margin:"0"}}>
+          <Grid item style={{padding:"0 0 0 0", margin:"0"}}>
+          { (item.descendantCount === 0)
+            ? (
+              <Typography className={classes.label}
+                onClick={(e)=> {props.setRefset({name:item.term, id:item.conceptId, desc:0});} }
+              >{item.term}</Typography>
+            ) : (
+              <Typography className={classes.label}
+                onClick={(e)=> {props.setRefset({name:item.term, id:item.conceptId, desc:1});} }
+              >{item.term} ({item.descendantCount})</Typography>
+            )
+          }
+          </Grid>
+        </Grid>
+      </Grid>
+    </Grid>
+  );
+
+  useEffect(() => {
+    if (props.nodeId === undefined) {
+    setTimeout(() => {
+      axios
+        .get(`http://api.infoclinic.co/children/SNOMEDCT/900000000000455006`)
+        .then(result =>
+          setChildNodes(
+            result.data
+            .sort((a,b) => a.term > b.term?1:-1)
+            .map((node,index) => (
+              <Left setRefset={props.setRefset} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.conceptId} nodeName={node.term} label={renderLabel(node)} count={node.descendantCount} date={node.dateCreated}/>
+            ))
+          )
+        );
+    }, 50);
   }
-
-  function renderNode(id) {
-    const d = dataRef.current;
-    const node = d.tree[id];
-    if (!node) return null;
-    const isLeaf = node.descendantCount === 0;
-    const isBold = d.boldSet.has(id);
-
-    const label = (
-      <span
-        className={isBold ? classes.bold : classes.normal}
-        onClick={() => setRefset({ name: node.term, id: node.conceptId, desc: isLeaf ? 0 : 1 })}
-      >
-        {node.term}{!isLeaf && ` (${node.descendantCount})`}
-      </span>
-    );
-
-    const nodeChildren = d.children[id];
-    if (isLeaf || !nodeChildren || nodeChildren.length === 0) {
-      return <TreeItem key={id} nodeId={id} label={label} />;
-    }
-    return (
-      <TreeItem key={id} nodeId={id} label={label}>
-        {nodeChildren.map(cid => renderNode(cid))}
-      </TreeItem>
-    );
-  }
-
-  const d = dataRef.current;
-  const rootChildren = d.children[ROOT_ID];
-  const rootBold = d.boldSet.has(ROOT_ID);
+  }, [props.nodeId]);
 
   return (
-    <TreeView
-      className={classes.treeView}
-      defaultCollapseIcon={<ExpandMoreIcon style={{ fontSize: 20 }} />}
-      defaultExpandIcon={<ChevronRightIcon style={{ fontSize: 20 }} />}
-      expanded={expanded}
-      onNodeToggle={handleToggle}
-    >
-      <TreeItem
-        nodeId={ROOT_ID}
-        label={
-          <span
-            className={rootBold ? classes.bold : classes.normal}
-            onClick={() => setRefset({ name: 'Reference Set', id: ROOT_ID, desc: 1 })}
-          >
-            Reference Set (113)
-          </span>
-        }
-      >
-        {rootChildren
-          ? rootChildren.map(id => renderNode(id))
-          : <TreeItem nodeId="loading" label="로딩 중..." />}
-      </TreeItem>
-    </TreeView>
+    <>
+    <Grid container>
+      <Grid item md={12}>
+        <TreeView
+          style={{fontSize: "small", margin:"0 0 1px 0"}}
+          defaultCollapseIcon={<ExpandMoreIcon style={{ fontSize: 20 }}/>}
+          defaultExpandIcon={<ChevronRightIcon style={{ fontSize: 20 }}/>}
+          defaultExpanded={['900000000000455006']}
+          onNodeToggle={handleChange}
+
+        >
+          { (props.nodeId === undefined)
+            ? (
+              <TreeItem
+                onLabelClick={(e)=> {props.setRefset({name:'Reference set', id:'900000000000455006', desc:1}); e.preventDefault();} }
+                onIconClick={event => {event.preventDefault();}}
+                classes={{label:classes.treeItemLabel}} nodeId={'900000000000455006'}
+                label={
+                  <span>&nbsp;Reference Set (113)</span>
+                }
+              >
+                {childNodes || [<div key="stub" />]}
+              </TreeItem>
+            ) : (
+              <>
+                { (props.count === 0)
+                  ? (
+                    <>
+                    { (props.nodeId === '900000000000455006')
+                    ? (
+                      <TreeItem
+                        onLabelClick={(e)=> {props.setRefset({name:'Reference set', id:'900000000000455006', desc:1}); e.preventDefault();} }
+                        onIconClick={event => {event.preventDefault();}}
+                        classes={{label:classes.treeItemLabel}}
+                        nodeId={props.nodeId}
+                        label={props.label} />
+                    ) : (
+                      <TreeItem
+                        endIcon={<RemoveIcon style={{ fontSize: 15 }}/>}
+                        onLabelClick={(e)=> {e.preventDefault();} }
+                        classes={{label:classes.treeItemLabel}}
+                        nodeId={props.nodeId}
+                        label={props.label} />
+                    )
+                    }
+                    </>
+                  )
+                  : (
+                    <>
+                    { (props.nodeId === '900000000000455006')
+                    ? (
+                      <TreeItem onLabelClick={(e)=> {props.setRefset({name:'Reference set', id:'900000000000455006', desc:1}); e.preventDefault();} } onIconClick={event => {event.preventDefault();}} classes={{label:classes.treeItemLabel}} nodeId={props.nodeId} label={props.label}>
+                        {childNodes || [<div key="stub" />]}
+                      </TreeItem>
+                    ) : (
+                      <TreeItem onLabelClick={(e)=> {e.preventDefault();} } classes={{label:classes.treeItemLabel}} nodeId={props.nodeId} label={props.label}>
+                        {childNodes || [<div key="stub" />]}
+                      </TreeItem>
+                    )
+                    }
+                    </>
+                  )
+                }
+              </>
+            )
+          }
+        </TreeView>
+      </Grid>
+    </Grid>
+    </>
   );
 }
+
