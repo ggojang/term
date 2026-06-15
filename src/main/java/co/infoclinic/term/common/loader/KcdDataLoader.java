@@ -7,19 +7,19 @@ import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
  * KCD-9 Korean label + neoplasm morphology loader.
  *
- * Input files (tab-separated, UTF-8):
- *   kcd9_main.tsv  - CODE, KOREAN_LABEL, ENGLISH_LABEL, IS_KCD_EXT
- *   kcd9_morph.tsv - CODE, KOREAN_LABEL, ENGLISH_LABEL
- *
- * Run:
- *   mvn compile exec:java -Dexec.mainClass=co.infoclinic.term.common.loader.KcdDataLoader \
- *       "-Dexec.args=/path/to/icd10/KCD-9"
+ * kcd9_main.tsv 처리:
+ *   - 챕터 범위코드(A00-B99 등) → ICD10_CLASS 로마자 챕터(I, II...)에 매핑하여 UPDATE
+ *   - 일반 코드 → ICD10_CLASS UPDATE (Korean label)
+ *   - KCD 확장코드(is_ext=1, ICD10_CLASS에 없는 코드) → INSERT
  */
 public class KcdDataLoader {
 
@@ -29,6 +29,33 @@ public class KcdDataLoader {
     private static final String JDBC_USER     = "postgres";
     private static final String JDBC_PASSWORD = "julab123!";
     private static final int    BATCH_SIZE    = 1000;
+
+    // 챕터 범위코드 → 로마자 챕터 코드 매핑
+    private static final Map<String, String> CHAPTER_MAP = new HashMap<>();
+    static {
+        CHAPTER_MAP.put("A00-B99",  "I");
+        CHAPTER_MAP.put("C00-D48",  "II");
+        CHAPTER_MAP.put("D50-D89",  "III");
+        CHAPTER_MAP.put("E00-E90",  "IV");
+        CHAPTER_MAP.put("F00-F99",  "V");
+        CHAPTER_MAP.put("G00-G99",  "VI");
+        CHAPTER_MAP.put("H00-H59",  "VII");
+        CHAPTER_MAP.put("H60-H95",  "VIII");
+        CHAPTER_MAP.put("I00-I99",  "IX");
+        CHAPTER_MAP.put("J00-J99",  "X");
+        CHAPTER_MAP.put("K00-K93",  "XI");
+        CHAPTER_MAP.put("L00-L99",  "XII");
+        CHAPTER_MAP.put("M00-M99",  "XIII");
+        CHAPTER_MAP.put("N00-N99",  "XIV");
+        CHAPTER_MAP.put("O00-O99",  "XV");
+        CHAPTER_MAP.put("P00-P96",  "XVI");
+        CHAPTER_MAP.put("Q00-Q99",  "XVII");
+        CHAPTER_MAP.put("R00-R99",  "XVIII");
+        CHAPTER_MAP.put("S00-T98",  "XIX");
+        CHAPTER_MAP.put("V01-Y98",  "XX");
+        CHAPTER_MAP.put("Z00-Z99",  "XXI");
+        CHAPTER_MAP.put("U00-U99",  "XXII");
+    }
 
     public static void main(String[] args) throws Exception {
         String dir = args.length > 0 ? args[0]
@@ -44,10 +71,8 @@ public class KcdDataLoader {
     public static void load(Connection conn, String dir) throws Exception {
         // 1. Add columns to ICD10_CLASS if not exist
         try (Statement st = conn.createStatement()) {
-            st.execute(
-                "ALTER TABLE icd10.ICD10_CLASS ADD COLUMN IF NOT EXISTS KOREAN_LABEL TEXT");
-            st.execute(
-                "ALTER TABLE icd10.ICD10_CLASS ADD COLUMN IF NOT EXISTS IS_KCD_EXT BOOLEAN DEFAULT FALSE");
+            st.execute("ALTER TABLE icd10.ICD10_CLASS ADD COLUMN IF NOT EXISTS KOREAN_LABEL TEXT");
+            st.execute("ALTER TABLE icd10.ICD10_CLASS ADD COLUMN IF NOT EXISTS IS_KCD_EXT BOOLEAN DEFAULT FALSE");
             conn.commit();
             log.info("ICD10_CLASS 컬럼 추가 완료");
         }
@@ -66,10 +91,10 @@ public class KcdDataLoader {
             log.info("KCD9_MORPH 테이블 생성 완료");
         }
 
-        // 3. Load kcd9_main.tsv → UPDATE ICD10_CLASS SET KOREAN_LABEL, IS_KCD_EXT
+        // 3. Load kcd9_main.tsv
         loadMain(conn, new File(dir, "kcd9_main.tsv"));
 
-        // 4. Load kcd9_morph.tsv → INSERT INTO KCD9_MORPH
+        // 4. Load kcd9_morph.tsv
         loadMorph(conn, new File(dir, "kcd9_morph.tsv"));
 
         // 5. Index
@@ -84,31 +109,107 @@ public class KcdDataLoader {
         if (!file.exists()) { log.warning("파일 없음: " + file); return; }
         log.info("kcd9_main 적재: " + file);
 
-        String sql = "UPDATE icd10.ICD10_CLASS SET KOREAN_LABEL=?, IS_KCD_EXT=? WHERE CODE=?";
-        long rows = 0;
+        // 현재 ICD10_CLASS에 있는 코드 목록 캐시
+        Map<String, String> existingCodes = new HashMap<>(); // code → super_class
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery("SELECT code, super_class FROM icd10.ICD10_CLASS")) {
+            while (rs.next()) {
+                existingCodes.put(rs.getString(1), rs.getString(2) == null ? "" : rs.getString(2));
+            }
+        }
+        log.info("기존 ICD10_CLASS 코드 수: " + existingCodes.size());
+
+        String sqlUpdate = "UPDATE icd10.ICD10_CLASS SET KOREAN_LABEL=?, IS_KCD_EXT=? WHERE CODE=?";
+        String sqlInsert =
+            "INSERT INTO icd10.ICD10_CLASS " +
+            "(CODE, LABEL, SUPER_CLASS, KOREAN_LABEL, IS_KCD_EXT, CHILDREN_COUNT, DESCENDANT_COUNT) " +
+            "VALUES (?, ?, ?, ?, TRUE, 0, 0) ON CONFLICT (CODE) DO NOTHING";
+
+        long updated = 0, inserted = 0, chapter = 0;
+
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate);
+             PreparedStatement psInsert = conn.prepareStatement(sqlInsert)) {
+
             String line;
             boolean first = true;
             while ((line = br.readLine()) != null) {
                 if (first) { first = false; continue; }
+                if (line.trim().isEmpty()) continue;
                 String[] f = line.split("\t", -1);
                 if (f.length < 4) continue;
-                String code = f[0].trim();
-                String korean = f[1].trim();
-                boolean isExt = "1".equals(f[3].trim());
+
+                String code    = f[0].trim();
+                String korean  = f[1].trim();
+                String english = f[2].trim();
+                boolean isExt  = "1".equals(f[3].trim());
+
                 if (code.isEmpty() || korean.isEmpty()) continue;
-                ps.setString(1, korean);
-                ps.setBoolean(2, isExt);
-                ps.setString(3, code);
-                ps.addBatch();
-                rows++;
-                if (rows % BATCH_SIZE == 0) { ps.executeBatch(); conn.commit(); log.info("  main: " + rows); }
+
+                // 챕터 범위코드 처리 (A00-B99 → 로마자 I)
+                if (CHAPTER_MAP.containsKey(code)) {
+                    String romanCode = CHAPTER_MAP.get(code);
+                    // "Ⅰ.특정 감염성 및 기생충성 질환(A00-B99)" → "특정 감염성 및 기생충성 질환" 정제
+                    String cleanKorean = korean.replaceAll("^[Ⅰ-Ⅻivxlcdm]+\\.?\\s*", "")  // 로마자 접두어 제거
+                                               .replaceAll("\\([A-Z0-9\\-]+\\)\\s*$", "") // 끝 범위코드 제거
+                                               .trim();
+                    psUpdate.setString(1, cleanKorean.isEmpty() ? korean : cleanKorean);
+                    psUpdate.setBoolean(2, false);
+                    psUpdate.setString(3, romanCode);
+                    psUpdate.addBatch();
+                    chapter++;
+                    continue;
+                }
+
+                if (existingCodes.containsKey(code)) {
+                    // 이미 있는 코드 → UPDATE
+                    psUpdate.setString(1, korean);
+                    psUpdate.setBoolean(2, isExt);
+                    psUpdate.setString(3, code);
+                    psUpdate.addBatch();
+                    updated++;
+                } else if (isExt) {
+                    // ICD10_CLASS에 없는 KCD 확장코드 → INSERT
+                    // super_class: 마지막 '.' 앞까지 (A08.30 → A08.3, A08 → A08)
+                    String superClass = deriveSuperClass(code, existingCodes);
+                    psInsert.setString(1, code);
+                    psInsert.setString(2, english.isEmpty() ? korean : english);
+                    psInsert.setString(3, superClass);
+                    psInsert.setString(4, korean);
+                    psInsert.addBatch();
+                    inserted++;
+                }
+                // isExt=false이고 existingCodes에 없으면 범위코드(A00-A09 등) → 무시
+                // (ICD10_CLASS에는 범위코드가 없음)
+
+                if ((updated + inserted) % BATCH_SIZE == 0) {
+                    psUpdate.executeBatch(); psInsert.executeBatch(); conn.commit();
+                    log.info("  진행: updated=" + updated + " inserted=" + inserted);
+                }
             }
-            ps.executeBatch();
+            psUpdate.executeBatch();
+            psInsert.executeBatch();
             conn.commit();
         }
-        log.info("kcd9_main 완료: " + rows + "행");
+        log.info("kcd9_main 완료: chapter=" + chapter + " updated=" + updated + " inserted=" + inserted);
+    }
+
+    /** 확장코드의 super_class 추정: 점을 제거하면서 기존 코드 중 가장 가까운 부모 탐색 */
+    private static String deriveSuperClass(String code, Map<String, String> existingCodes) {
+        // A08.30 → A08.3 → A08 순으로 탐색
+        int lastDot = code.lastIndexOf('.');
+        if (lastDot > 0) {
+            String parent = code.substring(0, lastDot);
+            if (existingCodes.containsKey(parent)) return parent;
+            // 한 단계 더 위로
+            int prevDot = parent.lastIndexOf('.');
+            if (prevDot > 0) {
+                String grandParent = parent.substring(0, prevDot);
+                if (existingCodes.containsKey(grandParent)) return grandParent;
+            }
+        }
+        // 점이 없는 경우 (혹은 부모 못 찾은 경우)
+        return code.length() >= 3 ? code.substring(0, 3) : code;
     }
 
     private static void loadMorph(Connection conn, File file) throws Exception {
