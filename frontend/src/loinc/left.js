@@ -21,14 +21,16 @@ function TabPanel(props) {
   const { children, value, index, ...other } = props;
 
   return (
-    <div
+    <Typography
+      component="div"
       role="tabpanel"
+      hidden={value !== index}
       id={`action-tabpanel-${index}`}
       aria-labelledby={`action-tab-${index}`}
-      style={{ display: value !== index ? 'none' : '' }}
+      {...other}
     >
-      <Box>{children}</Box>
-    </div>
+      {value === index && <Box>{children}</Box>}
+    </Typography>
   );
 }
 
