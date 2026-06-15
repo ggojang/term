@@ -97,7 +97,18 @@ public class KcdDataLoader {
         // 4. Load kcd9_morph.tsv
         loadMorph(conn, new File(dir, "kcd9_morph.tsv"));
 
-        // 5. Index
+        // 5. 확장코드 추가로 변경된 부모 노드의 CHILDREN_COUNT 갱신
+        try (Statement st = conn.createStatement()) {
+            int cnt = st.executeUpdate(
+                "UPDATE icd10.ICD10_CLASS p " +
+                "SET children_count = (SELECT COUNT(*) FROM icd10.ICD10_CLASS c WHERE c.super_class = p.code) " +
+                "WHERE EXISTS (SELECT 1 FROM icd10.ICD10_CLASS c WHERE c.super_class = p.code AND c.is_kcd_ext = true)"
+            );
+            conn.commit();
+            log.info("CHILDREN_COUNT 갱신: " + cnt + "개 부모 노드");
+        }
+
+        // 6. Index
         conn.setAutoCommit(true);
         try (Statement st = conn.createStatement()) {
             st.execute("CREATE INDEX IF NOT EXISTS idx_kcd9_morph_label ON icd10.KCD9_MORPH(KOREAN_LABEL)");
