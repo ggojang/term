@@ -434,6 +434,7 @@
 				<artifactId>frontend-maven-plugin</artifactId>
 				<version>1.15.0</version>
 				<configuration>
+					<skip>true</skip>
 					<workingDirectory>frontend</workingDirectory>
 					<nodeVersion>v20.18.0</nodeVersion>
 					<npmVersion>10.8.2</npmVersion>
@@ -470,7 +471,7 @@
 				<artifactId>tomcat7-maven-plugin</artifactId>
 				<version>2.2</version>
 				<configuration>
-					<port>8080</port>
+					<port>8088</port>
 					<path>/</path>
 					<uriEncoding>UTF-8</uriEncoding>
 				</configuration>
@@ -508,6 +509,15 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>3.4.0</version>
+				<configuration>
+					<failOnMissingWebXml>false</failOnMissingWebXml>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -521,7 +531,7 @@
 						<artifactId>tomcat7-maven-plugin</artifactId>
 						<version>2.2</version>
 						<configuration>
-							<port>8080</port>
+							<port>8088</port>
 							<path>/</path>
 							<uriEncoding>UTF-8</uriEncoding>
 						</configuration>

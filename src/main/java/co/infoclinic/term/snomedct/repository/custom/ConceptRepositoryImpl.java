@@ -160,6 +160,110 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 	
 	
 	
+	// ─── ECL2: dotted / reverse 쿼리 ────────────────────────────────────────────
+
+	@Override
+	public List<ConceptViewDTO> findAttrDestsBySources(List<String> sourceIds, String typeId, String effectiveTime) {
+		List<String> destIds = findAttrDestIdsBySources(sourceIds, typeId, effectiveTime);
+		if (destIds.isEmpty()) return new ArrayList<>();
+		return findConceptViewByIds(destIds, effectiveTime);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<String> findAttrDestIdsBySources(List<String> sourceIds, String typeId, String effectiveTime) {
+		if (sourceIds == null || sourceIds.isEmpty()) return new ArrayList<>();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < sourceIds.size(); i++) {
+			if (i > 0) sb.append(',');
+			sb.append('\'').append(sourceIds.get(i)).append('\'');
+		}
+		String qry = "SELECT DISTINCT ir.DESTINATION_ID " +
+				"FROM INFERRED_RELATIONSHIP ir " +
+				"WHERE ir.TYPE_ID = '" + typeId + "' " +
+				"AND ir.SOURCE_ID IN (" + sb + ") " +
+				"AND ir.ACTIVE = 1";
+		Query q = em.createNativeQuery(qry);
+		List<Object> results = q.getResultList();
+		List<String> ids = new ArrayList<>();
+		for (Object r : results) {
+			if (r != null) ids.add(r.toString());
+		}
+		return ids;
+	}
+
+	@Override
+	public List<ConceptViewDTO> findConceptViewByIds(List<String> conceptIds, String effectiveTime) {
+		if (conceptIds == null || conceptIds.isEmpty()) return new ArrayList<>();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < conceptIds.size(); i++) {
+			if (i > 0) sb.append(',');
+			sb.append('\'').append(conceptIds.get(i)).append('\'');
+		}
+		String closureQry = "SELECT DISTINCT CONCEPT_ID, CHILDREN_COUNT, DESCENDANT_COUNT FROM TC WHERE CONCEPT_ID IN (" + sb + ")";
+		String qry = getConceptListByClosureQry(closureQry, effectiveTime);
+		return getResultList(qry);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<String> findAttrDestIdsBySourcesAll(String typeId, String effectiveTime) {
+		String qry = "SELECT DISTINCT ir.DESTINATION_ID " +
+				"FROM INFERRED_RELATIONSHIP ir " +
+				"WHERE ir.TYPE_ID = '" + typeId + "' " +
+				"AND ir.ACTIVE = 1";
+		Query q = em.createNativeQuery(qry);
+		List<Object> results = q.getResultList();
+		List<String> ids = new ArrayList<>();
+		for (Object r : results) {
+			if (r != null) ids.add(r.toString());
+		}
+		return ids;
+	}
+
+	/** closureQry 가 CONCEPT_ID 목록을 반환할 때 개념 전체 정보를 조회하는 헬퍼 */
+	private String getConceptListByClosureQry(String closureQry, String effectiveTime) {
+		String qry = "SELECT C.*, D.TERM, MODULE.TERM AS MODULE_NAME, DEF.TERM AS DEF_NAME, T.CHILDREN_COUNT, T.DESCENDANT_COUNT " +
+				"FROM ( " +
+				"  SELECT C1.* " +
+				"  FROM CONCEPT AS C1 " +
+				"  INNER JOIN ( " +
+				"    SELECT IC.CONCEPT_ID, MAX(IC.EFFECTIVE_TIME) AS MAX_ETIME " +
+				"    FROM CONCEPT AS IC " +
+				"    INNER JOIN (" + closureQry + ") AS T " +
+				"    ON IC.CONCEPT_ID = T.CONCEPT_ID " +
+				"    WHERE IC.EFFECTIVE_TIME <= '" + effectiveTime + "' " +
+				"    GROUP BY IC.CONCEPT_ID " +
+				"  ) AS C2 " +
+				"  ON C1.CONCEPT_ID = C2.CONCEPT_ID " +
+				"  AND C1.EFFECTIVE_TIME = C2.MAX_ETIME " +
+				"  AND C1.ACTIVE = 1 " +
+				") AS C " +
+				"INNER JOIN ( " +
+				"  SELECT D.CONCEPT_ID, D.TERM " +
+				"  FROM DESCRIPTION AS D " +
+				"  INNER JOIN ( " +
+				"    SELECT ID.DESCRIPTION_ID, MAX(ID.EFFECTIVE_TIME) AS MAX_ETIME " +
+				"    FROM DESCRIPTION AS ID " +
+				"    INNER JOIN (" + closureQry + ") AS DT ON ID.CONCEPT_ID = DT.CONCEPT_ID " +
+				"    WHERE ID.EFFECTIVE_TIME <= '" + effectiveTime + "' " +
+				"    AND ID.TYPE_ID = '" + SNOMEDCTUtils.DescriptionType.FullySpecifiedName + "' " +
+				"    GROUP BY ID.DESCRIPTION_ID " +
+				"  ) AS GD " +
+				"  ON D.DESCRIPTION_ID = GD.DESCRIPTION_ID " +
+				"  AND D.EFFECTIVE_TIME = GD.MAX_ETIME " +
+				"  AND D.ACTIVE = 1 " +
+				"  AND D.LANGUAGE_CODE = '" + LANG + "' " +
+				"  GROUP BY D.CONCEPT_ID, D.TERM " +
+				") AS D ON C.CONCEPT_ID = D.CONCEPT_ID " +
+				"LEFT JOIN (" + closureQry + ") AS T ON C.CONCEPT_ID = T.CONCEPT_ID ";
+		qry += getModuleJoinQuery(effectiveTime);
+		qry += getDefinitionStatusJoinQuery(effectiveTime);
+		return qry;
+	}
+
+	// ─── End ECL2 methods ────────────────────────────────────────────────────
+
 	// ----------------------------------------
 	// Private methods
 	// ----------------------------------------
@@ -370,22 +474,22 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 				  "FROM ( " +
 				  "  SELECT SOURCE_ID, RELATIONSHIP_GROUP " +
 				  "  FROM " + TBL_REL + " " +
-				  "  WHERE " + COL_ATTR + " = '" + eAttr + "' AND " + COL_VAL + " = '" + eVal + "' " +
+				  "  WHERE " + buildAttrValCondition(eAttr, eVal) +
 				  "  AND RELATIONSHIP_GROUP > 0 " +
 				  ") AS A ";
-			
+
 			// 2번째[1] 쿼리는 INNER JOIN절에 위치
 			for (int j = 1; j < listSize; j++) {
 				// i번째 Entry
 				e = list.get(j);
 				eAttr = e.getKey();
 				eVal = String.valueOf(e.getValue());
-				
+
 				// 이너조인 쿼리
 				String joinQry = "INNER JOIN ( " +
 								 "  SELECT SOURCE_ID, RELATIONSHIP_GROUP " +
 								 "  FROM " + TBL_REL + " " +
-								 "  WHERE " + COL_ATTR + " = '" + eAttr + "' AND " + COL_VAL + " = '" + eVal + "' " +
+								 "  WHERE " + buildAttrValCondition(eAttr, eVal) +
 								 "  AND RELATIONSHIP_GROUP > 0 " +
 								 ") AS A" + (j) + " " +
 								 "ON A.SOURCE_ID = A" + (j) + ".SOURCE_ID " +
@@ -426,23 +530,23 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 	private String getAttrSetQuery(Map<String, Object> attrObjMap) {
 		// key: String
 		// Val: String
-		
+
 		String qry = "";
-		
+
 		List<Entry<String, Object>> list = new ArrayList<Entry<String, Object>>(attrObjMap.entrySet());
 		int listSize = list.size();
-		
+
 		Entry<String, Object> e = list.get(0);
 		String eAttr = e.getKey();
 		String eVal = String.valueOf(e.getValue());
-		
+
 		// 1번째[0] 쿼리는 FROM절에 위치
 		// ECL 비그룹 속성 제약은 ANY relationship group에서 속성-값 쌍을 매칭 (group 0 포함)
 		qry = "SELECT DISTINCT(A.SOURCE_ID) " +
 			  "FROM ( " +
 			  "  SELECT SOURCE_ID " +
 			  "  FROM " + TBL_REL + " " +
-			  "  WHERE " + COL_ATTR + " = '" + eAttr + "' AND " + COL_VAL + " = '" + eVal + "' " +
+			  "  WHERE " + buildAttrValCondition(eAttr, eVal) +
 			  "  AND ACTIVE = 1 " +
 			  ") AS A ";
 
@@ -457,16 +561,26 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 			String joinQry = "INNER JOIN ( " +
 							 "  SELECT SOURCE_ID " +
 							 "  FROM " + TBL_REL + " " +
-							 "  WHERE " + COL_ATTR + " = '" + eAttr + "' AND " + COL_VAL + " = '" + eVal + "' " +
+							 "  WHERE " + buildAttrValCondition(eAttr, eVal) +
 							 "  AND ACTIVE = 1 " +
 							 ") AS A" + (i) + " " +
 							 "ON A.SOURCE_ID = A" + (i++) + ".SOURCE_ID ";
-			
+
 			// 쿼리에 이너조인 쿼리반영
 			qry += joinQry;
 		}
-		
+
 		return qry;
+	}
+
+	/** * 를 와일드카드로 처리하는 TYPE_ID/DESTINATION_ID 조건 생성 */
+	private String buildAttrValCondition(String attrId, String valId) {
+		boolean anyAttr = "*".equals(attrId);
+		boolean anyVal  = "*".equals(valId);
+		if (anyAttr && anyVal)  return "1=1 ";
+		if (anyAttr)            return COL_VAL  + " = '" + valId  + "' ";
+		if (anyVal)             return COL_ATTR + " = '" + attrId + "' ";
+		return COL_ATTR + " = '" + attrId + "' AND " + COL_VAL + " = '" + valId + "' ";
 	}
 	
 	

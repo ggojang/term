@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import Search from './search.js';
 import Hierarchy from './hierarchy.js';
 import Ecl from './ecl.js';
@@ -16,8 +16,13 @@ import { Link } from "react-router-dom";
 
 import ErrorBoundary from 'react-error-boundaries'
 
+// 처음 활성화된 이후로는 DOM을 유지(hidden)하여 탭 상태 보존.
+// 한 번도 활성화된 적 없는 탭은 렌더링하지 않아 초기 로드 속도 확보.
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
+  const mountedRef = useRef(false);
+  if (value === index) mountedRef.current = true;
+  if (!mountedRef.current) return null;
 
   return (
     <Typography
@@ -28,7 +33,7 @@ function TabPanel(props) {
       aria-labelledby={`action-tab-${index}`}
       {...other}
     >
-      {value === index && <Box>{children}</Box>}
+      <Box>{children}</Box>
     </Typography>
   );
 }
@@ -88,12 +93,17 @@ const useStyles = makeStyles((theme) => ({
   },
   tab1: {
     minHeight : '2vh',
-    minWidth: '100px',
+    minWidth: '80px',
     opacity: 0.5,
   },
   tab2: {
     minHeight : '2vh',
-    minWidth: '100px',
+    minWidth: '80px',
+    opacity: 0.5,
+  },
+  tab3: {
+    minHeight : '2vh',
+    minWidth: '80px',
     opacity: 0.5,
   },
   link: {
@@ -157,7 +167,7 @@ export default function Left(props) {
           >
             <Tab variant="body1" classes={{root: classes.tab1}} label="Search" {...a11yProps(0)} />
             <Tab variant="body1" classes={{root: classes.tab2}} label="Hierarchy" {...a11yProps(1)} />
-            <Tab variant="body1" classes={{root: classes.tab2}} label="ECL" {...a11yProps(2)} />
+            <Tab variant="body1" classes={{root: classes.tab3}} label="ECL" {...a11yProps(2)} />
           </Tabs>
         </Toolbar>
         

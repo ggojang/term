@@ -1,414 +1,346 @@
-import React, { useState, useEffect, useRef} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { withStyles, makeStyles } from '@material-ui/core/styles';
-import clsx from 'clsx';
 
-import Grid from "@material-ui/core/Grid";
-import Box from "@material-ui/core/Box";
-import Divider from "@material-ui/core/Divider";
+import Grid from '@material-ui/core/Grid';
+import Box from '@material-ui/core/Box';
+import Divider from '@material-ui/core/Divider';
 import Typography from '@material-ui/core/Typography';
-import Paper from '@material-ui/core/Paper';
 import Table from '@material-ui/core/Table';
-import TablePagination from '@material-ui/core/TablePagination';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import IconButton from '@material-ui/core/IconButton';
-import Tooltip from '@material-ui/core/Tooltip';
-import {Star, StarBorder} from '@material-ui/icons';
-import Container from '@material-ui/core/Container';
-import { BrowserRouter as Link} from "react-router-dom";
-import FormControl from '@material-ui/core/FormControl';
+import TablePagination from '@material-ui/core/TablePagination';
 import TextField from '@material-ui/core/TextField';
-import Select from "@material-ui/core/Select";
-import InputLabel from "@material-ui/core/InputLabel";
+import InputAdornment from '@material-ui/core/InputAdornment';
+import IconButton from '@material-ui/core/IconButton';
+import LinearProgress from '@material-ui/core/LinearProgress';
+import Chip from '@material-ui/core/Chip';
+import SearchIcon from '@material-ui/icons/Search';
+import ClearIcon from '@material-ui/icons/Clear';
 
-const StyledTableCell = withStyles((theme) => ({
+const StyledTableCell = withStyles(() => ({
   head: {
-    backgroundColor: "#f9f9f9", //"#e3f2fd",
-    color: theme.palette.common.black,
+    backgroundColor: '#f0f4f8',
+    color: '#37474f',
+    fontSize: 12,
+    fontWeight: 700,
+    borderBottom: '2px solid #b0bec5',
+    padding: '6px 10px',
+    whiteSpace: 'nowrap',
   },
   body: {
-    fontSize: 11,
+    fontSize: 12,
+    padding: '4px 10px',
+    verticalAlign: 'middle',
   },
 }))(TableCell);
 
-const useStyles = makeStyles((theme) => ({
-  container: {
-    '-ms-overflow-style': 'none', /* IE and Edge */
-    scrollbarWidth: 'none', /* Firefox */
-    '&::-webkit-scrollbar': {
-        display: 'none', /* Chrome, Safari, Opera*/
-    },
+const StyledTableRow = withStyles(() => ({
+  root: {
+    '&:nth-of-type(odd)': { backgroundColor: '#fafafa' },
+    '&:hover': { backgroundColor: '#e8f0fe' },
   },
-  lineheight: {
-    lineHeight: 2,
-  },
-  alertWarning: {
-    backgroundImage: 'linear-gradient(to bottom,#f7edb5 0,#f5e79e 100%)',
-    backgroundRepeat: 'repeat-x',
-    color: '#8a6d3b',
-    backgroundColor: '#fcf8e3',
-    borderColor: '#f5e79e',
+}))(TableRow);
 
+const useStyles = makeStyles(() => ({
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    height: '85vh',
   },
-  badge: {
-    display: 'inline-block',
-    minWidth: '10px',
-    padding: '3px 7px',
-    fontSize: '12px',
-    fontWeight: 'bold',
-    lineHeight: '1',
-    textAlign: 'center',
-    whiteSpace: 'nowrap',
-    verticalAlign: 'baseLine',
-    borderRadius: '10px',
+  header: {
+    padding: '8px 14px 6px',
+    flexShrink: 0,
   },
-  label: {
-    fontSize: '0.8em',
-  },
-  inputlabel: {
-    minWidth: "10ch",
-    fontSize: '0.8em',
-    padding: "12px 0 0 12px",
-  },
-  textfield: {
-    marginTop: theme.spacing(1),
-    fontSize: '0.8em',
-    width: "20rem",
-  },
-  form: {
-    padding: "0 0 0 12px",
-  },
-  gridcontainer: {
-    height: '100vh',
+  title: {
+    fontWeight: 700,
+    fontSize: '0.93em',
+    color: '#1a237e',
   },
   divider: {
-    borderBottom: "solid 2px #2196F3",
+    height: 3,
+    backgroundColor: '#1976d2',
+    flexShrink: 0,
   },
-  tooltip:{
-    color: '#fffff',
+  searchRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    padding: '8px 14px',
+    flexShrink: 0,
   },
-  flagIcon : {
-    position: 'relative',
-    display: 'inline-block',
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: '50%',
+  searchField: {
+    flex: 1,
+    maxWidth: 400,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 8,
+      fontSize: '0.85em',
+      height: 34,
+    },
+    '& .MuiOutlinedInput-input': {
+      padding: '7px 10px',
+    },
   },
-  link: {
-    textDecoration: "none",
+  countChip: {
+    fontSize: '0.78em',
+    height: 22,
+    backgroundColor: '#e3f2fd',
+    color: '#1565c0',
+    fontWeight: 700,
+  },
+  tableWrapper: {
+    flex: 1,
+    overflow: 'hidden',
+    margin: '0 14px',
+    display: 'flex',
+    flexDirection: 'column',
+    border: '1px solid #e0e0e0',
+    borderRadius: 6,
+  },
+  tableContainer: {
+    flex: 1,
+    overflow: 'auto',
+  },
+  noData: {
+    textAlign: 'center',
+    color: '#90a4ae',
+    padding: '32px 0',
+    fontSize: '0.88em',
+  },
+  pagination: {
+    flexShrink: 0,
+    borderTop: '1px solid #e0e0e0',
+    '& .MuiTablePagination-caption': { fontSize: '0.78em' },
+    '& .MuiTablePagination-select': { fontSize: '0.78em' },
+    '& .MuiTablePagination-toolbar': { minHeight: 40 },
+  },
+  cellText: {
+    fontSize: '0.82em',
     color: '#000',
-    /* '&:hover': {
-      color: '#3a87ad',
-    }, */
   },
-  boxHover: {
-    /* 마우스 오버(마우스 올렸을때) */
-    '&:hover' : {
-        backgroundColor: "#dce6f0",
-
-    },
-  },
-  boxActive: {
-    /* 마우스 클릭하고있을때 */
-    '&:active' : {
-        backgroundColor: "#777",
-    },
-  },
-  boxVisited: {
-    /* 마우스 한번클릭후 */
-    '&:visited' : {
-        color: "white",
-    },
+  cellId: {
+    fontSize: '0.82em',
+    color: '#000',
+    fontWeight: 700,
   },
 }));
 
-export default function Main(props) {
+function useDebounce(value, delay) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
 
+export default function Main({ refset }) {
   const classes = useStyles();
 
-  const [q, setQ] = useState('*');
-  const [page, setPage] = useState(1);
-  const [size, setSize] = useState(15);
-  const [refsetTitle, setRefsetTitle] = useState(props.refset.name);
-  const [descript, setDescript] = useState([]);
-  const [member, setMember] = useState([]);
-  const [refset, setRefset] = useState([]);
-  const [refset2,setRefset2] = useState([]);
-  const flag = useRef("start");
+  const [inputValue, setInputValue] = useState('');
+  const [page, setPage]   = useState(0);
+  const [size, setSize]   = useState(25);
+  const [loading, setLoading] = useState(false);
+  const [columns, setColumns] = useState([]);
+  const [rows, setRows]   = useState([]);
+  const [total, setTotal] = useState(0);
 
-  const refsetDescriptor = '900000000000456007';
+  const q = useDebounce(inputValue, 300);
+  const abortRef = useRef(null);
 
+  // refset 변경 시 초기화 + descriptor 로드
   useEffect(() => {
-    setQ('*');
-    setPage(1);
-    setSize(15);
-    axios
-      .get(`/members/SNOMEDCT?refcpntid=${props.refset.id}`)
-      .then(response => setDescript(response))
-      .catch((ex) => { console.log('No descriptor', ex); });
-  }, [props.refset.id])
+    setInputValue('');
+    setPage(0);
+    setRows([]);
+    setTotal(0);
+    setColumns([]);
 
-  useEffect(() => {
-    //setQ('*');
-    axios
-      .get(`/members/SNOMEDCT/${props.refset.id}?q=${q}&page=${page}&size=${size}`)
-      .then( (response) => { flag.current = "hasMemebr"; setMember(response) })
-      .catch((ex) => { flag.current = "noMember";  setMember([]); console.log('No members', ex); });
-  }, [descript])
+    if (!refset?.id) return;
 
-  useEffect(() => {
-    setRefset2([]);
+    axios.get(`/descriptors/SNOMEDCT/${refset.id}`)
+      .then(res => {
+        if (!res.data?.length) return;
 
-    let order;
-    let ref = [];
-    ref[refsetDescriptor] = [];
+        // fields[0].name = attribute label (column name)
+        // fields[2].name = attribute order (numeric string "0","1","2"...)
+        const colMap = {};
+        res.data.forEach(item => {
+          const raw = item.fields?.[0]?.name;
+          const label = raw ? raw.split('(')[0].trim() : null;
+          const orderStr = item.fields?.[2]?.name;
+          const order = parseInt(orderStr, 10);
+          if (label && !isNaN(order)) colMap[order] = label;
+        });
 
-    // if (!descript.data) return null;
-    // setTimeout(() => { }, 3000);
-
-    if (descript.data) {
-      console.log('descript.data', descript.data);
-      descript.data.forEach((item, index, desc) => { 
-	if (desc[index].extra !== undefined) { // extra가 없는 경우가 있음
-          if (desc[index].extra["Attribute order"]) {
-              order = desc[index].extra["Attribute order"].id;
-              ref[refsetDescriptor][order] = [];
-
-            for (let des in desc[index].extra) {
-              ref[refsetDescriptor][order].push({
-                "title": des,
-                "id" : desc[index].extra[des].id,
-                "name" : desc[index].extra[des].name
-              })
-            }
+        if (Object.keys(colMap).length > 0) {
+          const maxOrder = Math.max(...Object.keys(colMap).map(Number));
+          const cols = [];
+          for (let i = 0; i <= maxOrder; i++) {
+            cols.push(colMap[i] || `Column ${i + 1}`);
           }
+          setColumns(cols);
         }
       })
-      console.log(ref);
-      setRefset2(ref);
-    }
-  },[descript])
+      .catch(() => {});
+  }, [refset?.id]);
 
+  // 멤버 검색
   useEffect(() => {
-    //setQ('*');
-    setPage(1);
-    setSize(15);
-    axios
-      .get(`/members/SNOMEDCT/${props.refset.id}?q=${q}&page=${page}&size=${size}`)
-      .then( (response) => { flag.current = "hasMemebr"; setMember(response) })
-      .catch((ex) => { flag.current = "noMember"; setMember([]); console.log('No members', ex); });
-  }, [q])
+    if (!refset?.id || refset.desc !== 0) return;
 
-  useEffect(() => {
-    //setQ('*');
-    axios
-      .get(`/members/SNOMEDCT/${props.refset.id}?q=${q}&page=${page}&size=${size}`)
-      .then( (response) => { flag.current = "hasMemebr"; setMember(response) })
-      .catch((ex) => { flag.current = "noMember"; setMember([]); console.log('No members', ex); });
-  }, [page, size])
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-  useEffect(() => {
-    setRefset([]);
-    if ( member.data ) {
-      if (member.data.totalElements !== 0) {
-        let fs;
-        let ref=[];
-	props.refset.desc = 0; // 계층구조에서 leaf 가 아니어도 멤버를 가지면 화면출력이 가능하도록 함 
-        ref[props.refset.id] = [];
-        member.data.content.forEach((item, index, mem) => {
-          ref[props.refset.id][index] = [];
-          if (refset2[refsetDescriptor]) {
-            if (refset2[refsetDescriptor]["0"]) {
-              ref[props.refset.id][index].push({
-                "title": (refset2[refsetDescriptor]["0"]["1"].name.split('('))[0],
-                "id": member.data.content[index].referencedComponent.id,
-                "name": member.data.content[index].referencedComponent.name,
-              });
-              let c=1;
-              for (let me in mem[index].fields) {
-                if (refset2[refsetDescriptor][c]) {
-                  ref[props.refset.id][index].push({
-                    "title": (refset2[refsetDescriptor][c]["1"].name.split('('))[0],
-                    "id" : mem[index].fields[me].id,
-                    "name" : mem[index].fields[me].name
-                  });
-                } else {
-                  ref[props.refset.id][index].push({
-                    "title": '',
-                    "id" : mem[index].fields[me].id,
-                    "name" : mem[index].fields[me].name
-                  });
-                }
-                c++;
-              }
-            }
-          }
-        })
-        // console.log(ref);
-        setRefset(ref);
-      } else {
-        flag.current = "noMember"
-      }
-    } else {
-      flag.current = "noMember"
+    setLoading(true);
+    const qParam = q.trim() || '*';
+
+    axios.get(
+      `/members/SNOMEDCT/${refset.id}?q=${encodeURIComponent(qParam)}&page=${page + 1}&size=${size}`,
+      { signal: controller.signal }
+    )
+      .then(res => {
+        setTotal(res.data?.totalElements || 0);
+        const content = res.data?.content || [];
+        setRows(content.map(item => {
+          const cells = [];
+          // col 0: referencedComponent
+          const rc = item.referencedComponent;
+          cells.push({ id: rc?.id, name: rc?.name });
+          // 추가 필드
+          (item.fields || []).forEach(f => {
+            cells.push({ id: f?.id, name: f?.name });
+          });
+          return cells;
+        }));
+      })
+      .catch(err => {
+        if (!axios.isCancel?.(err)) { setRows([]); setTotal(0); }
+      })
+      .finally(() => setLoading(false));
+  }, [refset?.id, q, page, size]); // eslint-disable-line
+
+  const handleClear = () => { setInputValue(''); setPage(0); };
+  const handleChangePage = (_, p) => setPage(p);
+  const handleChangeSize = e => { setSize(+e.target.value); setPage(0); };
+
+  const showTable = refset?.desc === 0;
+
+  // 컬럼 헤더: descriptor로부터 얻거나, 첫 행 기준으로 fallback
+  function getHeaders() {
+    if (columns.length > 0) return columns;
+    if (rows.length > 0) {
+      return rows[0].map((_, i) => i === 0 ? 'Referenced Component' : `Field ${i}`);
     }
-  }, [member, refset2])
+    return [];
+  }
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage+1);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    //console.log(event.target.value);
-    setSize(event.target.value);
-    setPage(1);
-  };
-
-  const handleQueryKeyUp = (event) => {
-    if (window.event.keyCode === 13) {
-      setQ(event.target.value);
-    }
-  };
-
-  //console.log("props.refset.desc : " + props.refset.desc);
-  //console.log("refset[props.refset.id] : " + refset[props.refset.id]);
-  //console.log("member.data : " + member.data);
+  function renderCell(cell) {
+    if (cell.id && cell.name) return (
+      <span>
+        <span className={classes.cellId}>{cell.id}</span>
+        <span style={{ color: '#90a4ae', margin: '0 4px' }}>|</span>
+        <span className={classes.cellText}>{cell.name}</span>
+        <span style={{ color: '#90a4ae', margin: '0 4px' }}>|</span>
+      </span>
+    );
+    if (cell.id)   return <span className={classes.cellId}>{cell.id}</span>;
+    if (cell.name) return <span className={classes.cellText}>{cell.name}</span>;
+    return null;
+  }
 
   return (
-    <div>
-      { props.refset &&
-          <Grid item md={12} >
-            <Box p={1}>
-              <Typography variant="body2">
-                <b>{props.refset.name}</b>
-              </Typography>
-            </Box>
-            <Divider className={classes.divider}/>
-            { props.refset.desc === 0 &&
+    <div className={classes.root}>
+      {refset && (
+        <>
+          <Box className={classes.header}>
+            <Typography className={classes.title}>{refset.name}</Typography>
+          </Box>
+          <Divider className={classes.divider} />
+
+          {showTable && (
             <>
-              { refset[props.refset.id] && member.data && member.data.totalElements
-                ? (
-                <>
-                <FormControl classes={{root: classes.form}}>
-                  <InputLabel shrink
-                    className={classes.inputlabel}
-                    id="queryLabel">Word OR match (* for all)
-                  </InputLabel>
-                  <TextField
-                    labelid="queryLabel"
-                    className={classes.textfield}
-                    InputProps={{
-                      classes: {
-                        input: classes.textfield,
-                      },
-                    }}
-                    id="query"
-                    type="search"
-                    onKeyUp={handleQueryKeyUp}
-                  />
-                </FormControl>
-                <br/>
-                <Box p={1}>
-                  <TableContainer p={1} align="center">
-                    <Table size="small" aria-label="a small table">
+              {/* 검색 바 */}
+              <div className={classes.searchRow}>
+                <TextField
+                  className={classes.searchField}
+                  variant="outlined"
+                  size="small"
+                  placeholder="검색어 입력 (비우면 전체 조회)..."
+                  value={inputValue}
+                  onChange={e => { setInputValue(e.target.value); setPage(0); }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon style={{ fontSize: 15, color: '#90a4ae' }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: inputValue ? (
+                      <InputAdornment position="end">
+                        <IconButton size="small" onClick={handleClear}>
+                          <ClearIcon style={{ fontSize: 13 }} />
+                        </IconButton>
+                      </InputAdornment>
+                    ) : null,
+                  }}
+                />
+                {!loading && total > 0 && (
+                  <Chip label={`${total.toLocaleString()} 건`} className={classes.countChip} size="small" />
+                )}
+              </div>
+
+              {loading && <LinearProgress style={{ margin: '0 14px 4px', borderRadius: 2 }} />}
+
+              {/* 테이블 + 페이지네이션 (함께 flex 박스 안에서 고정) */}
+              {rows.length > 0 ? (
+                <div className={classes.tableWrapper}>
+                  <TableContainer className={classes.tableContainer}>
+                    <Table size="small" stickyHeader>
                       <TableHead>
-                        <TableRow >
-                          { refset[props.refset.id][0].map((rs0, index) => (
-                          <StyledTableCell key={index} className={classes.label}>
-                            {rs0.title}
-                          </StyledTableCell>
+                        <TableRow>
+                          {getHeaders().map((col, i) => (
+                            <StyledTableCell key={i}>{col}</StyledTableCell>
                           ))}
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        { refset[props.refset.id].map((rs,index2) => (
-                        <TableRow key={index2}>
-                          { rs.map((r,index3) => (
-                            <StyledTableCell key={index3}  >
-                            { r.id && r.name && 
-			      <div>
-                                {r.id} | {r.name} |
-                              </div>
-                            }
-			    { r.id && !r.name &&
-                              <div>
-                                {r.id}
-                              </div>
-                            }
-                            { !r.id  && r.name && 
-			      <div>
-                                {r.name}
-                              </div>
-                            }
-                            </StyledTableCell>
-                          ))}
-                        </TableRow>
+                        {rows.map((row, ri) => (
+                          <StyledTableRow key={ri}>
+                            {row.map((cell, ci) => (
+                              <StyledTableCell key={ci}>{renderCell(cell)}</StyledTableCell>
+                            ))}
+                          </StyledTableRow>
                         ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
                   <TablePagination
-                    rowsPerPageOptions={[5, 10, 15]}
+                    className={classes.pagination}
+                    rowsPerPageOptions={[10, 25, 50, 100]}
                     component="div"
-                    count={member.data.totalElements}
-                    page={page-1}
+                    count={total}
+                    page={page}
                     rowsPerPage={size}
                     onChangePage={handleChangePage}
-                    onChangeRowsPerPage={handleChangeRowsPerPage}
+                    onChangeRowsPerPage={handleChangeSize}
+                    labelRowsPerPage="페이지당:"
                   />
-                </Box>
-                </>
-                ):(
-                  <>
-                  { q !== '*'
-                    ? (
-                      <>
-                      <Box p={1}>
-                        <FormControl classes={{root: classes.form}}>
-                          <InputLabel shrink
-                            className={classes.inputlabel}
-                            id="queryLabel">Word OR match (* for all)
-                          </InputLabel>
-                          <TextField
-                            labelid="queryLabel"
-                            className={classes.textfield}
-                            InputProps={{
-                              classes: {
-                                input: classes.textfield,
-                              },
-                            }}
-                            id="query"
-                            type="search"
-                            onKeyUp={handleQueryKeyUp}
-                            />
-                        </FormControl>
-                      </Box>
-                      <p style={{padding:'0 0 0 12px' }}>
-                        No members !
-                      </p>
-                      </>
-                    ):(
-                      <>
-                      { flag.current === "noMember" &&
-                        <p style={{padding:'0 0 0 12px' }}>
-                              No members !
-                        </p>
-                      }
-                      </>
-                    )
-                  }
-                  </>
+                </div>
+              ) : (
+                !loading && (
+                  <Typography className={classes.noData}>
+                    {inputValue ? `"${inputValue}" 에 해당하는 멤버가 없습니다` : '멤버가 없습니다'}
+                  </Typography>
                 )
-              }
+              )}
             </>
-            }
-          </Grid>
-
-      }
+          )}
+        </>
+      )}
     </div>
   );
 }
-

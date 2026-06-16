@@ -27,9 +27,17 @@ public interface HierarchyRepository extends JpaRepository<Hierarchy, Long> , Hi
 	@Query(value=
 			 "SELECT * " +
 		     "FROM loinc.HIERARCHY " +
-		     "WHERE PARENT = ?1 " +
+		     "WHERE UPPER(PARENT) = UPPER(?1) " +
 		     "ORDER BY SEQUENCE, NAME", nativeQuery=true)
 	List<Hierarchy> findChildrenByCode(String code);
+
+	@Query(value=
+			 "SELECT SEQ, CODE, NAME, PREFERRED_NAME, PARENT, PATH, " +
+			 "CHILDREN_COUNT, DESCENDANT_COUNT, SEQUENCE, TYPE " +
+			 "FROM loinc.HIERARCHY_LG " +
+			 "WHERE UPPER(PARENT) = UPPER(?1) " +
+			 "ORDER BY NAME", nativeQuery=true)
+	List<Hierarchy> findChildrenInLGHierarchy(String parent);
 	
 	
 	/**

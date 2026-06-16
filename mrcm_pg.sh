@@ -13,7 +13,7 @@ PG_USER="postgres"
 PG_PASS="julab123!"
 
 # MRCM TSV 파일 경로 (기본값: 스크립트와 같은 디렉토리)
-MRCM_FILE="${LOCATION}/release_files/MRCM_CONSTRAINTS.txt"
+MRCM_FILE="${1:-${LOCATION}/MySQL/MRCM/MRCM_CONSTRAINTS_20220228.txt}"
 
 if [ ! -f "${MRCM_FILE}" ]; then
     echo "MRCM 파일이 없습니다: ${MRCM_FILE}"

@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,7 +25,8 @@ import co.infoclinic.term.snomedct.model.dto.ConceptViewDTO;
 import co.infoclinic.term.snomedct.repository.TransitiveClosureRepository;
 import co.infoclinic.term.snomedct.service.ConceptService;
 import co.infoclinic.term.snomedct.service.SchemeService;
-import co.infoclinic.term.snomedct.utils.ECL1ParserUtil;
+import co.infoclinic.term.snomedct.repository.custom.ConceptRepositoryCustom;
+import co.infoclinic.term.snomedct.utils.ECL2ParserUtil;
 import co.infoclinic.term.snomedct.utils.ECLParserUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -56,6 +58,10 @@ public class ConstraintController {
 
 	@Autowired
 	private TransitiveClosureRepository tcRepo;
+
+	@Autowired
+	@Qualifier("conceptRepositoryImpl")
+	private ConceptRepositoryCustom conceptRepo;
 
 
 	@ApiOperation(value = "Get Entity List by ECL")
@@ -93,12 +99,16 @@ public class ConstraintController {
 	private List<ConceptViewDTO> evaluateECL(String ecl, String effectiveTime, int page, int size) {
 		String type = detectType(ecl);
 
-		if ("CONJUNCTION".equals(type)) {
+		if (ECL2ParserUtil.TYPE_CONJUNCTION.equals(type)) {
 			return evaluateCompound(ecl, "AND", effectiveTime, page, size, "AND");
-		} else if ("DISJUNCTION".equals(type)) {
+		} else if (ECL2ParserUtil.TYPE_DISJUNCTION.equals(type)) {
 			return evaluateCompound(ecl, "OR", effectiveTime, page, size, "OR");
-		} else if ("EXCLUSION".equals(type)) {
+		} else if (ECL2ParserUtil.TYPE_EXCLUSION.equals(type)) {
 			return evaluateCompound(ecl, "MINUS", effectiveTime, page, size, "MINUS");
+		} else if (ECL2ParserUtil.TYPE_DOTTED.equals(type)) {
+			return evaluateDotted(ecl, effectiveTime);
+		} else if (ECL2ParserUtil.TYPE_COMPOUNDFOCUS.equals(type)) {
+			return evaluateCompoundFocus(ecl, effectiveTime, page, size);
 		} else {
 			return evaluateSimple(ecl.trim(), effectiveTime, page, size);
 		}
@@ -126,6 +136,16 @@ public class ConstraintController {
 		if (ecl.startsWith("^")) {
 			String refsetId = ecl.substring(1).trim().split("\\s+")[0];
 			return conceptService.getMemberOfList(refsetId, effectiveTime);
+		}
+
+		// * : refinement — pipe 표기 제거 후 문자열 파싱 (* 를 attributeValue로 허용)
+		String eclStripped = ecl.replaceAll("\\s*\\|[^|]*\\|\\s*", " ").replaceAll("\\s+", " ").trim();
+		if (eclStripped.startsWith("*")) {
+			int ci = eclStripped.indexOf(':');
+			if (ci >= 0) {
+				return evaluateRefinement(eclStripped.substring(ci + 1).trim(), effectiveTime);
+			}
+			return new ArrayList<>();
 		}
 
 		// 속성 제약 (* :attr=val 형태)
@@ -175,27 +195,107 @@ public class ConstraintController {
 	}
 
 	/**
-	 * refinement 문자열 "attrId=valId,attrId2=valId2" 을 파싱해
-	 * 속성 조건을 만족하는 개념 목록 반환
+	 * refinement 문자열을 파싱해 속성 조건을 만족하는 개념 목록 반환.
+	 *
+	 * ECL2 지원:
+	 *   - {@code R TYPE_ID = valExpr}     : reverse 속성 (DESTINATION_ID 개념 반환)
+	 *   - {@code TYPE_ID = <<valId}        : 값 계층 제약
+	 *   - {@code TYPE_ID = *}              : 와일드카드 값 (buildAttrValCondition 처리)
 	 */
 	@SuppressWarnings("unchecked")
 	private List<ConceptViewDTO> evaluateRefinement(String refinementStr, String effectiveTime) {
-		// 여러 속성이 콤마로 연결된 경우 각각 AND 교집합
-		// 그룹 처리({...})는 일단 무시하고 non-group 속성만 처리
 		Map<String, Object> nonGroup = new LinkedHashMap<>();
+		List<ConceptViewDTO> reverseResult = null;
+
 		String[] parts = refinementStr.split(",");
 		for (String part : parts) {
-			part = part.trim().replaceAll("\\{", "").replaceAll("\\}", "");
+			part = part.trim().replaceAll("[{}]", "");
 			if (!part.contains("=")) continue;
 			String[] kv = part.split("=", 2);
-			if (kv.length == 2) {
-				nonGroup.put(kv[0].trim(), kv[1].trim());
+			if (kv.length != 2) continue;
+
+			String attrPart = kv[0].trim();
+			String valPart  = kv[1].trim();
+
+			// ECL2: reverse flag (R or r)
+			boolean isReverse = attrPart.matches("(?i)r\\s+.*");
+			if (isReverse) {
+				attrPart = attrPart.replaceFirst("(?i)r\\s+", "").trim();
+			}
+
+			// 속성 연산자 (<<, <) 제거
+			if (attrPart.startsWith("<<")) attrPart = attrPart.substring(2).trim();
+			else if (attrPart.startsWith("<"))  attrPart = attrPart.substring(1).trim();
+
+			// 값 제약 연산자 분리
+			String valOperator = "SELF";
+			if (valPart.startsWith("<<")) { valOperator = "DESCENDANTORSELFOF"; valPart = valPart.substring(2).trim(); }
+			else if (valPart.startsWith("<"))  { valOperator = "DESCENDANTOF";       valPart = valPart.substring(1).trim(); }
+
+			String attrId = attrPart;
+			String valId  = valPart;
+
+			if (isReverse) {
+				// SOURCE_ID 집합을 구한 뒤 그 DESTINATION_ID 를 반환
+				List<String> sourceIds = resolveConstraintToIds(valId, valOperator, effectiveTime);
+				List<String> destIds = sourceIds.isEmpty()
+						? conceptRepo.findAttrDestIdsBySourcesAll(attrId, effectiveTime)
+						: conceptRepo.findAttrDestIdsBySources(sourceIds, attrId, effectiveTime);
+				List<ConceptViewDTO> rList = conceptRepo.findConceptViewByIds(destIds, effectiveTime);
+				reverseResult = (reverseResult == null) ? rList : applySetOp(reverseResult, rList, "AND");
+			} else {
+				// 일반 속성: 값 제약 연산자가 있는 경우 expandValue
+				if (!"SELF".equals(valOperator) && !"*".equals(valId)) {
+					List<String> expandedIds = resolveConstraintToIds(valId, valOperator, effectiveTime);
+					// 값 집합을 OR 로 처리: 개별 항목을 nonGroup 에 추가하면 AND 가 됨
+					// → 임시 비교를 위해 IN 쿼리 대신 여러 OR 조건이 필요하므로 별도 처리
+					List<ConceptViewDTO> attrRes = evaluateAttrWithExpandedValues(attrId, expandedIds, effectiveTime);
+					reverseResult = (reverseResult == null) ? attrRes : applySetOp(reverseResult, attrRes, "AND");
+				} else {
+					nonGroup.put(attrId, valId);
+				}
 			}
 		}
-		if (nonGroup.isEmpty()) return new ArrayList<>();
-		Map<String, Object> paramMap = new LinkedHashMap<>();
-		paramMap.put("N", nonGroup);
-		return (List<ConceptViewDTO>) conceptService.getConceptList(paramMap, effectiveTime);
+
+		List<ConceptViewDTO> result = new ArrayList<>();
+		if (!nonGroup.isEmpty()) {
+			Map<String, Object> paramMap = new LinkedHashMap<>();
+			paramMap.put("N", nonGroup);
+			result = (List<ConceptViewDTO>) conceptService.getConceptList(paramMap, effectiveTime);
+		}
+		if (reverseResult != null) {
+			result = result.isEmpty() ? reverseResult : applySetOp(result, reverseResult, "AND");
+		}
+		return result;
+	}
+
+	/**
+	 * 값 제약(valId + operator)을 개념 ID 목록으로 확장한다.
+	 * valId="*" 이면 빈 목록을 반환 (호출 측에서 wildcard 처리).
+	 */
+	private List<String> resolveConstraintToIds(String valId, String valOperator, String effectiveTime) {
+		if ("*".equals(valId)) return new ArrayList<>();
+		if ("SELF".equals(valOperator) || "SCTID".equals(valOperator)) {
+			return java.util.Collections.singletonList(valId);
+		}
+		List<ConceptViewDTO> concepts = evaluateByKeyAndId(valOperator, valId, effectiveTime, 1, Integer.MAX_VALUE);
+		return concepts.stream().map(ConceptViewDTO::getConceptId).collect(Collectors.toList());
+	}
+
+	/** 여러 가능한 DESTINATION_ID 값들에 대해 OR 로 속성 조건 검색 */
+	@SuppressWarnings("unchecked")
+	private List<ConceptViewDTO> evaluateAttrWithExpandedValues(String attrId, List<String> valueIds, String effectiveTime) {
+		if (valueIds.isEmpty()) return new ArrayList<>();
+		List<ConceptViewDTO> result = new ArrayList<>();
+		for (String vid : valueIds) {
+			Map<String, Object> nonGroup = new LinkedHashMap<>();
+			nonGroup.put(attrId, vid);
+			Map<String, Object> paramMap = new LinkedHashMap<>();
+			paramMap.put("N", nonGroup);
+			List<ConceptViewDTO> partial = (List<ConceptViewDTO>) conceptService.getConceptList(paramMap, effectiveTime);
+			result = applySetOp(result, partial, "OR");
+		}
+		return result;
 	}
 
 	/**
@@ -237,21 +337,98 @@ public class ConstraintController {
 		return result;
 	}
 
-	/** ECL1ParserUtil로 표현식 유형 감지 */
+	/**
+	 * ECL2ParserUtil 로 표현식 유형 감지.
+	 * ECL2 신규: DOTTED / COMPOUNDFOCUS / 대소문자 무관 AND·OR·MINUS
+	 */
 	private String detectType(String ecl) {
 		try {
-			// ^ memberOf는 별도 처리
-			if (ecl.startsWith("^")) return "SIMPLE";
-			ECL1ParserUtil.parseExpression(ecl);
-			// parseExpression 호출 후 트리 검사 대신 키워드로 간이 판별
-			String upper = ecl.toUpperCase();
-			if (upper.matches(".*\\sAND\\s.*"))   return "CONJUNCTION";
-			if (upper.matches(".*\\sOR\\s.*"))    return "DISJUNCTION";
-			if (upper.matches(".*\\sMINUS\\s.*")) return "EXCLUSION";
+			if (ecl.startsWith("^")) return ECL2ParserUtil.TYPE_SIMPLE;
+			return ECL2ParserUtil.detectType(ecl);
 		} catch (Exception e) {
-			// fall through to SIMPLE
+			return ECL2ParserUtil.TYPE_SIMPLE;
 		}
-		return "SIMPLE";
+	}
+
+	// ─── ECL2: Dotted expression ─────────────────────────────────────────────
+
+	/**
+	 * Dotted 표현식 평가: {@code <<X . TYPE_ID [. TYPE_ID2 ...]}
+	 * 각 TYPE_ID 를 따라 SOURCE→DESTINATION 체인을 순차적으로 탐색한다.
+	 */
+	private List<ConceptViewDTO> evaluateDotted(String ecl, String effectiveTime) {
+		String stripped = ecl.replaceAll("\\s*\\|[^|]*\\|\\s*", " ").replaceAll("\\s+", " ").trim();
+
+		// " . " 을 구분자로 분리 (cardinality ".." 와 충돌 없음)
+		String[] parts = stripped.split("\\s+\\.\\s+");
+		if (parts.length < 2) return new ArrayList<>();
+
+		// 첫 번째 부분: focus 표현식
+		List<ConceptViewDTO> sources = evaluateSimple(parts[0].trim(), effectiveTime, 1, Integer.MAX_VALUE);
+		if (sources.isEmpty()) return new ArrayList<>();
+
+		List<String> ids = sources.stream().map(ConceptViewDTO::getConceptId).collect(Collectors.toList());
+
+		// 이후 TYPE_ID 체인을 따라 이동
+		for (int i = 1; i < parts.length; i++) {
+			String typeId = extractSctId(parts[i].trim());
+			if (typeId == null) return new ArrayList<>();
+			ids = conceptRepo.findAttrDestIdsBySources(ids, typeId, effectiveTime);
+			if (ids.isEmpty()) return new ArrayList<>();
+		}
+
+		return conceptRepo.findConceptViewByIds(ids, effectiveTime);
+	}
+
+	// ─── ECL2: Compound focus (+) ────────────────────────────────────────────
+
+	/**
+	 * Compound focus 평가: {@code <<X + <<Y [: refinement]}
+	 * 각 focus의 결과를 OR-union 한 뒤 refinement(있으면)를 적용한다.
+	 */
+	private List<ConceptViewDTO> evaluateCompoundFocus(String ecl, String effectiveTime, int page, int size) {
+		String stripped = ecl.replaceAll("\\s*\\|[^|]*\\|\\s*", " ").replaceAll("\\s+", " ").trim();
+
+		// refinement 분리
+		String focusPart = stripped;
+		String refinementPart = null;
+		int colonIdx = indexOfColonOutsideParens(stripped);
+		if (colonIdx >= 0) {
+			focusPart     = stripped.substring(0, colonIdx).trim();
+			refinementPart = stripped.substring(colonIdx + 1).trim();
+		}
+
+		// " + " 로 focus 분리
+		String[] foci = focusPart.split("\\s+\\+\\s+");
+		List<ConceptViewDTO> union = new ArrayList<>();
+		for (String f : foci) {
+			union = applySetOp(union, evaluateSimple(f.trim(), effectiveTime, page, size), "OR");
+		}
+
+		if (refinementPart != null && !refinementPart.isEmpty()) {
+			List<ConceptViewDTO> attrResult = evaluateRefinement(refinementPart, effectiveTime);
+			union = applySetOp(union, attrResult, "AND");
+		}
+		return union;
+	}
+
+	/** 괄호 밖의 ':' 위치를 찾는다 (compound focus 에서 refinement 분리용) */
+	private int indexOfColonOutsideParens(String s) {
+		int depth = 0;
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if (c == '(' || c == '{') depth++;
+			else if (c == ')' || c == '}') depth--;
+			else if (c == ':' && depth == 0) return i;
+		}
+		return -1;
+	}
+
+	/** 문자열에서 앞부분 operator(<<, <, >>, >, ^) 와 공백을 제거하고 SCTID 또는 * 를 추출 */
+	private String extractSctId(String token) {
+		String t = token.replaceAll("^(<<|<!|<|>>|>!|>|\\^)\\s*", "").trim();
+		if (t.isEmpty()) return null;
+		return t;
 	}
 
 	// -------------------------------------------------------------------------

@@ -160,9 +160,8 @@ export default function SearchBySynonym(props) {
       setResult([]);
       const opt = `q=${q}`;
 
-      axios
-        .get(`http://api2.infoclinic.co/getSynonym?${opt}`)
-        .then(response => setResult(response));
+      // 외부 API (api2.infoclinic.co) 미사용 — 서비스 이용 불가
+      setResult(['서비스 이용 불가']);
     }
   }, [q]);
 

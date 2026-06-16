@@ -44,20 +44,21 @@ public class SnomedRf2Loader {
     private static final String JDBC_PASSWORD = "julab123!";
 
     public static void main(String[] args) throws Exception {
-        if (args.length != 1) {
-            System.err.println("Usage: SnomedRf2Loader <path-to-snomed-rf2.zip>");
+        if (args.length < 1) {
+            System.err.println("Usage: SnomedRf2Loader <path-to-snomed-rf2.zip> [--append]");
             System.exit(1);
         }
 
+        boolean append = args.length >= 2 && "--append".equals(args[1]);
         Path zipPath = Paths.get(args[0]).toAbsolutePath().normalize();
         if (!zipPath.toFile().exists()) {
             throw new IllegalArgumentException("RF2 archive does not exist: " + zipPath);
         }
-        System.out.println("Loading SNOMED RF2 archive: " + zipPath);
+        System.out.println("Loading SNOMED RF2 archive: " + zipPath + (append ? " [append mode]" : " [full mode]"));
 
         try (Connection conn = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD)) {
             conn.setAutoCommit(false);
-            ensureSchema(conn, zipPath);
+            ensureSchema(conn, zipPath, append);
 
             int conceptCount = 0, descCount = 0, relCount = 0, refsetCount = 0;
 
@@ -116,8 +117,15 @@ public class SnomedRf2Loader {
     // 스키마 초기화
     // -------------------------------------------------------------------------
 
-    private static void ensureSchema(Connection conn, Path zipPath) throws SQLException, IOException {
+    private static void ensureSchema(Connection conn, Path zipPath, boolean append) throws SQLException, IOException {
         try (Statement st = conn.createStatement()) {
+            if (append) {
+                // append 모드: 테이블이 이미 존재하므로 스키마 생성 생략
+                st.execute("SET search_path TO term, public");
+                conn.commit();
+                System.out.println("Schema reuse (append mode).");
+                return;
+            }
             st.execute("DROP SCHEMA IF EXISTS term CASCADE");
             st.execute("CREATE SCHEMA term");
             st.execute("SET search_path TO term, public");

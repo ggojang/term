@@ -1,7 +1,6 @@
 {
   "name": "stom",
   "version": "0.1.0",
-  "homepage": "/",
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.11.0",
@@ -24,9 +23,10 @@
     "serve": "^11.3.2",
     "typescript": "^3.9.6"
   },
+  "homepage": "/stom",
   "scripts": {
     "start": "PORT=8300 react-scripts start",
-    "build": "react-scripts build",
+    "build": "BUILD_PATH=../src/main/webapp/stom NODE_OPTIONS=--openssl-legacy-provider node node_modules/react-scripts/bin/react-scripts.js build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

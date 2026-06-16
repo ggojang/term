@@ -83,6 +83,31 @@ public interface ConceptRepositoryCustom {
 
 	/** LIMIT 없이 전체 하위 목록 조회 (ECL 전용) */
 	List<ConceptViewDTO> findAllDescendantListByPathsAndEffectiveTime(List<String> paths, String effectiveTime);
+
+	/**
+	 * ECL2 dotted / reverse 용: 주어진 SOURCE_ID 목록에서 TYPE_ID 속성을 따라간 DESTINATION_ID 개념 목록
+	 *
+	 * @param sourceIds   SOURCE_ID 목록 (<<X 의 개념 ID 집합)
+	 * @param typeId      TYPE_ID (속성 코드)
+	 * @param effectiveTime
+	 */
+	List<ConceptViewDTO> findAttrDestsBySources(List<String> sourceIds, String typeId, String effectiveTime);
+
+	/**
+	 * ECL2 dotted 체인 중간 단계용: SOURCE_ID 목록에서 TYPE_ID 속성의 DESTINATION_ID 목록(ID만) 반환
+	 */
+	List<String> findAttrDestIdsBySources(List<String> sourceIds, String typeId, String effectiveTime);
+
+	/**
+	 * 개념 ID 목록으로 개념 목록 조회 (ECL2 결과 변환용)
+	 */
+	List<ConceptViewDTO> findConceptViewByIds(List<String> conceptIds, String effectiveTime);
+
+	/**
+	 * ECL2 reverse 와일드카드 소스: TYPE_ID 속성의 모든 DESTINATION_ID 목록
+	 * (= * 역방향 조회: SOURCE_ID 제한 없음)
+	 */
+	List<String> findAttrDestIdsBySourcesAll(String typeId, String effectiveTime);
 	
 
 	/**

@@ -31,12 +31,3 @@ src/main/webapp/stom/
 
 # Temp / scratch files
 tomcat7_log.txt
-
-# Large LOINC export files
-loinc/export/loinc_export_linguistic_variant.csv
-loinc/export/loinc_export_linguistic_variants.csv
-
-# Frontend build artifacts
-frontend/node_modules/
-frontend/build/
-frontend/yarn-error.log

@@ -1,6 +1,7 @@
 #!/bin/bash
-# Run term backend locally without external Tomcat
-# Spring 4.x + Hibernate 4.x + Java 17+ requires --add-opens for reflection access
+export JAVA_HOME=/usr/lib/jvm/java-17-oracle
+export PATH=$JAVA_HOME/bin:$PATH
+
 export MAVEN_OPTS="\
   --add-opens java.base/java.lang=ALL-UNNAMED \
   --add-opens java.base/java.lang.invoke=ALL-UNNAMED \
