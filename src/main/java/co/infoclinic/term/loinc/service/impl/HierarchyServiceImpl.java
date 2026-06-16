@@ -72,10 +72,28 @@ public class HierarchyServiceImpl implements HierarchyService {
 	 */
 	@Override
 	public List<HierarchyDTO> getChildren(String code, String path, String lang) {
-		if (StringUtils.isEmpty(code) || !code.matches(LOINCUtils.CODE_PATTERN)) {
+		if (StringUtils.isEmpty(code)) {
 			return new ArrayList<HierarchyDTO>();
 		}
-		
+
+		// group 키워드: hierarchy_lg 테이블에서 조회
+		if ("group".equalsIgnoreCase(code)) {
+			List<Hierarchy> entities = hierRepo.findChildrenInLGHierarchy("GROUP");
+			return convertToDTOList(entities);
+		}
+
+		// parts 키워드: LP432695-7이 PARTS 루트
+		if ("parts".equalsIgnoreCase(code)) {
+			List<Hierarchy> entities = hierRepo.findChildrenByCode("LP432695-7");
+			return convertToDTOList(entities);
+		}
+
+		// group 하위 노드(카테고리 이름)
+		if (!code.matches(LOINCUtils.CODE_PATTERN) || code.contains(" ")) {
+			List<Hierarchy> entities = hierRepo.findChildrenInLGHierarchy(code);
+			return convertToDTOList(entities);
+		}
+
 		// 자식 목록
 		List<HierarchyDTO> dtos;
 		List<Hierarchy> entities;
