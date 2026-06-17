@@ -222,7 +222,7 @@ public class HiraService {
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("code", r[0]); m.put("label", r[0] + " " + (r[1] != null ? r[1] : ""));
+            m.put("code", r[0]); m.put("label", r[1] != null ? r[1].toString() : "");
             m.put("koreanLabel", r[1]); m.put("englishLabel", r[2]);
             m.put("price", r[3]); m.put("type", "leaf"); m.put("childCount", 0);
             result.add(m);
