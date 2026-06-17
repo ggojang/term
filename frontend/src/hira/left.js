@@ -189,7 +189,7 @@ export default function HiraLeft({ category, setCategory, selectedCode, onSelect
       </div>
 
       {/* 검색결과 */}
-      {searchResults !== null ? (
+      {searchResults !== null && (
         <div>
           <Typography className={classes.caption}>
             {searchResults.total}건 (최대 100건 표시)
@@ -216,12 +216,17 @@ export default function HiraLeft({ category, setCategory, selectedCode, onSelect
             </div>
           ))}
         </div>
-      ) : loading ? (
+      )}
+
+      {/* 로딩 */}
+      {searchResults === null && loading && (
         <div style={{ textAlign: 'center', paddingTop: 20 }}>
           <CircularProgress size={24} />
         </div>
-      ) : (
-        /* 트리 */
+      )}
+
+      {/* 트리 — 검색 중에도 마운트 유지, display:none으로 숨김 */}
+      <div style={{ display: searchResults !== null || loading ? 'none' : 'block' }}>
         <TreeView
           defaultCollapseIcon={<ExpandMoreIcon style={{ fontSize: 16 }} />}
           defaultExpandIcon={<ChevronRightIcon style={{ fontSize: 16 }} />}
@@ -241,7 +246,7 @@ export default function HiraLeft({ category, setCategory, selectedCode, onSelect
             />
           ))}
         </TreeView>
-      )}
+      </div>
     </div>
   );
 }
