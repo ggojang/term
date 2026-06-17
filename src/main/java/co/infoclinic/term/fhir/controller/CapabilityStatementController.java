@@ -13,10 +13,20 @@ import javax.servlet.http.HttpServletRequest;
 @RestController
 public class CapabilityStatementController {
 
-    @RequestMapping(value = {"/stom/fhir", "/stom/fhir/"}, method = RequestMethod.GET,
-            produces = MediaType.TEXT_PLAIN_VALUE)
+    @RequestMapping(value = {FhirApi.BASE, FhirApi.BASE + "/"}, method = RequestMethod.GET,
+            produces = MediaType.TEXT_HTML_VALUE)
     public String fhirRoot() {
-        return "FHIR Endpoint";
+        return "<html><body style='font-family:sans-serif;padding:2em'>"
+             + "<h2>STOM Browser FHIR Endpoint</h2>"
+             + "<p>FHIR R4 Terminology Server</p>"
+             + "<ul>"
+             + "<li><a href='fhir/metadata'>CapabilityStatement</a></li>"
+             + "<li>CodeSystem/$lookup, $validate-code, $subsumes</li>"
+             + "<li>ValueSet/$expand, $validate-code</li>"
+             + "<li>ConceptMap/$translate</li>"
+             + "</ul>"
+             + "<p style='color:#888'>Supported systems: SNOMED CT, LOINC, KCD-9, HIRA EDI (행위/약제/치료재료)</p>"
+             + "</body></html>";
     }
 
     private static final FhirContext FHIR_CTX = FhirContext.forR4();
@@ -24,7 +34,7 @@ public class CapabilityStatementController {
     @RequestMapping(value = FhirApi.METADATA, method = RequestMethod.GET,
             produces = {MediaType.APPLICATION_JSON_VALUE, "application/fhir+json"})
     public String getCapabilityStatement(HttpServletRequest request) {
-        String base = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/stom/fhir";
+        String base = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + "/fhir";
 
         CapabilityStatement cs = new CapabilityStatement();
         cs.setId("terminology-server");
