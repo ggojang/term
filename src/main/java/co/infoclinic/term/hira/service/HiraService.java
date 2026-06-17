@@ -201,8 +201,17 @@ public class HiraService {
         return -1;
     }
 
+    private String buildAtcLabel(String code, String hname, String ename) {
+        boolean hasH = hname != null && !hname.isEmpty() && !hname.equals(code);
+        boolean hasE = ename != null && !ename.isEmpty() && !ename.equals(code);
+        if (hasH && hasE) return code + " " + hname + " / " + ename;
+        if (hasH) return code + " " + hname;
+        if (hasE) return code + " " + ename;
+        return code;
+    }
+
     public List<Map<String, Object>> get약제ATCRoot() {
-        String sql = "SELECT g.code, COALESCE(m.atc_hname, m.atc_name, g.code) as label, g.cnt"
+        String sql = "SELECT g.code, m.atc_hname, m.atc_name, g.cnt"
                    + " FROM ("
                    + "   SELECT SUBSTRING(atc_code, 1, 1) as code, COUNT(DISTINCT 제품코드) as cnt"
                    + "   FROM term.hira_atc_map WHERE LENGTH(atc_code) >= 1"
@@ -216,10 +225,11 @@ public class HiraService {
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
             String code = r[0].toString();
-            String label = r[1] != null ? r[1].toString() : code;
+            String hname = r[1] != null ? r[1].toString() : null;
+            String ename = r[2] != null ? r[2].toString() : null;
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("code", code); m.put("label", code + " " + label);
-            m.put("type", "group"); m.put("childCount", ((Number) r[2]).intValue());
+            m.put("code", code); m.put("label", buildAtcLabel(code, hname, ename));
+            m.put("type", "group"); m.put("childCount", ((Number) r[3]).intValue());
             result.add(m);
         }
         return result;
@@ -232,9 +242,10 @@ public class HiraService {
 
         // 하위 ATC 그룹 (nextLen 길이)
         if (nextLen > 0) {
-            String sql = "SELECT g.code, COALESCE(m.atc_hname, m.atc_name, g.code) as label, g.cnt"
+            String sql = "SELECT g.code, m.atc_hname, COALESCE(m.atc_name, g.map_name) as ename, g.cnt"
                        + " FROM ("
                        + "   SELECT SUBSTRING(atc_code, 1, " + nextLen + ") as code,"
+                       + "   MAX(CASE WHEN LENGTH(atc_code) = " + nextLen + " THEN atc_name END) as map_name,"
                        + "   COUNT(DISTINCT 제품코드) as cnt"
                        + "   FROM term.hira_atc_map"
                        + "   WHERE atc_code LIKE ?1 AND LENGTH(atc_code) >= " + nextLen
@@ -248,11 +259,12 @@ public class HiraService {
             List<Object[]> rows = q.getResultList();
             for (Object[] r : rows) {
                 String code = r[0].toString();
-                String name = r[1] != null ? r[1].toString() : code;
+                String hname = r[1] != null ? r[1].toString() : null;
+                String ename = r[2] != null ? r[2].toString() : null;
                 Map<String, Object> m = new LinkedHashMap<>();
                 m.put("code", code);
-                m.put("label", code + " " + name);
-                m.put("type", "group"); m.put("childCount", ((Number) r[2]).intValue());
+                m.put("label", buildAtcLabel(code, hname, ename));
+                m.put("type", "group"); m.put("childCount", ((Number) r[3]).intValue());
                 result.add(m);
             }
         }
