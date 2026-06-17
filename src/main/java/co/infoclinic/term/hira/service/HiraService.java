@@ -39,7 +39,7 @@ public class HiraService {
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
             String raw = r[0].toString();
-            String label = raw.matches("\\d+") ? raw + "장" : raw;
+            String label = raw.startsWith("(") ? raw : raw + "장";
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("code", sheet + "|" + raw); m.put("label", label); m.put("type", "group");
             m.put("childCount", ((Number) r[1]).intValue());
@@ -60,7 +60,7 @@ public class HiraService {
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
             String raw = r[0].toString();
-            String label = raw.matches("\\d+") ? raw + "절" : raw;
+            String label = raw.startsWith("(") ? raw : raw + "절";
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("code", sheet + "|" + jang + "|" + raw); m.put("label", label); m.put("type", "group");
             m.put("childCount", ((Number) r[1]).intValue());
