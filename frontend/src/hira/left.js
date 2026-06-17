@@ -210,32 +210,43 @@ export default function HiraLeft({ category, setCategory, selectedCode, onSelect
           <Typography className={classes.caption}>
             {searchResults.total}건 (최대 100건 표시)
           </Typography>
-          {(searchResults.items || []).map((item, i) => (
-            <div
-              key={i}
-              className={classes.resultItem}
-              onClick={() => onSelect(item.code)}
-              style={{ backgroundColor: item.code === selectedCode ? '#e3f2fd' : undefined }}
-            >
-              <span className={classes.codeTag}>{item.code}</span>
-              {getItemLabel(item)}
-              {category === '행위' && item.classNo && (
-                <span style={{ color: '#888', fontSize: '0.78em', marginLeft: 6 }}>
-                  [{item.classNo}]
-                </span>
-              )}
-              {category === '약제' && item.atcCode && (
-                <span style={{ color: '#888', fontSize: '0.78em', marginLeft: 6 }}>
-                  [{item.atcCode}]
-                </span>
-              )}
-              {item.price != null && (
-                <span className={classes.priceTag}>
-                  {Number(item.price).toLocaleString()}원
-                </span>
-              )}
-            </div>
-          ))}
+          {(searchResults.items || []).map((item, i) => {
+            const isGroup = category === '치료재료' && item.type === 'group';
+            return (
+              <div
+                key={i}
+                className={classes.resultItem}
+                onClick={isGroup ? undefined : () => onSelect(item.code)}
+                style={{
+                  backgroundColor: item.code === selectedCode ? '#e3f2fd' : (isGroup ? '#f5f5f5' : undefined),
+                  cursor: isGroup ? 'default' : 'pointer',
+                }}
+              >
+                {isGroup ? (
+                  <>
+                    <span style={{ color: '#1976d2', fontWeight: 'bold', marginRight: 4, fontSize: '0.8em' }}>▸ 중분류</span>
+                    <span className={classes.codeTag}>{item.midCode}</span>
+                    {item.name}
+                    <span style={{ color: '#bbb', fontSize: '0.78em', marginLeft: 4 }}>({item.childCount}건)</span>
+                  </>
+                ) : (
+                  <>
+                    <span className={classes.codeTag}>{item.code}</span>
+                    {getItemLabel(item)}
+                    {category === '행위' && item.classNo && (
+                      <span style={{ color: '#888', fontSize: '0.78em', marginLeft: 6 }}>[{item.classNo}]</span>
+                    )}
+                    {category === '약제' && item.atcCode && (
+                      <span style={{ color: '#888', fontSize: '0.78em', marginLeft: 6 }}>[{item.atcCode}]</span>
+                    )}
+                    {item.price != null && (
+                      <span className={classes.priceTag}>{Number(item.price).toLocaleString()}원</span>
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 

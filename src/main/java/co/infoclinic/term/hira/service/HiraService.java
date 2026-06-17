@@ -663,16 +663,29 @@ public class HiraService {
 
     public Map<String, Object> search치료재료(String q, int page, int size) {
         int offset = (page - 1) * size;
-        String sql = "SELECT 코드, 품명, 규격, 단위, 상한금액, 중분류, 급여구분"
-                   + " FROM term.hira_치료재료_code"
-                   + " WHERE 코드 ILIKE '%' || ?1 || '%'"
-                   + "    OR 품명 ILIKE '%' || ?1 || '%'"
-                   + "    OR 중분류 ILIKE '%' || ?1 || '%'"
-                   + " ORDER BY 코드 LIMIT ?2 OFFSET ?3";
-        String cntSql = "SELECT COUNT(*) FROM term.hira_치료재료_code"
-                      + " WHERE 코드 ILIKE '%' || ?1 || '%'"
-                      + "    OR 품명 ILIKE '%' || ?1 || '%'"
-                      + "    OR 중분류 ILIKE '%' || ?1 || '%'";
+        // 중간노드(중분류) + leaf(품목) UNION
+        String sql =
+            "SELECT 'group' as type, 시트명 || '|' || 중분류코드 as code,"
+          + "       중분류코드 || ' ' || MIN(중분류) as name,"
+          + "       MIN(시트명) as sheet, 중분류코드 as mid_code, CAST(NULL AS numeric) as price, COUNT(*) as cnt"
+          + " FROM term.hira_치료재료_code"
+          + " WHERE 중분류코드 ILIKE '%' || ?1 || '%' OR 중분류 ILIKE '%' || ?1 || '%'"
+          + " GROUP BY 시트명, 중분류코드"
+          + " UNION ALL"
+          + " SELECT 'leaf' as type, 코드 as code, 품명 as name,"
+          + "        시트명 as sheet, 중분류코드 as mid_code, 상한금액 as price, CAST(NULL AS bigint) as cnt"
+          + " FROM term.hira_치료재료_code"
+          + " WHERE 코드 ILIKE '%' || ?1 || '%' OR 품명 ILIKE '%' || ?1 || '%'"
+          + " ORDER BY type, code"
+          + " LIMIT ?2 OFFSET ?3";
+        String cntSql =
+            "SELECT ("
+          + "  SELECT COUNT(DISTINCT 시트명 || '|' || 중분류코드) FROM term.hira_치료재료_code"
+          + "  WHERE 중분류코드 ILIKE '%' || ?1 || '%' OR 중분류 ILIKE '%' || ?1 || '%'"
+          + ") + ("
+          + "  SELECT COUNT(*) FROM term.hira_치료재료_code"
+          + "  WHERE 코드 ILIKE '%' || ?1 || '%' OR 품명 ILIKE '%' || ?1 || '%'"
+          + ")";
         Query dq = em.createNativeQuery(sql);
         dq.setParameter(1, q); dq.setParameter(2, size); dq.setParameter(3, offset);
         Query cq = em.createNativeQuery(cntSql);
@@ -683,9 +696,9 @@ public class HiraService {
         List<Map<String, Object>> items = new ArrayList<>();
         for (Object[] r : rows) {
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("code", r[0]); m.put("name", r[1]); m.put("spec", r[2]);
-            m.put("unit", r[3]); m.put("price", r[4]); m.put("midClass", r[5]);
-            m.put("benefit", r[6]);
+            m.put("type", r[0]); m.put("code", r[1]); m.put("name", r[2]);
+            m.put("sheet", r[3]); m.put("midCode", r[4]); m.put("price", r[5]);
+            if ("group".equals(r[0].toString())) m.put("childCount", ((Number) r[6]).intValue());
             items.add(m);
         }
         Map<String, Object> result = new LinkedHashMap<>();
