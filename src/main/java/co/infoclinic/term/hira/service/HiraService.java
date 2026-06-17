@@ -666,7 +666,7 @@ public class HiraService {
         // 중간노드(중분류) + leaf(품목) UNION
         String sql =
             "SELECT 'group' as type, 시트명 || '|' || 중분류코드 as code,"
-          + "       중분류코드 || ' ' || MIN(중분류) as name,"
+          + "       MIN(중분류) as name,"
           + "       MIN(시트명) as sheet, 중분류코드 as mid_code, CAST(NULL AS numeric) as price, COUNT(*) as cnt"
           + " FROM term.hira_치료재료_code"
           + " WHERE 중분류코드 ILIKE '%' || ?1 || '%' OR 중분류 ILIKE '%' || ?1 || '%'"
