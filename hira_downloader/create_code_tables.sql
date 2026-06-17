@@ -65,3 +65,15 @@ CREATE INDEX IF NOT EXISTS idx_hira_치료재료_중분류 ON hira_치료재료_
 CREATE INDEX IF NOT EXISTS idx_hira_치료재료_search ON hira_치료재료_code USING gin(
     to_tsvector('simple', coalesce(코드,'') || ' ' || coalesce(품명,'') || ' ' || coalesce(중분류,''))
 );
+
+-- ── ATC 마스터 (약학정보원 health.kr) ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS term.hira_atc_master (
+    atc_code  VARCHAR(10)  PRIMARY KEY,
+    atc_name  VARCHAR(255),
+    atc_hname VARCHAR(255),
+    vol       VARCHAR(100)
+);
+
+-- ── ATC 코드-약제 매핑 (hira_약제_code의 atc 연결) ────────────────────────────
+-- 이 테이블은 별도 매핑 로직에서 생성/관리
+-- CREATE TABLE IF NOT EXISTS term.hira_atc_map ( ... );
