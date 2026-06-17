@@ -20,8 +20,9 @@ public class FhirApi {
     public static final String CONCEPT_MAP_ID      = BASE + "/ConceptMap/{id}";
     public static final String CONCEPT_MAP_TRANSLATE= BASE + "/ConceptMap/$translate";
 
-    public static final String NAMING_SYSTEM        = BASE + "/NamingSystem";
-    public static final String NAMING_SYSTEM_ID     = BASE + "/NamingSystem/{id}";
+    public static final String NAMING_SYSTEM            = BASE + "/NamingSystem";
+    public static final String NAMING_SYSTEM_ID         = BASE + "/NamingSystem/{id}";
+    public static final String NAMING_SYSTEM_PREFERRED  = BASE + "/NamingSystem/$preferred-id";
 
     public static final String INSTALL_PACKAGE     = BASE + "/$install-package";
 }

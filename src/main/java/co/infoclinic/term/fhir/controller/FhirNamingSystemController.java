@@ -63,6 +63,38 @@ public class FhirNamingSystemController {
         return new ResponseEntity<String>(HttpStatus.NO_CONTENT);
     }
 
+    // ── $preferred-id ─────────────────────────────────────────────────────────
+    // GET /NamingSystem/$preferred-id?id={value}&type={oid|uri|uuid|other}
+    @RequestMapping(value = FhirApi.NAMING_SYSTEM + "/$preferred-id", method = RequestMethod.GET,
+            produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<String> preferredId(@RequestParam String id,
+                                              @RequestParam String type) {
+        IParser parser = FhirResourceService.FHIR_CTX.newJsonParser();
+        List<FhirResource> all = svc.search(RESOURCE_TYPE, null);
+        for (FhirResource r : all) {
+            if (r.getContent() == null) continue;
+            NamingSystem ns = (NamingSystem) parser.parseResource(r.getContent());
+            boolean hasId = ns.getUniqueId().stream().anyMatch(u ->
+                    id.equals(u.getValue()) && (type == null || type.equals(u.getType() != null ? u.getType().toCode() : "")));
+            if (!hasId) continue;
+            // preferred identifier 반환
+            NamingSystem.NamingSystemUniqueIdComponent preferred = ns.getUniqueId().stream()
+                    .filter(u -> u.hasPreferred() && u.getPreferred())
+                    .findFirst()
+                    .orElse(ns.getUniqueId().isEmpty() ? null : ns.getUniqueId().get(0));
+            if (preferred != null) {
+                Parameters out = new Parameters();
+                out.addParameter().setName("result").setValue(new StringType(preferred.getValue()));
+                return ResponseEntity.ok(
+                        FhirResourceService.FHIR_CTX.newJsonParser().setPrettyPrint(true).encodeResourceToString(out));
+            }
+        }
+        Parameters notFound = new Parameters();
+        notFound.addParameter().setName("result").setValue(new StringType(""));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(FhirResourceService.FHIR_CTX.newJsonParser().setPrettyPrint(true).encodeResourceToString(notFound));
+    }
+
     private String buildBundle(List<FhirResource> resources) {
         Bundle bundle = new Bundle();
         bundle.setType(Bundle.BundleType.SEARCHSET);
@@ -70,7 +102,7 @@ public class FhirNamingSystemController {
         IParser parser = FhirResourceService.FHIR_CTX.newJsonParser();
         for (FhirResource r : resources) {
             Bundle.BundleEntryComponent entry = bundle.addEntry();
-            entry.setFullUrl("/stom/fhir/NamingSystem/" + r.getId());
+            entry.setFullUrl(FhirApi.BASE + "/NamingSystem/" + r.getId());
             Resource res;
             if (r.getContent() != null) {
                 res = (Resource) parser.parseResource(r.getContent());
