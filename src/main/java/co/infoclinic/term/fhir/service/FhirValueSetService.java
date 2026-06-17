@@ -284,6 +284,61 @@ public class FhirValueSetService {
         return sb.length() > 0 ? sb.toString() : null;
     }
 
+    /**
+     * ValueSet/$validate-code
+     * url 또는 idOrUrl로 ValueSet을 찾아 code가 포함되어 있는지 확인
+     */
+    @Autowired
+    private FhirCodeSystemService csSvc;
+
+    public Parameters validateCode(String idOrUrl, String system, String code, String display) {
+        Parameters out = new Parameters();
+
+        if (code == null || code.isEmpty()) {
+            out.addParameter().setName("result").setValue(new BooleanType(false));
+            out.addParameter().setName("message").setValue(new StringType("code parameter is required"));
+            return out;
+        }
+
+        // ValueSet URL/ID 없이 system만 있으면 CodeSystem validate-code로 위임
+        if (idOrUrl == null) {
+            if (system != null) {
+                return csSvc.validateCode(system, code, display);
+            }
+            out.addParameter().setName("result").setValue(new BooleanType(false));
+            out.addParameter().setName("message").setValue(new StringType("url or system parameter is required"));
+            return out;
+        }
+
+        // ValueSet 조회
+        String json = resourceSvc.findById("ValueSet", idOrUrl)
+                .orElseGet(() -> resourceSvc.findByUrl("ValueSet", idOrUrl).orElse(null));
+        if (json == null) {
+            out.addParameter().setName("result").setValue(new BooleanType(false));
+            out.addParameter().setName("message").setValue(new StringType("ValueSet not found: " + idOrUrl));
+            return out;
+        }
+
+        // $expand 후 코드 포함 여부 확인
+        ValueSet expanded = expand(idOrUrl, null, null, null);
+        if (expanded.hasExpansion()) {
+            for (ValueSet.ValueSetExpansionContainsComponent c : expanded.getExpansion().getContains()) {
+                if (code.equals(c.getCode()) && (system == null || system.equals(c.getSystem()))) {
+                    out.addParameter().setName("result").setValue(new BooleanType(true));
+                    if (c.getDisplay() != null) {
+                        out.addParameter().setName("display").setValue(new StringType(c.getDisplay()));
+                    }
+                    return out;
+                }
+            }
+        }
+
+        out.addParameter().setName("result").setValue(new BooleanType(false));
+        out.addParameter().setName("message").setValue(
+                new StringType("Code " + code + " not found in ValueSet " + idOrUrl));
+        return out;
+    }
+
     private ValueSet buildOutcomeValueSet(String message) {
         ValueSet vs = new ValueSet();
         vs.setStatus(Enumerations.PublicationStatus.UNKNOWN);

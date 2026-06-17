@@ -82,6 +82,43 @@ public class FhirValueSetController {
         return encode(result);
     }
 
+    // ── $validate-code ────────────────────────────────────
+
+    @RequestMapping(value = FhirApi.VALUE_SET_VALIDATE, method = RequestMethod.GET,
+            produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
+    public String validateCode(@RequestParam(required = false) String url,
+                               @RequestParam(required = false) String valueSetUrl,
+                               @RequestParam(required = false) String system,
+                               @RequestParam(required = false) String code,
+                               @RequestParam(required = false) String display) {
+        String idOrUrl = url != null ? url : valueSetUrl;
+        Parameters result = svc.validateCode(idOrUrl, system, code, display);
+        return encode(result);
+    }
+
+    @RequestMapping(value = FhirApi.VALUE_SET_VALIDATE, method = RequestMethod.POST,
+            consumes = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE},
+            produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
+    public String validateCodePost(@RequestBody String body) {
+        IParser parser = FhirResourceService.FHIR_CTX.newJsonParser();
+        Parameters params = (Parameters) parser.parseResource(body);
+        String url = getParamStr(params, "url");
+        String valueSetUrl = getParamStr(params, "valueSetUrl");
+        String system = getParamStr(params, "system");
+        String code = getParamStr(params, "code");
+        String display = getParamStr(params, "display");
+        String idOrUrl = url != null ? url : valueSetUrl;
+        Parameters result = svc.validateCode(idOrUrl, system, code, display);
+        return encode(result);
+    }
+
+    private String getParamStr(Parameters params, String name) {
+        return params.getParameter().stream()
+                .filter(p -> name.equals(p.getName()) && p.getValue() instanceof org.hl7.fhir.r4.model.PrimitiveType)
+                .map(p -> ((org.hl7.fhir.r4.model.PrimitiveType<?>) p.getValue()).getValueAsString())
+                .findFirst().orElse(null);
+    }
+
     // ── 유틸 ──────────────────────────────────────────────
 
     private String encode(Resource resource) {
