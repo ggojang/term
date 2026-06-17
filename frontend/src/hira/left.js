@@ -198,11 +198,16 @@ export default function HiraLeft({ category, setCategory, selectedCode, onSelect
             <div
               key={i}
               className={classes.resultItem}
-              onClick={() => onSelect(category === '약제' ? item.code : item.code)}
+              onClick={() => onSelect(item.code)}
               style={{ backgroundColor: item.code === selectedCode ? '#e3f2fd' : undefined }}
             >
               <span className={classes.codeTag}>{item.code}</span>
               {getItemLabel(item)}
+              {category === '행위' && item.classNo && (
+                <span style={{ color: '#888', fontSize: '0.78em', marginLeft: 6 }}>
+                  [{item.classNo}]
+                </span>
+              )}
               {item.price != null && (
                 <span className={classes.priceTag}>
                   {Number(item.price).toLocaleString()}원

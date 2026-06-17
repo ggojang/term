@@ -160,16 +160,18 @@ public class HiraService {
 
     public Map<String, Object> search행위(String q, int page, int size) {
         int offset = (page - 1) * size;
-        String sql = "SELECT 수가코드, 한글명, 영문명, 의원단가, 시트구분"
+        String sql = "SELECT 수가코드, 한글명, 영문명, 의원단가, 시트구분, 분류번호"
                    + " FROM term.hira_행위_code"
                    + " WHERE 수가코드 ILIKE '%' || ?1 || '%'"
                    + "    OR 한글명 ILIKE '%' || ?1 || '%'"
                    + "    OR 영문명 ILIKE '%' || ?1 || '%'"
+                   + "    OR 분류번호 ILIKE '%' || ?1 || '%'"
                    + " ORDER BY 수가코드 LIMIT ?2 OFFSET ?3";
         String cntSql = "SELECT COUNT(*) FROM term.hira_행위_code"
                       + " WHERE 수가코드 ILIKE '%' || ?1 || '%'"
                       + "    OR 한글명 ILIKE '%' || ?1 || '%'"
-                      + "    OR 영문명 ILIKE '%' || ?1 || '%'";
+                      + "    OR 영문명 ILIKE '%' || ?1 || '%'"
+                      + "    OR 분류번호 ILIKE '%' || ?1 || '%'";
         Query dq = em.createNativeQuery(sql);
         dq.setParameter(1, q); dq.setParameter(2, size); dq.setParameter(3, offset);
         Query cq = em.createNativeQuery(cntSql);
@@ -181,7 +183,7 @@ public class HiraService {
         for (Object[] r : rows) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("code", r[0]); m.put("koreanLabel", r[1]); m.put("englishLabel", r[2]);
-            m.put("price", r[3]); m.put("sheetType", r[4]);
+            m.put("price", r[3]); m.put("sheetType", r[4]); m.put("classNo", r[5]);
             items.add(m);
         }
         Map<String, Object> result = new LinkedHashMap<>();
