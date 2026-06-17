@@ -202,17 +202,24 @@ public class HiraService {
     }
 
     public List<Map<String, Object>> get약제ATCRoot() {
-        String sql = "SELECT SUBSTRING(atc_code, 1, 1) as code, COUNT(DISTINCT 제품코드) as cnt"
-                   + " FROM term.hira_atc_map WHERE LENGTH(atc_code) >= 1"
-                   + " GROUP BY SUBSTRING(atc_code, 1, 1) ORDER BY code";
+        String sql = "SELECT g.code, COALESCE(m.atc_hname, m.atc_name, g.code) as label, g.cnt"
+                   + " FROM ("
+                   + "   SELECT SUBSTRING(atc_code, 1, 1) as code, COUNT(DISTINCT 제품코드) as cnt"
+                   + "   FROM term.hira_atc_map WHERE LENGTH(atc_code) >= 1"
+                   + "   GROUP BY SUBSTRING(atc_code, 1, 1)"
+                   + " ) g"
+                   + " LEFT JOIN term.hira_atc_master m ON m.atc_code = g.code"
+                   + " ORDER BY g.code";
         Query q = em.createNativeQuery(sql);
         @SuppressWarnings("unchecked")
         List<Object[]> rows = q.getResultList();
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
+            String code = r[0].toString();
+            String label = r[1] != null ? r[1].toString() : code;
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("code", r[0]); m.put("label", r[0]);
-            m.put("type", "group"); m.put("childCount", ((Number) r[1]).intValue());
+            m.put("code", code); m.put("label", code + " " + label);
+            m.put("type", "group"); m.put("childCount", ((Number) r[2]).intValue());
             result.add(m);
         }
         return result;
@@ -225,22 +232,26 @@ public class HiraService {
 
         // 하위 ATC 그룹 (nextLen 길이)
         if (nextLen > 0) {
-            String sql = "SELECT SUBSTRING(atc_code, 1, " + nextLen + ") as code,"
-                       + " MAX(CASE WHEN LENGTH(atc_code) = " + nextLen + " THEN atc_name ELSE NULL END) as name,"
-                       + " COUNT(DISTINCT 제품코드) as cnt"
-                       + " FROM term.hira_atc_map"
-                       + " WHERE atc_code LIKE ?1 AND LENGTH(atc_code) >= " + nextLen
-                       + " GROUP BY SUBSTRING(atc_code, 1, " + nextLen + ") ORDER BY code";
+            String sql = "SELECT g.code, COALESCE(m.atc_hname, m.atc_name, g.code) as label, g.cnt"
+                       + " FROM ("
+                       + "   SELECT SUBSTRING(atc_code, 1, " + nextLen + ") as code,"
+                       + "   COUNT(DISTINCT 제품코드) as cnt"
+                       + "   FROM term.hira_atc_map"
+                       + "   WHERE atc_code LIKE ?1 AND LENGTH(atc_code) >= " + nextLen
+                       + "   GROUP BY SUBSTRING(atc_code, 1, " + nextLen + ")"
+                       + " ) g"
+                       + " LEFT JOIN term.hira_atc_master m ON m.atc_code = g.code"
+                       + " ORDER BY g.code";
             Query q = em.createNativeQuery(sql);
             q.setParameter(1, prefix + "%");
             @SuppressWarnings("unchecked")
             List<Object[]> rows = q.getResultList();
             for (Object[] r : rows) {
                 String code = r[0].toString();
-                String name = r[1] != null ? r[1].toString() : "";
+                String name = r[1] != null ? r[1].toString() : code;
                 Map<String, Object> m = new LinkedHashMap<>();
                 m.put("code", code);
-                m.put("label", name.isEmpty() ? code : code + " " + name);
+                m.put("label", code + " " + name);
                 m.put("type", "group"); m.put("childCount", ((Number) r[2]).intValue());
                 result.add(m);
             }
@@ -265,7 +276,7 @@ public class HiraService {
     public Map<String, Object> get약제ATCDetail(String 제품코드) {
         // ATC 정보 + 최신 약가 정보
         String sql = "SELECT a.제품코드, a.제품명, a.업체명, a.식약분류, a.주성분코드,"
-                   + " STRING_AGG(DISTINCT a.atc_code || '|' || a.atc_name, ',' ORDER BY a.atc_code || '|' || a.atc_name) as atc_list,"
+                   + " STRING_AGG(DISTINCT a.atc_code || '|' || COALESCE(a.atc_name,'') || '|' || COALESCE(m.atc_hname,''), ',' ORDER BY a.atc_code || '|' || COALESCE(a.atc_name,'') || '|' || COALESCE(m.atc_hname,'')) as atc_list,"
                    + " MAX(CASE WHEN d.적용시작일자 = latest.mx THEN d.급여기준 END) as 급여기준,"
                    + " MAX(CASE WHEN d.적용시작일자 = latest.mx THEN d.상한가 END) as 상한가,"
                    + " MAX(CASE WHEN d.적용시작일자 = latest.mx THEN d.투여경로 END) as 투여경로,"
@@ -274,6 +285,7 @@ public class HiraService {
                    + " MAX(CASE WHEN d.적용시작일자 = latest.mx THEN d.전문일반 END) as 전문일반,"
                    + " MAX(CASE WHEN d.적용시작일자 = latest.mx THEN d.적용시작일자 END) as 적용일자"
                    + " FROM term.hira_atc_map a"
+                   + " LEFT JOIN term.hira_atc_master m ON a.atc_code = m.atc_code"
                    + " LEFT JOIN term.hira_약제_code d ON a.제품코드 = d.제품코드"
                    + " LEFT JOIN (SELECT 제품코드, MAX(적용시작일자) as mx FROM term.hira_약제_code GROUP BY 제품코드) latest"
                    + "   ON d.제품코드 = latest.제품코드"
@@ -291,10 +303,13 @@ public class HiraService {
         List<Map<String, Object>> atcList = new ArrayList<>();
         if (r[5] != null) {
             for (String entry : r[5].toString().split(",")) {
-                String[] parts = entry.split("\\|", 2);
-                if (parts.length == 2) {
+                String[] parts = entry.split("\\|", 3);
+                if (parts.length >= 2) {
                     Map<String, Object> a = new LinkedHashMap<>();
-                    a.put("code", parts[0]); a.put("name", parts[1]);
+                    a.put("code", parts[0]);
+                    String hname = parts.length == 3 && !parts[2].isEmpty() ? parts[2] : null;
+                    a.put("name", hname != null ? hname : parts[1]);
+                    a.put("englishName", parts[1]);
                     atcList.add(a);
                 }
             }
