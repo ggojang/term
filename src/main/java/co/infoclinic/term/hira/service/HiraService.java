@@ -191,37 +191,191 @@ public class HiraService {
         return result;
     }
 
-    // ─── 약제 ─────────────────────────────────────────────────────────────────
-    public List<Map<String, Object>> get약제TreeRoot() {
-        String sql = "SELECT 분류번호, COUNT(DISTINCT 제품코드) as cnt"
-                   + " FROM term.hira_약제_code GROUP BY 분류번호 ORDER BY 분류번호";
+    // ─── 약제 ATC 트리 ────────────────────────────────────────────────────────
+    private int atcNextLen(int len) {
+        if (len == 0) return 1;
+        if (len == 1) return 3;
+        if (len == 3) return 4;
+        if (len == 4) return 5;
+        if (len == 5) return 7;
+        return -1;
+    }
+
+    public List<Map<String, Object>> get약제ATCRoot() {
+        String sql = "SELECT SUBSTRING(atc_code, 1, 1) as code, COUNT(DISTINCT 제품코드) as cnt"
+                   + " FROM term.hira_atc_map WHERE LENGTH(atc_code) >= 1"
+                   + " GROUP BY SUBSTRING(atc_code, 1, 1) ORDER BY code";
         Query q = em.createNativeQuery(sql);
         @SuppressWarnings("unchecked")
         List<Object[]> rows = q.getResultList();
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("code", r[0]); m.put("label", "[" + r[0] + "] 약효분류");
+            m.put("code", r[0]); m.put("label", r[0]);
             m.put("type", "group"); m.put("childCount", ((Number) r[1]).intValue());
             result.add(m);
         }
         return result;
     }
 
-    public List<Map<String, Object>> get약제TreeByDiv(String divCode) {
-        String sql = "SELECT DISTINCT ON (제품코드) 제품코드, 제품명, 규격, 단위, 상한가, 적용시작일자"
-                   + " FROM term.hira_약제_code WHERE 분류번호 = ?1"
+    public List<Map<String, Object>> get약제ATCChildren(String prefix) {
+        int len = prefix.length();
+        int nextLen = atcNextLen(len);
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        // 하위 ATC 그룹 (nextLen 길이)
+        if (nextLen > 0) {
+            String sql = "SELECT SUBSTRING(atc_code, 1, " + nextLen + ") as code,"
+                       + " MAX(CASE WHEN LENGTH(atc_code) = " + nextLen + " THEN atc_name ELSE NULL END) as name,"
+                       + " COUNT(DISTINCT 제품코드) as cnt"
+                       + " FROM term.hira_atc_map"
+                       + " WHERE atc_code LIKE ?1 AND LENGTH(atc_code) >= " + nextLen
+                       + " GROUP BY SUBSTRING(atc_code, 1, " + nextLen + ") ORDER BY code";
+            Query q = em.createNativeQuery(sql);
+            q.setParameter(1, prefix + "%");
+            @SuppressWarnings("unchecked")
+            List<Object[]> rows = q.getResultList();
+            for (Object[] r : rows) {
+                String code = r[0].toString();
+                String name = r[1] != null ? r[1].toString() : "";
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("code", code);
+                m.put("label", name.isEmpty() ? code : code + " " + name);
+                m.put("type", "group"); m.put("childCount", ((Number) r[2]).intValue());
+                result.add(m);
+            }
+        }
+
+        // 이 ATC 코드에 직접 매핑된 제품 (leaf)
+        String leafSql = "SELECT DISTINCT 제품코드, 제품명 FROM term.hira_atc_map"
+                       + " WHERE atc_code = ?1 ORDER BY 제품코드";
+        Query lq = em.createNativeQuery(leafSql);
+        lq.setParameter(1, prefix);
+        @SuppressWarnings("unchecked")
+        List<Object[]> leaves = lq.getResultList();
+        for (Object[] r : leaves) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("code", r[0]); m.put("label", r[0] + " " + r[1]);
+            m.put("type", "leaf"); m.put("childCount", 0);
+            result.add(m);
+        }
+        return result;
+    }
+
+    public Map<String, Object> get약제ATCDetail(String 제품코드) {
+        String sql = "SELECT 제품코드, 제품명, 업체명, 식약분류, 주성분코드,"
+                   + " STRING_AGG(DISTINCT atc_code || '|' || atc_name, ',' ORDER BY atc_code || '|' || atc_name) as atc_list"
+                   + " FROM term.hira_atc_map WHERE 제품코드 = ?1"
+                   + " GROUP BY 제품코드, 제품명, 업체명, 식약분류, 주성분코드";
+        Query q = em.createNativeQuery(sql);
+        q.setParameter(1, 제품코드);
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = q.getResultList();
+        if (rows.isEmpty()) return Collections.emptyMap();
+        Object[] r = rows.get(0);
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("code", r[0]); m.put("name", r[1]); m.put("company", r[2]);
+        m.put("drugClass", r[3]); m.put("ingredient", r[4]);
+        // atc_list: "A10BA02|metformin,A10BD07|metformin and sitagliptin"
+        List<Map<String, Object>> atcList = new ArrayList<>();
+        if (r[5] != null) {
+            for (String entry : r[5].toString().split(",")) {
+                String[] parts = entry.split("\\|", 2);
+                if (parts.length == 2) {
+                    Map<String, Object> a = new LinkedHashMap<>();
+                    a.put("code", parts[0]); a.put("name", parts[1]);
+                    atcList.add(a);
+                }
+            }
+        }
+        m.put("atcList", atcList);
+        return m;
+    }
+
+    public Map<String, Object> search약제ATC(String q, int page, int size) {
+        int offset = (page - 1) * size;
+        String sql = "SELECT DISTINCT 제품코드, 제품명, 업체명, atc_code, atc_name"
+                   + " FROM term.hira_atc_map"
+                   + " WHERE 제품코드 ILIKE '%' || ?1 || '%'"
+                   + "    OR 제품명 ILIKE '%' || ?1 || '%'"
+                   + "    OR atc_code ILIKE '%' || ?1 || '%'"
+                   + "    OR atc_name ILIKE '%' || ?1 || '%'"
+                   + " ORDER BY 제품코드 LIMIT ?2 OFFSET ?3";
+        String cntSql = "SELECT COUNT(DISTINCT 제품코드) FROM term.hira_atc_map"
+                      + " WHERE 제품코드 ILIKE '%' || ?1 || '%'"
+                      + "    OR 제품명 ILIKE '%' || ?1 || '%'"
+                      + "    OR atc_code ILIKE '%' || ?1 || '%'"
+                      + "    OR atc_name ILIKE '%' || ?1 || '%'";
+        Query dq = em.createNativeQuery(sql);
+        dq.setParameter(1, q); dq.setParameter(2, size); dq.setParameter(3, offset);
+        Query cq = em.createNativeQuery(cntSql);
+        cq.setParameter(1, q);
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = dq.getResultList();
+        long total = ((Number) cq.getSingleResult()).longValue();
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (Object[] r : rows) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("code", r[0]); row.put("name", r[1]); row.put("company", r[2]);
+            row.put("atcCode", r[3]); row.put("atcName", r[4]);
+            items.add(row);
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("total", total); result.put("items", items);
+        return result;
+    }
+
+    // ─── 약제 ─────────────────────────────────────────────────────────────────
+    public List<Map<String, Object>> get약제TreeRoot() {
+        String sql = "SELECT 주성분명, COUNT(DISTINCT 제품코드) as cnt"
+                   + " FROM term.hira_약제_code GROUP BY 주성분명 ORDER BY 주성분명";
+        Query q = em.createNativeQuery(sql);
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = q.getResultList();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Object[] r : rows) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("code", r[0]); m.put("label", r[0] != null ? r[0].toString() : "(성분명없음)");
+            m.put("type", "group"); m.put("childCount", ((Number) r[1]).intValue());
+            result.add(m);
+        }
+        return result;
+    }
+
+    public List<Map<String, Object>> get약제TreeByDiv(String ingName) {
+        String sql = "SELECT 제품명_기본, COUNT(DISTINCT 제품코드) as cnt"
+                   + " FROM term.hira_약제_code WHERE 주성분명 = ?1"
+                   + " GROUP BY 제품명_기본 ORDER BY 제품명_기본";
+        Query q = em.createNativeQuery(sql);
+        q.setParameter(1, ingName);
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = q.getResultList();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Object[] r : rows) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            String productBase = r[0] != null ? r[0].toString() : "(제품명없음)";
+            m.put("code", ingName + "|" + productBase);
+            m.put("label", productBase);
+            m.put("type", "group"); m.put("childCount", ((Number) r[1]).intValue());
+            result.add(m);
+        }
+        return result;
+    }
+
+    public List<Map<String, Object>> get약제TreeByProduct(String ingName, String productBase) {
+        String sql = "SELECT DISTINCT ON (제품코드) 제품코드, 제품명, 상한가, 적용시작일자"
+                   + " FROM term.hira_약제_code WHERE 주성분명 = ?1 AND 제품명_기본 = ?2"
                    + " ORDER BY 제품코드, 적용시작일자 DESC";
         Query q = em.createNativeQuery(sql);
-        q.setParameter(1, divCode);
+        q.setParameter(1, ingName); q.setParameter(2, productBase);
         @SuppressWarnings("unchecked")
         List<Object[]> rows = q.getResultList();
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("code", r[0]); m.put("label", r[0] + " " + r[1]);
-            m.put("koreanLabel", r[1]); m.put("spec", r[2]); m.put("unit", r[3]);
-            m.put("price", r[4]); m.put("type", "leaf"); m.put("childCount", 0);
+            m.put("koreanLabel", r[1]); m.put("price", r[2]);
+            m.put("type", "leaf"); m.put("childCount", 0);
             result.add(m);
         }
         return result;

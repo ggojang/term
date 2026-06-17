@@ -56,7 +56,7 @@ function HiraTreeNode({ node, cat, depth, onSelect, classes }) {
       else if (p.length === 4) url = `/hira/행위/tree/${p[0]}/${p[1]}/${p[2]}/${p[3]}`;
       else url = `/hira/행위/tree/${p[0]}/${p[1]}/${p[2]}/${p[3]}/${p[4]}`;
     } else if (cat === '약제') {
-      url = `/hira/약제/tree/${encodeURIComponent(node.code)}`;
+      url = `/hira/약제/atc/tree/${encodeURIComponent(node.code)}`;
     } else if (cat === '치료재료') {
       if (parts.length === 1) url = `/hira/치료재료/tree/${encodeURIComponent(node.code)}`;
       else url = `/hira/치료재료/tree/${encodeURIComponent(parts[0])}/${encodeURIComponent(parts[1])}`;
@@ -125,7 +125,8 @@ export default function HiraLeft({ category, setCategory, selectedCode, onSelect
     setSearchResults(null);
     setQuery('');
     setLoading(true);
-    axios.get(`${BASE}/hira/${category}/tree`)
+    const treeUrl = category === '약제' ? `${BASE}/hira/약제/atc/tree` : `${BASE}/hira/${category}/tree`;
+    axios.get(treeUrl)
       .then(res => setRoots(res.data))
       .catch(() => setRoots([]))
       .finally(() => setLoading(false));
@@ -134,7 +135,10 @@ export default function HiraLeft({ category, setCategory, selectedCode, onSelect
   const doSearch = () => {
     if (!query.trim()) { setSearchResults(null); return; }
     setSearching(true);
-    axios.get(`${BASE}/hira/${category}/search`, { params: { q: query, size: 100 } })
+    const searchUrl = category === '약제'
+      ? `${BASE}/hira/약제/atc/search`
+      : `${BASE}/hira/${category}/search`;
+    axios.get(searchUrl, { params: { q: query, size: 100 } })
       .then(res => setSearchResults(res.data))
       .catch(() => setSearchResults({ items: [], total: 0 }))
       .finally(() => setSearching(false));
@@ -144,7 +148,6 @@ export default function HiraLeft({ category, setCategory, selectedCode, onSelect
 
   const getItemLabel = (item) => {
     if (category === '행위') return item.koreanLabel || item.code;
-    if (category === '약제') return item.name || item.code;
     return item.name || item.code;
   };
 
@@ -206,6 +209,11 @@ export default function HiraLeft({ category, setCategory, selectedCode, onSelect
               {category === '행위' && item.classNo && (
                 <span style={{ color: '#888', fontSize: '0.78em', marginLeft: 6 }}>
                   [{item.classNo}]
+                </span>
+              )}
+              {category === '약제' && item.atcCode && (
+                <span style={{ color: '#888', fontSize: '0.78em', marginLeft: 6 }}>
+                  [{item.atcCode}]
                 </span>
               )}
               {item.price != null && (

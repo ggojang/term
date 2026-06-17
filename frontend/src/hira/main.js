@@ -210,6 +210,63 @@ function 치료재료Detail({ code, classes }) {
   );
 }
 
+// ─── 약제 ATC 상세 ─────────────────────────────────────────────────────────────
+function 약제ATCDetail({ code, classes }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!code) return;
+    setLoading(true);
+    axios.get(`${BASE}/hira/약제/atc/${encodeURIComponent(code)}`)
+      .then(r => setData(r.data))
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
+  }, [code]);
+
+  if (loading) return <Box textAlign="center" mt={6}><CircularProgress /></Box>;
+  if (!data || !data.code) return <Typography className={classes.placeholder}>코드를 선택하세요</Typography>;
+
+  return (
+    <Box>
+      <Chip className={classes.chip} label={data.code} color="primary" variant="outlined" />
+
+      <Divider className={classes.divider} style={{ marginTop: 8 }} />
+
+      <Typography className={classes.section}>기본 정보</Typography>
+      <Field label="제품코드" value={data.code} classes={classes} />
+      <Field label="제품명" value={data.name} classes={classes} />
+      <Field label="업체명" value={data.company} classes={classes} />
+      <Field label="주성분코드" value={data.ingredient} classes={classes} />
+      <Field label="식약분류" value={data.drugClass} classes={classes} />
+
+      {data.atcList && data.atcList.length > 0 && (
+        <>
+          <Typography className={classes.section} style={{ marginTop: 16 }}>ATC 코드</Typography>
+          <TableContainer component={Paper} variant="outlined" style={{ marginTop: 4 }}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell>ATC 코드</StyledTableCell>
+                  <StyledTableCell>명칭</StyledTableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data.atcList.map((a, i) => (
+                  <TableRow key={i} className={classes.histRow}>
+                    <StyledTableCell>{a.code}</StyledTableCell>
+                    <StyledTableCell>{a.name}</StyledTableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
+      )}
+    </Box>
+  );
+}
+
 // ─── 메인 패널 ─────────────────────────────────────────────────────────────────
 export default function HiraMain({ category, code }) {
   const classes = useStyles();
@@ -225,7 +282,7 @@ export default function HiraMain({ category, code }) {
   }
 
   if (category === '행위') return <Box p={2}><행위Detail code={code} classes={classes} /></Box>;
-  if (category === '약제') return <Box p={2}><약제Detail code={code} classes={classes} /></Box>;
+  if (category === '약제') return <Box p={2}><약제ATCDetail code={code} classes={classes} /></Box>;
   if (category === '치료재료') return <Box p={2}><치료재료Detail code={code} classes={classes} /></Box>;
   return null;
 }

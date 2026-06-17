@@ -65,15 +65,44 @@ public class HiraController {
         return svc.search행위(q, page, size);
     }
 
+    // ─── 약제 ATC 트리 ───────────────────────────────────────────────────────
+    @RequestMapping(value = "/약제/atc/tree", method = RequestMethod.GET)
+    public List<Map<String, Object>> 약제ATCRoot() {
+        return svc.get약제ATCRoot();
+    }
+
+    @RequestMapping(value = "/약제/atc/tree/{code:.+}", method = RequestMethod.GET)
+    public List<Map<String, Object>> 약제ATCChildren(@PathVariable String code) {
+        return svc.get약제ATCChildren(code);
+    }
+
+    @RequestMapping(value = "/약제/atc/{code:.+}", method = RequestMethod.GET)
+    public Map<String, Object> 약제ATCDetail(@PathVariable String code) {
+        return svc.get약제ATCDetail(code);
+    }
+
+    @RequestMapping(value = "/약제/atc/search", method = RequestMethod.GET)
+    public Map<String, Object> 약제ATCSearch(@RequestParam String q,
+                                             @RequestParam(defaultValue = "1") int page,
+                                             @RequestParam(defaultValue = "100") int size) {
+        return svc.search약제ATC(q, page, size);
+    }
+
     // ─── 약제 ────────────────────────────────────────────────────────────────
     @RequestMapping(value = "/약제/tree", method = RequestMethod.GET)
     public List<Map<String, Object>> 약제TreeRoot() {
         return svc.get약제TreeRoot();
     }
 
-    @RequestMapping(value = "/약제/tree/{divCode}", method = RequestMethod.GET)
-    public List<Map<String, Object>> 약제TreeDiv(@PathVariable String divCode) {
-        return svc.get약제TreeByDiv(divCode);
+    @RequestMapping(value = "/약제/tree/{ingName}", method = RequestMethod.GET)
+    public List<Map<String, Object>> 약제TreeByIng(@PathVariable String ingName) {
+        return svc.get약제TreeByDiv(ingName);
+    }
+
+    @RequestMapping(value = "/약제/tree/{ingName}/{productBase:.+}", method = RequestMethod.GET)
+    public List<Map<String, Object>> 약제TreeByProduct(@PathVariable String ingName,
+                                                       @PathVariable String productBase) {
+        return svc.get약제TreeByProduct(ingName, productBase);
     }
 
     @RequestMapping(value = "/약제/{code:.+}", method = RequestMethod.GET)
