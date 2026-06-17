@@ -43,12 +43,11 @@ function HiraTreeNode({ node, cat, depth, onSelect, classes }) {
 
   const isLeaf = node.type === 'leaf';
 
-  const handleToggle = (_, nodeIds) => {
-    if (isLeaf || nodeIds.length === 0 || children !== null) return;
+  const loadChildren = () => {
+    if (isLeaf || children !== null || loading) return;
     setLoading(true);
-    let url = '';
-    // URL 결정: code 안에 '|' 로 경로가 인코딩돼 있음
     const parts = node.code.split('|');
+    let url = '';
     if (cat === '행위') {
       if (parts.length === 1) url = `/hira/행위/tree/${encodeURIComponent(parts[0])}`;
       else if (parts.length === 2) url = `/hira/행위/tree/${encodeURIComponent(parts[0])}/${encodeURIComponent(parts[1])}`;
@@ -101,7 +100,8 @@ function HiraTreeNode({ node, cat, depth, onSelect, classes }) {
     <TreeItem
       nodeId={nodeId}
       label={label}
-      onIconClick={() => {}}
+      onIconClick={loadChildren}
+      onLabelClick={loadChildren}
     >
       {children === null ? <div /> : children}
     </TreeItem>
