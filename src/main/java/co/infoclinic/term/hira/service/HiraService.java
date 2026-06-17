@@ -587,52 +587,54 @@ public class HiraService {
 
     // ─── 치료재료 ─────────────────────────────────────────────────────────────
     public List<Map<String, Object>> get치료재료TreeRoot() {
-        String sql = "SELECT SUBSTRING(코드, 1, 1) as major, COUNT(*) as cnt"
-                   + " FROM term.hira_치료재료_code GROUP BY SUBSTRING(코드, 1, 1) ORDER BY major";
+        String sql = "SELECT 시트명, COUNT(*) as cnt"
+                   + " FROM term.hira_치료재료_code"
+                   + " GROUP BY 시트명 ORDER BY 시트명";
         Query q = em.createNativeQuery(sql);
         @SuppressWarnings("unchecked")
         List<Object[]> rows = q.getResultList();
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("code", r[0]); m.put("label", r[0] + " 군");
+            m.put("code", r[0]); m.put("label", r[0].toString());
             m.put("type", "group"); m.put("childCount", ((Number) r[1]).intValue());
             result.add(m);
         }
         return result;
     }
 
-    public List<Map<String, Object>> get치료재료TreeByMajor(String major) {
+    public List<Map<String, Object>> get치료재료TreeBySheet(String sheet) {
         String sql = "SELECT 중분류코드, MIN(중분류) as 중분류명, COUNT(*) as cnt"
-                   + " FROM term.hira_치료재료_code WHERE SUBSTRING(코드, 1, 1) = ?1"
+                   + " FROM term.hira_치료재료_code WHERE 시트명 = ?1"
                    + " GROUP BY 중분류코드 ORDER BY 중분류코드";
         Query q = em.createNativeQuery(sql);
-        q.setParameter(1, major);
+        q.setParameter(1, sheet);
         @SuppressWarnings("unchecked")
         List<Object[]> rows = q.getResultList();
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("code", major + "|" + r[0]);
-            m.put("label", "[" + r[0] + "] " + r[1]);
+            m.put("code", sheet + "|" + r[0]);
+            m.put("label", r[0] + " " + r[1]);
             m.put("type", "group"); m.put("childCount", ((Number) r[2]).intValue());
             result.add(m);
         }
         return result;
     }
 
-    public List<Map<String, Object>> get치료재료TreeByMid(String midCode) {
+    public List<Map<String, Object>> get치료재료TreeByMid(String sheet, String midCode) {
         String sql = "SELECT 코드, 품명, 규격, 단위, 상한금액, 급여구분"
-                   + " FROM term.hira_치료재료_code WHERE 중분류코드 = ?1 ORDER BY 코드 LIMIT 1000";
+                   + " FROM term.hira_치료재료_code WHERE 시트명 = ?1 AND 중분류코드 = ?2 ORDER BY 코드";
         Query q = em.createNativeQuery(sql);
-        q.setParameter(1, midCode);
+        q.setParameter(1, sheet);
+        q.setParameter(2, midCode);
         @SuppressWarnings("unchecked")
         List<Object[]> rows = q.getResultList();
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("code", r[0]); m.put("label", r[0] + " " + (r[1] != null ? r[1] : ""));
-            m.put("koreanLabel", r[1]); m.put("spec", r[2]); m.put("unit", r[3]);
+            m.put("code", r[0]); m.put("label", r[1] != null ? r[1].toString() : "");
+            m.put("spec", r[2]); m.put("unit", r[3]);
             m.put("price", r[4]); m.put("benefit", r[5]);
             m.put("type", "leaf"); m.put("childCount", 0);
             result.add(m);

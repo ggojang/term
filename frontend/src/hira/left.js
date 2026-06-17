@@ -58,7 +58,8 @@ function HiraTreeNode({ node, cat, depth, onSelect, classes }) {
     } else if (cat === '약제') {
       url = `/hira/약제/atc/tree/${encodeURIComponent(node.code)}`;
     } else if (cat === '치료재료') {
-      if (parts.length === 1) url = `/hira/치료재료/tree/${encodeURIComponent(node.code)}`;
+      // code: 시트명 (depth 0) → "시트명|중분류코드" (depth 1) → 실제코드 (leaf)
+      if (parts.length === 1) url = `/hira/치료재료/tree/${encodeURIComponent(parts[0])}`;
       else url = `/hira/치료재료/tree/${encodeURIComponent(parts[0])}/${encodeURIComponent(parts[1])}`;
     }
     axios.get(url).then(res => {

@@ -123,15 +123,15 @@ public class HiraController {
         return svc.get치료재료TreeRoot();
     }
 
-    @RequestMapping(value = "/치료재료/tree/{major}", method = RequestMethod.GET)
-    public List<Map<String, Object>> 치료재료TreeMajor(@PathVariable String major) {
-        return svc.get치료재료TreeByMajor(major);
+    @RequestMapping(value = "/치료재료/tree/{sheet:.+}", method = RequestMethod.GET)
+    public List<Map<String, Object>> 치료재료TreeSheet(@PathVariable String sheet) {
+        return svc.get치료재료TreeBySheet(sheet);
     }
 
-    @RequestMapping(value = "/치료재료/tree/{major}/{midCode}", method = RequestMethod.GET)
-    public List<Map<String, Object>> 치료재료TreeMid(@PathVariable String major,
+    @RequestMapping(value = "/치료재료/tree/{sheet}/{midCode:.+}", method = RequestMethod.GET)
+    public List<Map<String, Object>> 치료재료TreeMid(@PathVariable String sheet,
                                                     @PathVariable String midCode) {
-        return svc.get치료재료TreeByMid(midCode);
+        return svc.get치료재료TreeByMid(sheet, midCode);
     }
 
     @RequestMapping(value = "/치료재료/{code:.+}", method = RequestMethod.GET)

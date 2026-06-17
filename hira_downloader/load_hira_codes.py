@@ -203,6 +203,14 @@ def _flush_약제(conn, buf):
 SUPPLY_XLSX = INCOMING / "★2026.6.1._적용_(인체조직포함)_파일(급여).xlsx"
 SUPPLY_XLSX2 = INCOMING / "★2026.6.1._적용_(인체조직포함)_파일(비급여).xlsx"
 
+# 적재할 시트 목록: (파일, 시트명, 급여구분)
+SUPPLY_SHEETS = [
+    (SUPPLY_XLSX,  "급여_품목(인체조직포함)",           "급여"),
+    (SUPPLY_XLSX,  "100분의100미만본인부담_품목",         "급여"),
+    (SUPPLY_XLSX,  "허가초과_품목",                      "급여"),
+    (SUPPLY_XLSX2, "비급여_품목(인체조직포함)",           "비급여"),
+]
+
 
 def load_치료재료(conn):
     log.info("치료재료 적재 시작")
@@ -212,12 +220,15 @@ def load_치료재료(conn):
     conn.commit()
 
     total = 0
-    for fpath, 급여구분 in [
-        (SUPPLY_XLSX,  "급여"),
-        (SUPPLY_XLSX2, "비급여"),
-    ]:
+    for fpath, sheet_name, 급여구분 in SUPPLY_SHEETS:
+        if not fpath.exists():
+            log.warning("파일 없음: %s", fpath)
+            continue
         wb = openpyxl.load_workbook(str(fpath), read_only=True)
-        sheet_name = "급여_품목(인체조직포함)" if 급여구분 == "급여" else "비급여_품목(인체조직포함)"
+        if sheet_name not in wb.sheetnames:
+            log.warning("시트 없음: %s / %s", fpath.name, sheet_name)
+            wb.close()
+            continue
         ws = wb[sheet_name]
         rows_iter = ws.iter_rows(values_only=True)
         headers = next(rows_iter)
@@ -243,6 +254,7 @@ def load_치료재료(conn):
                 str(row[h.get('제조회사', 10)] or ""),
                 str(row[h.get('재질', 11)] or ""),
                 급여구분,
+                sheet_name,
             ))
             cnt += 1
             if len(buf) >= 3000:
@@ -254,7 +266,7 @@ def load_치료재료(conn):
         conn.commit()
         wb.close()
         total += cnt
-        log.info("  %s %s: %d행", fpath.name, 급여구분, cnt)
+        log.info("  %s [%s]: %d행", fpath.name, sheet_name, cnt)
 
     log.info("치료재료 적재 완료: 총 %d행", total)
 
@@ -264,11 +276,12 @@ def _flush_치료재료(conn, buf):
         psycopg2.extras.execute_values(
             cur,
             """INSERT INTO hira_치료재료_code
-               (코드,최초등재일,적용일자,종료일자,중분류,중분류코드,품명,규격,단위,상한금액,제조회사,재질,급여구분)
+               (코드,최초등재일,적용일자,종료일자,중분류,중분류코드,품명,규격,단위,상한금액,제조회사,재질,급여구분,시트명)
                VALUES %s
                ON CONFLICT (코드) DO UPDATE SET
                  적용일자=EXCLUDED.적용일자, 품명=EXCLUDED.품명,
-                 상한금액=EXCLUDED.상한금액, 급여구분=EXCLUDED.급여구분""",
+                 상한금액=EXCLUDED.상한금액, 급여구분=EXCLUDED.급여구분,
+                 시트명=EXCLUDED.시트명""",
             buf, page_size=2000
         )
 
