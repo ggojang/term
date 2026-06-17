@@ -96,6 +96,11 @@ public class ConstraintController {
 	// ECL 평가기 (재귀적으로 AND/OR/MINUS 처리)
 	// -------------------------------------------------------------------------
 
+	/** FHIR ValueSet 서비스 등 외부에서 ECL 실행 시 사용 */
+	public List<ConceptViewDTO> evaluateECLPublic(String ecl, String effectiveTime) {
+		return evaluateECL(ecl, effectiveTime, 1, Integer.MAX_VALUE);
+	}
+
 	private List<ConceptViewDTO> evaluateECL(String ecl, String effectiveTime, int page, int size) {
 		String type = detectType(ecl);
 

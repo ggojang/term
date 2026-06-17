@@ -4,6 +4,9 @@ import ca.uhn.fhir.parser.IParser;
 import co.infoclinic.term.fhir.model.entity.FhirResource;
 import co.infoclinic.term.loinc.model.entity.LinguisticVariant;
 import co.infoclinic.term.loinc.repository.LinguisticVariantRepository;
+import co.infoclinic.term.snomedct.controller.ConstraintController;
+import co.infoclinic.term.snomedct.model.dto.ConceptViewDTO;
+import co.infoclinic.term.snomedct.service.SchemeService;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +19,7 @@ import javax.persistence.Query;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class FhirValueSetService {
@@ -27,6 +31,12 @@ public class FhirValueSetService {
 
     @Autowired
     private LinguisticVariantRepository lvRepo;
+
+    @Autowired
+    private ConstraintController constraintCtrl;
+
+    @Autowired
+    private SchemeService schemeSvc;
 
     @PersistenceContext(unitName = "default")
     private EntityManager em;
@@ -61,6 +71,11 @@ public class FhirValueSetService {
      */
     @SuppressWarnings("unchecked")
     public ValueSet expand(String idOrUrl, String filter, Integer offset, Integer count) {
+        // SNOMED CT implicit ValueSet (ECL / refset)
+        if (idOrUrl != null && idOrUrl.startsWith(FhirCodeSystemService.URL_SNOMED)) {
+            return expandSnomedImplicit(idOrUrl, filter, offset, count);
+        }
+
         String json = null;
         if (idOrUrl != null) {
             json = resourceSvc.findById("ValueSet", idOrUrl)
@@ -310,13 +325,16 @@ public class FhirValueSetService {
             return out;
         }
 
-        // ValueSet 조회
-        String json = resourceSvc.findById("ValueSet", idOrUrl)
-                .orElseGet(() -> resourceSvc.findByUrl("ValueSet", idOrUrl).orElse(null));
-        if (json == null) {
-            out.addParameter().setName("result").setValue(new BooleanType(false));
-            out.addParameter().setName("message").setValue(new StringType("ValueSet not found: " + idOrUrl));
-            return out;
+        // SNOMED CT implicit ValueSet은 DB 조회 없이 바로 expand
+        boolean isImplicit = idOrUrl.startsWith(FhirCodeSystemService.URL_SNOMED);
+        if (!isImplicit) {
+            String json = resourceSvc.findById("ValueSet", idOrUrl)
+                    .orElseGet(() -> resourceSvc.findByUrl("ValueSet", idOrUrl).orElse(null));
+            if (json == null) {
+                out.addParameter().setName("result").setValue(new BooleanType(false));
+                out.addParameter().setName("message").setValue(new StringType("ValueSet not found: " + idOrUrl));
+                return out;
+            }
         }
 
         // $expand 후 코드 포함 여부 확인
@@ -337,6 +355,97 @@ public class FhirValueSetService {
         out.addParameter().setName("message").setValue(
                 new StringType("Code " + code + " not found in ValueSet " + idOrUrl));
         return out;
+    }
+
+    /**
+     * SNOMED CT implicit ValueSet 확장
+     * 지원 URL 패턴:
+     *   http://snomed.info/sct?fhir_vs=ecl/<<73211009
+     *   http://snomed.info/sct?fhir_vs=refset/450976002
+     *   http://snomed.info/sct?fhir_vs  (전체)
+     */
+    private ValueSet expandSnomedImplicit(String url, String filter, Integer offset, Integer count) {
+        String effectiveTime = schemeSvc.getEffectiveTime(schemeSvc.getLatestVersion());
+
+        // fhir_vs 파라미터 추출
+        String fhirVs = null;
+        int qIdx = url.indexOf('?');
+        if (qIdx >= 0) {
+            String query = url.substring(qIdx + 1);
+            for (String param : query.split("&")) {
+                if (param.startsWith("fhir_vs=")) {
+                    fhirVs = param.substring("fhir_vs=".length());
+                    break;
+                } else if (param.equals("fhir_vs")) {
+                    fhirVs = "";
+                    break;
+                }
+            }
+        }
+
+        List<ConceptViewDTO> concepts;
+        String vsTitle;
+
+        if (fhirVs == null || fhirVs.isEmpty()) {
+            // 전체 — 너무 크므로 비지원
+            return buildOutcomeValueSet("fhir_vs parameter required for SNOMED CT implicit ValueSet");
+        } else if (fhirVs.startsWith("ecl/")) {
+            String ecl = fhirVs.substring("ecl/".length());
+            vsTitle = "SNOMED CT ECL: " + ecl;
+            try {
+                concepts = constraintCtrl.evaluateECLPublic(ecl, effectiveTime);
+            } catch (Exception e) {
+                return buildOutcomeValueSet("ECL error: " + e.getMessage());
+            }
+        } else if (fhirVs.startsWith("refset/")) {
+            String refsetId = fhirVs.substring("refset/".length());
+            vsTitle = "SNOMED CT RefSet: " + refsetId;
+            try {
+                concepts = constraintCtrl.evaluateECLPublic("^" + refsetId, effectiveTime);
+            } catch (Exception e) {
+                return buildOutcomeValueSet("RefSet error: " + e.getMessage());
+            }
+        } else {
+            return buildOutcomeValueSet("Unsupported fhir_vs pattern: " + fhirVs);
+        }
+
+        // filter 적용
+        if (filter != null && !filter.isEmpty()) {
+            String lf = filter.toLowerCase();
+            concepts = concepts.stream()
+                    .filter(c -> (c.getConceptId() != null && c.getConceptId().contains(filter))
+                            || (c.getTerm() != null && c.getTerm().toLowerCase().contains(lf)))
+                    .collect(Collectors.toList());
+        }
+
+        int total = concepts.size();
+
+        // offset / count 적용
+        int from = offset != null ? offset : 0;
+        int to = count != null ? Math.min(from + count, total) : total;
+        if (from < total) concepts = concepts.subList(from, to);
+        else concepts = Collections.emptyList();
+
+        ValueSet vs = new ValueSet();
+        vs.setUrl(url);
+        vs.setTitle(vsTitle);
+        vs.setStatus(Enumerations.PublicationStatus.ACTIVE);
+
+        ValueSet.ValueSetExpansionComponent expansion = new ValueSet.ValueSetExpansionComponent();
+        expansion.setIdentifier(url);
+        expansion.setTimestamp(new java.util.Date());
+        expansion.setTotal(total);
+        if (offset != null) expansion.setOffset(offset);
+
+        for (ConceptViewDTO c : concepts) {
+            expansion.addContains()
+                    .setSystem(FhirCodeSystemService.URL_SNOMED)
+                    .setCode(c.getConceptId())
+                    .setDisplay(c.getTerm());
+        }
+
+        vs.setExpansion(expansion);
+        return vs;
     }
 
     private ValueSet buildOutcomeValueSet(String message) {
