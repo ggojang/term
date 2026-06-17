@@ -172,8 +172,7 @@ export default function App() {
     if (value >= 0 && value < 3) setMsg('International Edition 2026.06.01');
     else if (value === 3) setMsg('Version 2.82 (2026-02-24)');
     else if (value === 4) setMsg('Release 2025.12.23');
-    else if (value === 5) setMsg('2016 Release (2014-10-14)');
-    else if (value === 6) setMsg('2026.06.01 기준');
+    else if (value === 5) setMsg('2026.06.01 기준');
     else setMsg('');
   }, [value]);
 
@@ -203,7 +202,7 @@ export default function App() {
                   <Tab className={clsx(classes.label, classes.tab2)} label="Mapping Support" {...a11yProps(2)} />
                   <Tab className={clsx(classes.label, classes.tab3)} label="LOINC Browser" {...a11yProps(3)} />
                   <Tab className={clsx(classes.label, classes.tab3)} label="KCD-9 Browser" {...a11yProps(4)} />
-                  <Tab className={clsx(classes.label, classes.tab3)} label="요양급여청구코드" {...a11yProps(5)} />
+                  <Tab className={clsx(classes.label, classes.tab3)} label="HIRA Browser" {...a11yProps(5)} />
                 </Tabs>
               </Grid>
               <Grid item md={2}>
