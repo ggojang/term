@@ -13,7 +13,7 @@ Board ID: BBSMSTR_000000000676
   5) PostgreSQL hira_downloads 테이블에 이력 기록
   6) Slack 알림
 
-스케줄: cron 매일 09:00
+스케줄: cron 매주 월요일 09:00
 """
 from __future__ import annotations
 

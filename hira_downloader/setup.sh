@@ -12,18 +12,14 @@ echo "Python: $($PYTHON --version)"
 
 # pip 패키지 설치
 echo "패키지 설치 중..."
-$PYTHON -m pip install playwright psycopg2-binary requests --quiet
-
-# Playwright 브라우저 설치
-echo "Playwright Chromium 설치 중..."
-$PYTHON -m playwright install chromium
+$PYTHON -m pip install psycopg2-binary requests --quiet
 
 # 다운로드 디렉토리 생성
 mkdir -p "$SCRIPT_DIR/../release_files/hira_incoming"
 echo "다운로드 폴더: $SCRIPT_DIR/../release_files/hira_incoming"
 
 # cron 등록 안내
-CRON_CMD="0 9 * * * HIRA_SLACK_WEBHOOK='YOUR_WEBHOOK_URL' $PYTHON $SCRIPT_DIR/hira_download.py >> $SCRIPT_DIR/hira_download.log 2>&1"
+CRON_CMD="0 9 * * 1 HIRA_SLACK_WEBHOOK='YOUR_WEBHOOK_URL' $PYTHON $SCRIPT_DIR/hira_download.py >> $SCRIPT_DIR/hira_download.log 2>&1"
 echo ""
 echo "=== cron 등록 방법 ==="
 echo "crontab -e 실행 후 아래 줄 추가:"
