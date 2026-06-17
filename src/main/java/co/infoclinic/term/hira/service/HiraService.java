@@ -263,10 +263,22 @@ public class HiraService {
     }
 
     public Map<String, Object> get약제ATCDetail(String 제품코드) {
-        String sql = "SELECT 제품코드, 제품명, 업체명, 식약분류, 주성분코드,"
-                   + " STRING_AGG(DISTINCT atc_code || '|' || atc_name, ',' ORDER BY atc_code || '|' || atc_name) as atc_list"
-                   + " FROM term.hira_atc_map WHERE 제품코드 = ?1"
-                   + " GROUP BY 제품코드, 제품명, 업체명, 식약분류, 주성분코드";
+        // ATC 정보 + 최신 약가 정보
+        String sql = "SELECT a.제품코드, a.제품명, a.업체명, a.식약분류, a.주성분코드,"
+                   + " STRING_AGG(DISTINCT a.atc_code || '|' || a.atc_name, ',' ORDER BY a.atc_code || '|' || a.atc_name) as atc_list,"
+                   + " MAX(CASE WHEN d.적용시작일자 = latest.mx THEN d.급여기준 END) as 급여기준,"
+                   + " MAX(CASE WHEN d.적용시작일자 = latest.mx THEN d.상한가 END) as 상한가,"
+                   + " MAX(CASE WHEN d.적용시작일자 = latest.mx THEN d.투여경로 END) as 투여경로,"
+                   + " MAX(CASE WHEN d.적용시작일자 = latest.mx THEN d.규격 END) as 규격,"
+                   + " MAX(CASE WHEN d.적용시작일자 = latest.mx THEN d.단위 END) as 단위,"
+                   + " MAX(CASE WHEN d.적용시작일자 = latest.mx THEN d.전문일반 END) as 전문일반,"
+                   + " MAX(CASE WHEN d.적용시작일자 = latest.mx THEN d.적용시작일자 END) as 적용일자"
+                   + " FROM term.hira_atc_map a"
+                   + " LEFT JOIN term.hira_약제_code d ON a.제품코드 = d.제품코드"
+                   + " LEFT JOIN (SELECT 제품코드, MAX(적용시작일자) as mx FROM term.hira_약제_code GROUP BY 제품코드) latest"
+                   + "   ON d.제품코드 = latest.제품코드"
+                   + " WHERE a.제품코드 = ?1"
+                   + " GROUP BY a.제품코드, a.제품명, a.업체명, a.식약분류, a.주성분코드";
         Query q = em.createNativeQuery(sql);
         q.setParameter(1, 제품코드);
         @SuppressWarnings("unchecked")
@@ -276,7 +288,6 @@ public class HiraService {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("code", r[0]); m.put("name", r[1]); m.put("company", r[2]);
         m.put("drugClass", r[3]); m.put("ingredient", r[4]);
-        // atc_list: "A10BA02|metformin,A10BD07|metformin and sitagliptin"
         List<Map<String, Object>> atcList = new ArrayList<>();
         if (r[5] != null) {
             for (String entry : r[5].toString().split(",")) {
@@ -289,6 +300,24 @@ public class HiraService {
             }
         }
         m.put("atcList", atcList);
+        m.put("benefit", r[6]); m.put("price", r[7]);
+        m.put("route", r[8]); m.put("spec", r[9]); m.put("unit", r[10]);
+        m.put("type", r[11]); m.put("applyDate", r[12]);
+
+        // 가격 이력 (약제_code)
+        String histSql = "SELECT 적용시작일자, 급여기준, 상한가 FROM term.hira_약제_code"
+                       + " WHERE 제품코드 = ?1 ORDER BY 적용시작일자 DESC";
+        Query hq = em.createNativeQuery(histSql);
+        hq.setParameter(1, 제품코드);
+        @SuppressWarnings("unchecked")
+        List<Object[]> hist = hq.getResultList();
+        List<Map<String, Object>> history = new ArrayList<>();
+        for (Object[] h : hist) {
+            Map<String, Object> hm = new LinkedHashMap<>();
+            hm.put("applyDate", h[0]); hm.put("benefit", h[1]); hm.put("price", h[2]);
+            history.add(hm);
+        }
+        m.put("priceHistory", history);
         return m;
     }
 

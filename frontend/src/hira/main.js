@@ -230,6 +230,8 @@ function 약제ATCDetail({ code, classes }) {
   return (
     <Box>
       <Chip className={classes.chip} label={data.code} color="primary" variant="outlined" />
+      {data.type && <span className={classes.badge}>{data.type}</span>}
+      {data.benefit && <span className={classes.badge} style={{ background: '#e8f5e9', color: '#2e7d32' }}>{data.benefit}</span>}
 
       <Divider className={classes.divider} style={{ marginTop: 8 }} />
 
@@ -238,11 +240,16 @@ function 약제ATCDetail({ code, classes }) {
       <Field label="제품명" value={data.name} classes={classes} />
       <Field label="업체명" value={data.company} classes={classes} />
       <Field label="주성분코드" value={data.ingredient} classes={classes} />
+      <Field label="투여경로" value={data.route} classes={classes} />
+      <Field label="규격" value={data.spec} classes={classes} />
+      <Field label="단위" value={data.unit} classes={classes} />
       <Field label="식약분류" value={data.drugClass} classes={classes} />
+      <Field label="적용일자" value={data.applyDate ? new Date(data.applyDate).toLocaleDateString('ko-KR') : null} classes={classes} />
+      {data.price != null && <PriceField label="상한가" value={data.price} classes={classes} />}
 
       {data.atcList && data.atcList.length > 0 && (
         <>
-          <Typography className={classes.section} style={{ marginTop: 16 }}>ATC 코드</Typography>
+          <Typography className={classes.section} style={{ marginTop: 16 }}>ATC 분류</Typography>
           <TableContainer component={Paper} variant="outlined" style={{ marginTop: 4 }}>
             <Table size="small">
               <TableHead>
@@ -256,6 +263,32 @@ function 약제ATCDetail({ code, classes }) {
                   <TableRow key={i} className={classes.histRow}>
                     <StyledTableCell>{a.code}</StyledTableCell>
                     <StyledTableCell>{a.name}</StyledTableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
+      )}
+
+      {data.priceHistory && data.priceHistory.length > 1 && (
+        <>
+          <Typography className={classes.section} style={{ marginTop: 16 }}>가격 이력</Typography>
+          <TableContainer component={Paper} variant="outlined" style={{ marginTop: 4 }}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell>적용일자</StyledTableCell>
+                  <StyledTableCell>상한가</StyledTableCell>
+                  <StyledTableCell>급여기준</StyledTableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data.priceHistory.map((h, i) => (
+                  <TableRow key={i} className={classes.histRow}>
+                    <StyledTableCell>{h.applyDate ? new Date(h.applyDate).toLocaleDateString('ko-KR') : '-'}</StyledTableCell>
+                    <StyledTableCell>{h.price != null ? Number(h.price).toLocaleString() + ' 원' : '-'}</StyledTableCell>
+                    <StyledTableCell>{h.benefit || '-'}</StyledTableCell>
                   </TableRow>
                 ))}
               </TableBody>
