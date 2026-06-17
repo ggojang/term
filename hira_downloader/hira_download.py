@@ -20,6 +20,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+import subprocess
 import sys
 import urllib.parse
 from datetime import date, datetime
@@ -270,6 +271,17 @@ def download_file(sess: requests.Session, apnd_file_id: str,
 
 
 # ── Slack 알림 ────────────────────────────────────────────────────────────────
+def send_slack_load_done(new_files: list[dict]):
+    if not SLACK_WEBHOOK_URL:
+        return
+    cats = ", ".join(f"[{f['category']}]" for f in new_files)
+    msg = f"*HIRA DB 적재 완료 ({date.today()})* — {cats}"
+    try:
+        requests.post(SLACK_WEBHOOK_URL, json={"text": msg}, timeout=10).raise_for_status()
+    except Exception as e:
+        log.error("Slack 알림 실패: %s", e)
+
+
 def send_slack(new_files: list[dict]):
     if not SLACK_WEBHOOK_URL or not new_files:
         if not SLACK_WEBHOOK_URL:
@@ -371,6 +383,19 @@ def main() -> int:
 
     send_slack(all_new)
     log.info("=== 완료: 신규 파일 %d건 ===", len(all_new))
+
+    if all_new:
+        log.info("=== DB 적재 시작 ===")
+        loader = Path(__file__).parent / "load_hira_codes.py"
+        result = subprocess.run(
+            [sys.executable, str(loader)],
+            capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            log.info("DB 적재 완료\n%s", result.stdout[-2000:] if result.stdout else "")
+            send_slack_load_done(all_new)
+        else:
+            log.error("DB 적재 실패 (exit %d)\n%s", result.returncode, result.stderr[-2000:])
     return 0
 
 
