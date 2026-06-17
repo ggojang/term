@@ -195,7 +195,8 @@ export default function App() {
                   onChange={handleChange}
                   classes={{ indicator: classes.indicator }}
                   aria-label="browser tab"
-                  variant="standard"
+                  variant="scrollable"
+                  scrollButtons="auto"
                 >
                   <Tab className={clsx(classes.label, classes.tab1)} label="SNOMED CT Browser" {...a11yProps(0)} />
                   <Tab className={clsx(classes.label, classes.tab3)} label="Refset Viewer" {...a11yProps(1)} />
