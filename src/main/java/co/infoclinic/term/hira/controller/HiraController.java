@@ -36,6 +36,23 @@ public class HiraController {
         return svc.get행위TreeByJeol(sheet, jang, jeol);
     }
 
+    @RequestMapping(value = "/행위/tree/{sheet}/{jang}/{jeol}/{sedo}", method = RequestMethod.GET)
+    public List<Map<String, Object>> 행위TreeSedo(@PathVariable String sheet,
+                                                  @PathVariable String jang,
+                                                  @PathVariable String jeol,
+                                                  @PathVariable String sedo) {
+        return svc.get행위TreeBySedo(sheet, jang, jeol, sedo);
+    }
+
+    @RequestMapping(value = "/행위/tree/{sheet}/{jang}/{jeol}/{sedo}/{classNo:.+}", method = RequestMethod.GET)
+    public List<Map<String, Object>> 행위TreeClassNo(@PathVariable String sheet,
+                                                     @PathVariable String jang,
+                                                     @PathVariable String jeol,
+                                                     @PathVariable String sedo,
+                                                     @PathVariable String classNo) {
+        return svc.get행위TreeByClassNo(sheet, jang, jeol, sedo, classNo);
+    }
+
     @RequestMapping(value = "/행위/{code:.+}", method = RequestMethod.GET)
     public Map<String, Object> 행위Detail(@PathVariable String code) {
         return svc.get행위Detail(code);

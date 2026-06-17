@@ -49,9 +49,12 @@ function HiraTreeNode({ node, cat, depth, onSelect, classes }) {
     const parts = node.code.split('|');
     let url = '';
     if (cat === '행위') {
-      if (parts.length === 1) url = `/hira/행위/tree/${encodeURIComponent(parts[0])}`;
-      else if (parts.length === 2) url = `/hira/행위/tree/${encodeURIComponent(parts[0])}/${encodeURIComponent(parts[1])}`;
-      else url = `/hira/행위/tree/${encodeURIComponent(parts[0])}/${encodeURIComponent(parts[1])}/${encodeURIComponent(parts[2])}`;
+      const p = parts.map(encodeURIComponent);
+      if (p.length === 1) url = `/hira/행위/tree/${p[0]}`;
+      else if (p.length === 2) url = `/hira/행위/tree/${p[0]}/${p[1]}`;
+      else if (p.length === 3) url = `/hira/행위/tree/${p[0]}/${p[1]}/${p[2]}`;
+      else if (p.length === 4) url = `/hira/행위/tree/${p[0]}/${p[1]}/${p[2]}/${p[3]}`;
+      else url = `/hira/행위/tree/${p[0]}/${p[1]}/${p[2]}/${p[3]}/${p[4]}`;
     } else if (cat === '약제') {
       url = `/hira/약제/tree/${encodeURIComponent(node.code)}`;
     } else if (cat === '치료재료') {

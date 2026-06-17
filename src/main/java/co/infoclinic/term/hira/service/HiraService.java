@@ -38,8 +38,10 @@ public class HiraService {
         List<Object[]> rows = q.getResultList();
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
+            String raw = r[0].toString();
+            String label = raw.matches("\\d+") ? raw + "장" : raw;
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("code", sheet + "|" + r[0]); m.put("label", r[0]); m.put("type", "group");
+            m.put("code", sheet + "|" + raw); m.put("label", label); m.put("type", "group");
             m.put("childCount", ((Number) r[1]).intValue());
             result.add(m);
         }
@@ -57,8 +59,10 @@ public class HiraService {
         List<Object[]> rows = q.getResultList();
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
+            String raw = r[0].toString();
+            String label = raw.matches("\\d+") ? raw + "절" : raw;
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("code", sheet + "|" + jang + "|" + r[0]); m.put("label", r[0]); m.put("type", "group");
+            m.put("code", sheet + "|" + jang + "|" + raw); m.put("label", label); m.put("type", "group");
             m.put("childCount", ((Number) r[1]).intValue());
             result.add(m);
         }
@@ -66,14 +70,62 @@ public class HiraService {
     }
 
     public List<Map<String, Object>> get행위TreeByJeol(String sheet, String jang, String jeol) {
+        String sql = "SELECT COALESCE(NULLIF(세분류,''), '(세분류없음)') as sedo, COUNT(*) as cnt"
+                   + " FROM term.hira_행위_code"
+                   + " WHERE 시트구분 = ?1"
+                   + "   AND COALESCE(NULLIF(장구분,''),'(기타)') = ?2"
+                   + "   AND COALESCE(NULLIF(절구분,''),'(직접)') = ?3"
+                   + " GROUP BY sedo ORDER BY sedo";
+        Query q = em.createNativeQuery(sql);
+        q.setParameter(1, sheet); q.setParameter(2, jang); q.setParameter(3, jeol);
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = q.getResultList();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Object[] r : rows) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("code", sheet + "|" + jang + "|" + jeol + "|" + r[0]);
+            m.put("label", r[0]); m.put("type", "group");
+            m.put("childCount", ((Number) r[1]).intValue());
+            result.add(m);
+        }
+        return result;
+    }
+
+    public List<Map<String, Object>> get행위TreeBySedo(String sheet, String jang, String jeol, String sedo) {
+        String sql = "SELECT COALESCE(NULLIF(분류번호,''), '(분류없음)') as classno, COUNT(*) as cnt"
+                   + " FROM term.hira_행위_code"
+                   + " WHERE 시트구분 = ?1"
+                   + "   AND COALESCE(NULLIF(장구분,''),'(기타)') = ?2"
+                   + "   AND COALESCE(NULLIF(절구분,''),'(직접)') = ?3"
+                   + "   AND COALESCE(NULLIF(세분류,''),'(세분류없음)') = ?4"
+                   + " GROUP BY classno ORDER BY classno";
+        Query q = em.createNativeQuery(sql);
+        q.setParameter(1, sheet); q.setParameter(2, jang); q.setParameter(3, jeol); q.setParameter(4, sedo);
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = q.getResultList();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Object[] r : rows) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("code", sheet + "|" + jang + "|" + jeol + "|" + sedo + "|" + r[0]);
+            m.put("label", r[0]); m.put("type", "group");
+            m.put("childCount", ((Number) r[1]).intValue());
+            result.add(m);
+        }
+        return result;
+    }
+
+    public List<Map<String, Object>> get행위TreeByClassNo(String sheet, String jang, String jeol, String sedo, String classNo) {
         String sql = "SELECT 수가코드, 한글명, 영문명, 의원단가"
                    + " FROM term.hira_행위_code"
                    + " WHERE 시트구분 = ?1"
                    + "   AND COALESCE(NULLIF(장구분,''),'(기타)') = ?2"
                    + "   AND COALESCE(NULLIF(절구분,''),'(직접)') = ?3"
+                   + "   AND COALESCE(NULLIF(세분류,''),'(세분류없음)') = ?4"
+                   + "   AND COALESCE(NULLIF(분류번호,''),'(분류없음)') = ?5"
                    + " ORDER BY 수가코드 LIMIT 500";
         Query q = em.createNativeQuery(sql);
         q.setParameter(1, sheet); q.setParameter(2, jang); q.setParameter(3, jeol);
+        q.setParameter(4, sedo); q.setParameter(5, classNo);
         @SuppressWarnings("unchecked")
         List<Object[]> rows = q.getResultList();
         List<Map<String, Object>> result = new ArrayList<>();
