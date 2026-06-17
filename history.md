@@ -234,6 +234,16 @@ python3 hira_downloader/load_atc_master.py                      # ATC 마스터 
 - NamingSystem 리소스 선언 추가 (read/create/update/delete/search-type + `$preferred-id`)
 - implementation description에 HIRA EDI 추가
 
+### LOINC implicit ValueSet 구현 (2026-06-17)
+- `FhirValueSetService.expandLoincImplicit()` 구현
+- 지원 URL 패턴:
+  - `http://loinc.org/vs` → `loinc.loinc` 전체 (filter, offset, count 지원)
+  - `http://loinc.org/vs/LL{id}` → `loinc.la` Answer List (LL로 시작)
+  - `http://loinc.org/vs/{LOINC-code}` → `loinc.la_link` + `loinc.la` 조인으로 해당 코드의 Answer List
+  - `http://loinc.org/vs/loinc-{CLASS}` → `loinc.loinc WHERE class_name = ?`
+- `ValueSet/$expand?url=http://loinc.org/vs/LL...` 등으로 호출 가능
+- `expand()` 라우팅은 이전 세션에서 이미 추가됨
+
 ---
 
 ## 로컬 DB 미적용 항목 (추후 LOINC 버전 업데이트 시 적용 예정)

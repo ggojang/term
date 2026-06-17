@@ -76,6 +76,11 @@ public class FhirValueSetService {
             return expandSnomedImplicit(idOrUrl, filter, offset, count);
         }
 
+        // LOINC implicit ValueSet
+        if (idOrUrl != null && idOrUrl.startsWith(FhirCodeSystemService.URL_LOINC + "/vs")) {
+            return expandLoincImplicit(idOrUrl, filter, offset, count);
+        }
+
         String json = null;
         if (idOrUrl != null) {
             json = resourceSvc.findById("ValueSet", idOrUrl)
@@ -355,6 +360,142 @@ public class FhirValueSetService {
         out.addParameter().setName("message").setValue(
                 new StringType("Code " + code + " not found in ValueSet " + idOrUrl));
         return out;
+    }
+
+    /**
+     * LOINC implicit ValueSet 확장
+     * 지원 URL 패턴:
+     *   http://loinc.org/vs                    — LOINC 전체 (count 필수)
+     *   http://loinc.org/vs/LL2827-8           — Answer List (LL로 시작)
+     *   http://loinc.org/vs/8480-6             — 특정 LOINC 코드의 Answer List
+     *   http://loinc.org/vs/loinc-{CLASS}      — CLASS 기반 (예: loinc-CHEM)
+     */
+    @SuppressWarnings("unchecked")
+    private ValueSet expandLoincImplicit(String url, String filter, Integer offset, Integer count) {
+        String path = url.substring((FhirCodeSystemService.URL_LOINC + "/vs").length());
+        // path: "" | "/LL2827-8" | "/8480-6" | "/loinc-CHEM"
+        if (path.startsWith("/")) path = path.substring(1);
+
+        ValueSet vs = new ValueSet();
+        vs.setUrl(url);
+        vs.setStatus(Enumerations.PublicationStatus.ACTIVE);
+
+        ValueSet.ValueSetExpansionComponent expansion = new ValueSet.ValueSetExpansionComponent();
+        expansion.setIdentifier(url);
+        expansion.setTimestamp(new java.util.Date());
+        if (offset != null) expansion.setOffset(offset);
+
+        int from  = offset != null ? offset : 0;
+        int limit = count  != null ? count  : 100;
+
+        if (path.isEmpty()) {
+            // 전체 LOINC
+            vs.setTitle("All LOINC codes");
+            String sql = "SELECT code, long_common_name FROM loinc.loinc"
+                    + (filter != null ? " WHERE code ILIKE :f OR long_common_name ILIKE :f OR display_name ILIKE :f" : "")
+                    + " ORDER BY code LIMIT " + limit + " OFFSET " + from;
+            Query q = em.createNativeQuery(sql);
+            if (filter != null) q.setParameter("f", "%" + filter + "%");
+            List<Object[]> rows = q.getResultList();
+
+            String cntSql = "SELECT COUNT(*) FROM loinc.loinc"
+                    + (filter != null ? " WHERE code ILIKE :f OR long_common_name ILIKE :f OR display_name ILIKE :f" : "");
+            Query cq = em.createNativeQuery(cntSql);
+            if (filter != null) cq.setParameter("f", "%" + filter + "%");
+            expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+
+            for (Object[] r : rows) {
+                expansion.addContains()
+                        .setSystem(FhirCodeSystemService.URL_LOINC)
+                        .setCode((String) r[0])
+                        .setDisplay(r[1] != null ? (String) r[1] : "");
+            }
+
+        } else if (path.toUpperCase().startsWith("LL")) {
+            // Answer List: LL2827-8
+            vs.setTitle("LOINC Answer List: " + path);
+            String sql = "SELECT answer_string_id, display_text FROM loinc.la"
+                    + " WHERE answer_list_id = :lid"
+                    + (filter != null ? " AND (display_text ILIKE :f OR answer_string_id ILIKE :f)" : "")
+                    + " ORDER BY answer_string_id LIMIT " + limit + " OFFSET " + from;
+            Query q = em.createNativeQuery(sql);
+            q.setParameter("lid", path);
+            if (filter != null) q.setParameter("f", "%" + filter + "%");
+            List<Object[]> rows = q.getResultList();
+
+            String cntSql = "SELECT COUNT(*) FROM loinc.la WHERE answer_list_id = :lid"
+                    + (filter != null ? " AND (display_text ILIKE :f OR answer_string_id ILIKE :f)" : "");
+            Query cq = em.createNativeQuery(cntSql);
+            cq.setParameter("lid", path);
+            if (filter != null) cq.setParameter("f", "%" + filter + "%");
+            expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+
+            for (Object[] r : rows) {
+                expansion.addContains()
+                        .setSystem(FhirCodeSystemService.URL_LOINC)
+                        .setCode(r[0] != null ? (String) r[0] : "")
+                        .setDisplay(r[1] != null ? (String) r[1] : "");
+            }
+
+        } else if (path.startsWith("loinc-")) {
+            // CLASS 기반: loinc-CHEM
+            String className = path.substring("loinc-".length());
+            vs.setTitle("LOINC CLASS: " + className);
+            String sql = "SELECT code, long_common_name FROM loinc.loinc"
+                    + " WHERE class_name = :cls"
+                    + (filter != null ? " AND (code ILIKE :f OR long_common_name ILIKE :f)" : "")
+                    + " ORDER BY code LIMIT " + limit + " OFFSET " + from;
+            Query q = em.createNativeQuery(sql);
+            q.setParameter("cls", className);
+            if (filter != null) q.setParameter("f", "%" + filter + "%");
+            List<Object[]> rows = q.getResultList();
+
+            String cntSql = "SELECT COUNT(*) FROM loinc.loinc WHERE class_name = :cls"
+                    + (filter != null ? " AND (code ILIKE :f OR long_common_name ILIKE :f)" : "");
+            Query cq = em.createNativeQuery(cntSql);
+            cq.setParameter("cls", className);
+            if (filter != null) cq.setParameter("f", "%" + filter + "%");
+            expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+
+            for (Object[] r : rows) {
+                expansion.addContains()
+                        .setSystem(FhirCodeSystemService.URL_LOINC)
+                        .setCode((String) r[0])
+                        .setDisplay(r[1] != null ? (String) r[1] : "");
+            }
+
+        } else {
+            // 특정 LOINC 코드의 Answer List (la_link 경유)
+            String loincCode = path;
+            vs.setTitle("LOINC Answer List for: " + loincCode);
+            String sql = "SELECT a.answer_string_id, a.display_text"
+                    + " FROM loinc.la_link l JOIN loinc.la a ON a.answer_list_id = l.answer_list_id"
+                    + " WHERE l.loinc_number = :code"
+                    + (filter != null ? " AND (a.display_text ILIKE :f OR a.answer_string_id ILIKE :f)" : "")
+                    + " ORDER BY a.answer_list_id, a.sequence_number LIMIT " + limit + " OFFSET " + from;
+            Query q = em.createNativeQuery(sql);
+            q.setParameter("code", loincCode);
+            if (filter != null) q.setParameter("f", "%" + filter + "%");
+            List<Object[]> rows = q.getResultList();
+
+            String cntSql = "SELECT COUNT(*) FROM loinc.la_link l JOIN loinc.la a ON a.answer_list_id = l.answer_list_id"
+                    + " WHERE l.loinc_number = :code"
+                    + (filter != null ? " AND (a.display_text ILIKE :f OR a.answer_string_id ILIKE :f)" : "");
+            Query cq = em.createNativeQuery(cntSql);
+            cq.setParameter("code", loincCode);
+            if (filter != null) cq.setParameter("f", "%" + filter + "%");
+            expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+
+            for (Object[] r : rows) {
+                expansion.addContains()
+                        .setSystem(FhirCodeSystemService.URL_LOINC)
+                        .setCode(r[0] != null ? (String) r[0] : "")
+                        .setDisplay(r[1] != null ? (String) r[1] : "");
+            }
+        }
+
+        vs.setExpansion(expansion);
+        return vs;
     }
 
     /**
