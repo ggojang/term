@@ -97,6 +97,37 @@ fhir/
 - `src/main/webapp/WEB-INF/spring/mvc.xml` — FHIR 컨트롤러 컴포넌트 스캔 추가
 - `src/main/resources/log4jdbc.log4j2.properties` — 로깅 설정
 
+## 요양급여청구코드 브라우저 (2026-06-17)
+
+### 개요
+HIRA 청구관련기준(마스터파일) 3종을 DB에 적재하고, STOM Browser에 새 탭 "요양급여청구코드" 추가.
+
+### DB 적재
+- `hira_downloader/create_code_tables.sql` — 3개 테이블 생성
+  - `term.hira_행위_code` (419,025행) — 수가코드, 한글명, 영문명, 단가
+  - `term.hira_약제_code` (59,110행) — 제품코드, 제품명, 상한가, 약효분류번호
+  - `term.hira_치료재료_code` (29,004행) — 코드, 품명, 중분류, 상한금액
+- `hira_downloader/load_hira_codes.py` — xlsb/xlsx → PostgreSQL 적재 스크립트
+  - pyxlsb (행위 xlsb), openpyxl (약제/치료재료 xlsx) 사용
+
+### Backend
+- `src/main/java/co/infoclinic/term/hira/controller/HiraController.java` — REST API
+- `src/main/java/co/infoclinic/term/hira/service/HiraService.java` — Native Query 서비스
+- API 패턴: `/hira/{카테고리}/tree`, `/hira/{카테고리}/search`, `/hira/{카테고리}/{code}`
+
+### Frontend
+- `frontend/src/hira/layout.js` — 3:9 Grid 레이아웃
+- `frontend/src/hira/left.js` — 행위|약제|치료재료 탭 + 트리 + 검색
+- `frontend/src/hira/main.js` — 코드 상세 패널 (단가, 이력 포함)
+- `frontend/src/App.js` — 탭 5번 "요양급여청구코드" 추가
+
+### 계층 구조
+- 행위: 시트구분(의치과_급여 등) → 장구분 → 절구분 → 수가코드
+- 약제: 분류번호(약효분류 3자리) → 제품코드
+- 치료재료: 코드 첫글자(A/B/C...) → 중분류코드 → 코드
+
+---
+
 ## HIRA 코드자료 자동 다운로더 (2026-06-17)
 
 - `hira_downloader/hira_download.py` — Playwright 기반 크롤링 + 다운로드 메인 스크립트

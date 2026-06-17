@@ -5,6 +5,7 @@ import RefsetLayout from './refsetViewer/layout.js';
 import MapLayout from './map/layout.js';
 import LoincLayout from './loinc/layout.js';
 import Icd10Layout from './icd10/layout.js';
+import HiraLayout from './hira/layout.js';
 import PropTypes from 'prop-types';
 import CssBaseline from "@material-ui/core/CssBaseline"
 import clsx from 'clsx';
@@ -111,6 +112,7 @@ export default function App() {
   const [fromId, setFromId] = useState(init.fromId);
   const [kcdCode, setKcdCode] = useState(init.kcdCode || '');
   const [loincId, setLoincId] = useState(init.loincId || '');
+  const [hiraCode, setHiraCode] = useState(init.hiraCode || null);
   const [mrcmFromMain, setMrcmFromMain] = useState([]);
   const [mrcmFromSearch, setMrcmFromSearch] = useState('');
   const [msg, setMsg] = useState('');
@@ -171,6 +173,7 @@ export default function App() {
     else if (value === 3) setMsg('Version 2.82 (2026-02-24)');
     else if (value === 4) setMsg('Release 2025.12.23');
     else if (value === 5) setMsg('2016 Release (2014-10-14)');
+    else if (value === 6) setMsg('2026.06.01 기준');
     else setMsg('');
   }, [value]);
 
@@ -199,6 +202,7 @@ export default function App() {
                   <Tab className={clsx(classes.label, classes.tab2)} label="Mapping Support" {...a11yProps(2)} />
                   <Tab className={clsx(classes.label, classes.tab3)} label="LOINC Browser" {...a11yProps(3)} />
                   <Tab className={clsx(classes.label, classes.tab3)} label="KCD-9 Browser" {...a11yProps(4)} />
+                  <Tab className={clsx(classes.label, classes.tab3)} label="요양급여청구코드" {...a11yProps(5)} />
                 </Tabs>
               </Grid>
               <Grid item md={2}>
@@ -236,6 +240,12 @@ export default function App() {
           <Icd10Layout
             selectedCode={kcdCode}
             setSelectedCode={handleSetKcdCode}
+          />
+        </TabPanel>
+        <TabPanel value={value} index={5}>
+          <HiraLayout
+            selectedCode={hiraCode}
+            setSelectedCode={setHiraCode}
           />
         </TabPanel>
       </div>
