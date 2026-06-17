@@ -68,10 +68,22 @@ function HiraTreeNode({ node, cat, depth, onSelect, classes }) {
     }).catch(() => setChildren([])).finally(() => setLoading(false));
   };
 
+  let labelMain = node.label;
+  let labelEn = '';
+  if (!isLeaf && node.label && node.label.includes('\t')) {
+    const parts = node.label.split('\t');
+    // parts: [code, hname, ename]
+    const hname = parts[1] || '';
+    const ename = parts[2] || '';
+    labelMain = parts[0] + (hname ? ' ' + hname : '');
+    labelEn = ename;
+  }
+
   const label = (
     <Typography className={classes.treeLabel} component="span">
       {isLeaf && <span className={classes.codeTag}>{node.code}</span>}
-      <span>{node.label}</span>
+      <span>{labelMain}</span>
+      {labelEn && <span style={{ fontSize: '0.82em', color: '#999', marginLeft: 4 }}>{labelEn}</span>}
       {node.price != null && (
         <span className={classes.priceTag}>
           {Number(node.price).toLocaleString()}원

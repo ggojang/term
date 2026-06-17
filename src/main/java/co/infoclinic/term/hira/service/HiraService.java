@@ -12,6 +12,81 @@ public class HiraService {
     @PersistenceContext
     private EntityManager em;
 
+    // ─── 행위 장/절 타이틀 ────────────────────────────────────────────────────
+    private static final Map<String, String> 장타이틀 = new LinkedHashMap<String, String>() {{
+        put("01", "기본진료료");
+        put("02", "검사료");
+        put("03", "영상진단 및 방사선치료료");
+        put("04", "투약 및 조제료");
+        put("05", "주사료");
+        put("06", "마취료");
+        put("07", "이학요법료");
+        put("08", "정신요법료");
+        put("09", "처치 및 수술료 등");
+        put("10", "치과 처치·수술료");
+        put("11", "조산료");
+        put("12", "보건기관의 진료수가");
+        put("13", "한방 검사료");
+        put("14", "한방 시술 및 처치료");
+        put("15", "약국 약제비");
+        put("16", "전혈 및 혈액성분제제료");
+        put("17", "입원환자 식대");
+        put("18", "치과의 보철료");
+        put("19", "응급의료수가");
+        put("19-2", "권역외상센터 검사료");
+        put("19-3", "권역외상센터 영상진단료");
+        put("19-5", "권역외상센터 주사료");
+        put("19-6", "권역외상센터 마취료");
+        put("19-8", "권역외상센터 정신요법료");
+        put("19-9", "권역외상센터 처치 및 수술료");
+        put("20", "치과의 교정치료료");
+        put("00", "비급여");
+    }};
+
+    private static final Map<String, String> 절타이틀 = new LinkedHashMap<String, String>() {{
+        put("01|01", "기본진료료");
+        put("01|02", "통합관리료");
+        put("02|01", "검체 검사료");
+        put("02|02", "병리 검사료");
+        put("02|03", "기능 검사료");
+        put("02|04", "내시경, 천자 및 생검료");
+        put("02|05", "초음파 검사료");
+        put("03|01", "방사선 일반영상진단료");
+        put("03|02", "방사선 특수영상진단료");
+        put("03|03", "핵의학영상진단 및 골밀도검사료");
+        put("03|04", "방사선 치료료");
+        put("05|01", "주사료");
+        put("05|02", "채혈 및 수혈료");
+        put("06|01", "마취료");
+        put("06|02", "치과마취료");
+        put("06|03", "신경차단술료");
+        put("06|04", "신경파괴술료");
+        put("07|01", "기본물리치료료");
+        put("07|02", "단순재활치료료");
+        put("07|03", "전문재활치료료");
+        put("07|04", "기타 이학요법료");
+        put("09|01", "처치 및 수술료");
+        put("09|02", "캐스트료");
+        put("10|01", "치아질환 처치");
+        put("10|02", "수술 후 처치·치주조직의 처치 등");
+        put("10|03", "구강악안면 수술");
+        put("10|04", "치주질환 수술");
+        put("10|05", "보철물의 유지관리");
+        put("14|01", "시술료");
+        put("14|02", "처치료");
+        put("14|03", "한방 정신요법료");
+        put("19|01", "응급 기본진료료");
+        put("19|02", "응급의료행위");
+        put("19|03", "권역외상센터 응급의료행위");
+        put("19-2|03", "기능 검사료");
+        put("19-2|04", "내시경, 천자 및 생검료");
+        put("19-3|02", "방사선 특수영상진단료");
+        put("19-5|01", "주사료");
+        put("19-6|01", "마취료");
+        put("19-9|01", "처치 및 수술료");
+        put("19-9|02", "캐스트료");
+    }};
+
     // ─── 행위 ─────────────────────────────────────────────────────────────────
     public List<Map<String, Object>> get행위TreeRoot() {
         String sql = "SELECT 시트구분, COUNT(*) as cnt FROM term.hira_행위_code GROUP BY 시트구분 ORDER BY 시트구분";
@@ -39,7 +114,15 @@ public class HiraService {
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
             String raw = r[0].toString();
-            String label = raw.startsWith("(") ? raw : raw + "장";
+            String title = 장타이틀.get(raw);
+            String label;
+            if (raw.startsWith("(")) {
+                label = raw;
+            } else if (title != null) {
+                label = raw + "장 " + title;
+            } else {
+                label = raw + "장";
+            }
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("code", sheet + "|" + raw); m.put("label", label); m.put("type", "group");
             m.put("childCount", ((Number) r[1]).intValue());
@@ -60,7 +143,15 @@ public class HiraService {
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
             String raw = r[0].toString();
-            String label = raw.startsWith("(") ? raw : raw + "절";
+            String title = 절타이틀.get(jang + "|" + raw);
+            String label;
+            if (raw.startsWith("(")) {
+                label = raw;
+            } else if (title != null) {
+                label = raw + "절 " + title;
+            } else {
+                label = raw + "절";
+            }
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("code", sheet + "|" + jang + "|" + raw); m.put("label", label); m.put("type", "group");
             m.put("childCount", ((Number) r[1]).intValue());
@@ -204,10 +295,10 @@ public class HiraService {
     private String buildAtcLabel(String code, String hname, String ename) {
         boolean hasH = hname != null && !hname.isEmpty() && !hname.equals(code);
         boolean hasE = ename != null && !ename.isEmpty() && !ename.equals(code);
-        if (hasH && hasE) return code + " " + hname + " / " + ename;
-        if (hasH) return code + " " + hname;
-        if (hasE) return code + " " + ename;
-        return code;
+        // format: "code\thname\tename" — frontend splits on \t to render ename smaller
+        String h = hasH ? hname : "";
+        String e = hasE ? ename : "";
+        return code + "\t" + h + "\t" + e;
     }
 
     public List<Map<String, Object>> get약제ATCRoot() {
@@ -278,7 +369,7 @@ public class HiraService {
         List<Object[]> leaves = lq.getResultList();
         for (Object[] r : leaves) {
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("code", r[0]); m.put("label", r[0] + " " + r[1]);
+            m.put("code", r[0]); m.put("label", r[1]);
             m.put("type", "leaf"); m.put("childCount", 0);
             result.add(m);
         }
@@ -429,7 +520,7 @@ public class HiraService {
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] r : rows) {
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("code", r[0]); m.put("label", r[0] + " " + r[1]);
+            m.put("code", r[0]); m.put("label", r[1]);
             m.put("koreanLabel", r[1]); m.put("price", r[2]);
             m.put("type", "leaf"); m.put("childCount", 0);
             result.add(m);
