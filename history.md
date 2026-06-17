@@ -209,6 +209,33 @@ HIRA 청구관련기준(마스터파일) 3종을 DB에 적재하고, STOM Browse
 
 ---
 
+## FHIR Terminology Server DB 스키마 및 기타 수정 (2026-06-17)
+
+### FHIR resource 테이블 DDL 추가
+- `fhir/create_fhir_schema.sql` — 신규 추가 (기존 소스에 없었음)
+  - `fhir` 스키마 생성
+  - `fhir.resource` 테이블: resource_type, id, url, version, name, title, status, content, created_at, updated_at
+  - PK: (resource_type, id), 인덱스: url / name / status
+
+### 신규 서버 설치 순서
+```bash
+psql -U postgres -d term -f fhir/create_fhir_schema.sql        # FHIR 스키마
+psql -U postgres -d term -f hira_downloader/create_code_tables.sql  # HIRA 코드 테이블
+python3 hira_downloader/load_hira_codes.py                      # HIRA 코드 적재
+python3 hira_downloader/load_atc_master.py                      # ATC 마스터 적재
+```
+
+### NamingSystem 수정
+- `FhirNamingSystemController`: fullUrl 하드코딩 `/stom/fhir` → `FhirApi.BASE` 사용
+- `GET /NamingSystem/$preferred-id?id={value}&type={oid|uri|...}` 구현
+- `FhirApi`: `NAMING_SYSTEM_PREFERRED` 상수 추가
+
+### CapabilityStatement 수정
+- NamingSystem 리소스 선언 추가 (read/create/update/delete/search-type + `$preferred-id`)
+- implementation description에 HIRA EDI 추가
+
+---
+
 ## 로컬 DB 미적용 항목 (추후 LOINC 버전 업데이트 시 적용 예정)
 
 - `loinc.HIERARCHY` DESCENDANT_COUNT 재계산 (PATH 기반, 293,674행)
