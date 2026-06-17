@@ -130,12 +130,70 @@ HIRA 청구관련기준(마스터파일) 3종을 DB에 적재하고, STOM Browse
 
 ## HIRA 코드자료 자동 다운로더 (2026-06-17)
 
-- `hira_downloader/hira_download.py` — Playwright 기반 크롤링 + 다운로드 메인 스크립트
+- `hira_downloader/hira_download.py` — requests 기반 HIRA 포털 크롤링 + 다운로드 + DB 적재 자동 연결
 - `hira_downloader/setup.sh` — 설치 및 cron 등록 스크립트
 - `hira_downloader/create_table.sql` — DB 테이블 DDL (term.hira_downloads)
 - 다운로드 경로: `release_files/hira_incoming/`
-- cron: 매일 09:00, Slack webhook 알림 지원 (HIRA_SLACK_WEBHOOK 환경변수)
+- cron: 매주 월요일 09:00, Slack webhook 알림 지원 (HIRA_SLACK_WEBHOOK 환경변수)
+- **자동 적재 흐름**: 새 파일 다운로드 감지 → `load_hira_codes.py` 자동 실행 → Slack 알림
+- **중복 방지**: `hira_downloads` 테이블의 `post_no`로 이미 처리된 게시글 건너뜀
 - **초기 실행 전**: `hira_downloader/setup.sh` 실행 후 HIRA_SLACK_WEBHOOK 설정 필요
+
+---
+
+## HIRA 트리 구조 및 검색 개선 (2026-06-17)
+
+### 행위 트리
+- 5단계: 시트구분 → 장(01장 기본진료료 등 타이틀 포함) → 절 → 세분류 → 분류번호 → 청구코드
+- 장·절 타이틀 정적 Map으로 표시 (예: "01장 기본진료료")
+- 검색에 분류번호 포함
+- 리프 노드 레이블 중복 코드 제거 (코드는 codeTag로만 표시)
+
+### 약제 트리 (ATC 계층)
+- ATC 그룹 레이블: `code\t한글명\tename` 탭 구분으로 전달
+- 프론트엔드에서 한글명은 일반 크기, 영문명은 작은 회색 글씨로 별도 렌더링
+- 리프 노드 레이블 중복 코드 제거
+
+### 치료재료 트리
+- 3단계: 엑셀시트명(급여_품목 등) → 중분류(코드+명칭) → 품명(리프)
+- `hira_치료재료_code` 테이블에 `시트명` 컬럼 추가, 4개 시트 적재
+- 검색: 중분류(group)와 품목(leaf) UNION, type 필드로 구분 렌더링
+- 중분류 검색 결과는 파란색 ▸ 중분류 뱃지, 클릭 불가
+
+---
+
+## FHIR Terminology Server 기능 확장 (2026-06-17)
+
+### BASE path 수정
+- `FhirApi.BASE`: `/stom/fhir` → `/fhir` (Spring MVC context path 중복 버그 수정)
+- `CapabilityStatementController`: 하드코딩 `/stom/fhir` → `request.getContextPath()` 기반으로 수정
+
+### HIRA EDI CodeSystem 브리징
+`FhirCodeSystemService`에 HIRA 3종 `$lookup` / `$validate-code` 추가:
+
+| URL | DB 테이블 | 조회 컬럼 |
+|-----|-----------|-----------|
+| `http://www.hl7korea.or.kr/CodeSystem/hira-edi-procedure` | `hira_행위_code` | 수가코드 → 한글명, 영문명(designation) |
+| `http://www.hl7korea.or.kr/CodeSystem/hira-edi-medication` | `hira_약제_code` | 제품코드 → 제품명 |
+| `http://www.hl7korea.or.kr/CodeSystem/hira-edi-material` | `hira_치료재료_code` | 코드 → 품명 |
+
+### ValueSet/$validate-code 구현
+- `system`만 있을 때 → `CodeSystem/$validate-code`로 위임 (SNOMED, LOINC, KCD-9, HIRA 3종)
+- ValueSet URL/ID 있을 때 → `$expand` 후 코드 포함 여부 확인
+- GET / POST 모두 지원
+
+### SNOMED CT Implicit ValueSet 지원
+- `ConstraintController.evaluateECLPublic()` 추출 (기존 ECL2 실행기 재사용)
+- 지원 URL 패턴:
+  - `http://snomed.info/sct?fhir_vs=ecl/<<73211009` — ECL 표현식 (ECL2 전체 문법)
+  - `http://snomed.info/sct?fhir_vs=refset/450976002` — Reference Set
+- `$expand` 및 `$validate-code` 모두 implicit ValueSet URL 처리
+- offset / count / filter 파라미터 지원
+
+### FHIR root 페이지
+- `GET /stom/fhir` → STOM Browser FHIR Endpoint 안내 HTML (한글 UTF-8)
+
+---
 
 ## 로컬 DB 미적용 항목 (추후 LOINC 버전 업데이트 시 적용 예정)
 
