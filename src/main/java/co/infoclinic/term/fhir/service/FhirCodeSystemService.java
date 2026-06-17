@@ -28,9 +28,12 @@ public class FhirCodeSystemService {
     private static final Logger log = LoggerFactory.getLogger(FhirCodeSystemService.class);
 
     // Well-known canonical URLs
-    public static final String URL_SNOMED = "http://snomed.info/sct";
-    public static final String URL_LOINC  = "http://loinc.org";
-    public static final String URL_KCD9   = "http://koicd.kr/fhir/kcd9";
+    public static final String URL_SNOMED           = "http://snomed.info/sct";
+    public static final String URL_LOINC            = "http://loinc.org";
+    public static final String URL_KCD9             = "http://koicd.kr/fhir/kcd9";
+    public static final String URL_HIRA_PROCEDURE   = "http://www.hl7korea.or.kr/CodeSystem/hira-edi-procedure";
+    public static final String URL_HIRA_MEDICATION  = "http://www.hl7korea.or.kr/CodeSystem/hira-edi-medication";
+    public static final String URL_HIRA_MATERIAL    = "http://www.hl7korea.or.kr/CodeSystem/hira-edi-material";
 
     @Autowired
     private FhirResourceService resourceSvc;
@@ -132,6 +135,52 @@ public class FhirCodeSystemService {
             return out;
         }
 
+        if (URL_HIRA_PROCEDURE.equals(system)) {
+            Query q = em.createNativeQuery(
+                "SELECT 한글명, 영문명 FROM term.hira_행위_code WHERE 수가코드 = :code LIMIT 1");
+            q.setParameter("code", code);
+            List<Object[]> rows = q.getResultList();
+            if (rows.isEmpty()) return outcomeNotFound(out, system, code);
+            Object[] row = rows.get(0);
+            String display = row[0] != null ? (String) row[0] : "";
+            out.addParameter().setName("name").setValue(new StringType("HIRA EDI Procedure"));
+            out.addParameter().setName("display").setValue(new StringType(display));
+            out.addParameter().setName("system").setValue(new UriType(system));
+            out.addParameter().setName("code").setValue(new CodeType(code));
+            if (row[1] != null && !((String) row[1]).isEmpty()) {
+                Parameters.ParametersParameterComponent des = out.addParameter().setName("designation");
+                des.addPart().setName("language").setValue(new CodeType("en"));
+                des.addPart().setName("value").setValue(new StringType((String) row[1]));
+            }
+            return out;
+        }
+
+        if (URL_HIRA_MEDICATION.equals(system)) {
+            Query q = em.createNativeQuery(
+                "SELECT 제품명 FROM term.hira_약제_code WHERE 제품코드 = :code LIMIT 1");
+            q.setParameter("code", code);
+            List<String> rows = q.getResultList();
+            if (rows.isEmpty()) return outcomeNotFound(out, system, code);
+            out.addParameter().setName("name").setValue(new StringType("HIRA EDI Medication"));
+            out.addParameter().setName("display").setValue(new StringType(rows.get(0) != null ? rows.get(0) : ""));
+            out.addParameter().setName("system").setValue(new UriType(system));
+            out.addParameter().setName("code").setValue(new CodeType(code));
+            return out;
+        }
+
+        if (URL_HIRA_MATERIAL.equals(system)) {
+            Query q = em.createNativeQuery(
+                "SELECT 품명 FROM term.hira_치료재료_code WHERE 코드 = :code LIMIT 1");
+            q.setParameter("code", code);
+            List<String> rows = q.getResultList();
+            if (rows.isEmpty()) return outcomeNotFound(out, system, code);
+            out.addParameter().setName("name").setValue(new StringType("HIRA EDI Material"));
+            out.addParameter().setName("display").setValue(new StringType(rows.get(0) != null ? rows.get(0) : ""));
+            out.addParameter().setName("system").setValue(new UriType(system));
+            out.addParameter().setName("code").setValue(new CodeType(code));
+            return out;
+        }
+
         // fhir.resource 저장된 CodeSystem에서 조회
         return lookupFromStoredCodeSystem(system, code, out);
     }
@@ -163,6 +212,27 @@ public class FhirCodeSystemService {
             Icd10Class icd10 = icd10Repo.findByCode(code);
             valid = (icd10 != null);
             if (valid) actualDisplay = icd10.getKoreanLabel() != null ? icd10.getKoreanLabel() : icd10.getLabel();
+        } else if (URL_HIRA_PROCEDURE.equals(system)) {
+            Query q = em.createNativeQuery(
+                "SELECT 한글명 FROM term.hira_행위_code WHERE 수가코드 = :code LIMIT 1");
+            q.setParameter("code", code);
+            List<String> rows = q.getResultList();
+            valid = !rows.isEmpty();
+            if (valid) actualDisplay = rows.get(0);
+        } else if (URL_HIRA_MEDICATION.equals(system)) {
+            Query q = em.createNativeQuery(
+                "SELECT 제품명 FROM term.hira_약제_code WHERE 제품코드 = :code LIMIT 1");
+            q.setParameter("code", code);
+            List<String> rows = q.getResultList();
+            valid = !rows.isEmpty();
+            if (valid) actualDisplay = rows.get(0);
+        } else if (URL_HIRA_MATERIAL.equals(system)) {
+            Query q = em.createNativeQuery(
+                "SELECT 품명 FROM term.hira_치료재료_code WHERE 코드 = :code LIMIT 1");
+            q.setParameter("code", code);
+            List<String> rows = q.getResultList();
+            valid = !rows.isEmpty();
+            if (valid) actualDisplay = rows.get(0);
         } else {
             return validateFromStoredCodeSystem(system, code, display, out);
         }

@@ -1,7 +1,7 @@
 package co.infoclinic.term.fhir.api;
 
 public class FhirApi {
-    public static final String BASE = "/stom/fhir";
+    public static final String BASE = "/fhir";
     public static final String METADATA = BASE + "/metadata";
 
     public static final String CODE_SYSTEM         = BASE + "/CodeSystem";
