@@ -195,6 +195,20 @@ HIRA 청구관련기준(마스터파일) 3종을 DB에 적재하고, STOM Browse
 
 ---
 
+## ATC 마스터 수집 스크립트 (2026-06-17)
+
+- `hira_downloader/load_atc_master.py` — 약학정보원(health.kr) ATC 코드 전체 수집 및 DB 적재
+- **출처**: https://health.kr/searchDrug/ATCcode.renewal.asp
+- **API**: `ajax_atccode.asp?select_mode={1~5}&req_word={상위코드}` (JSON)
+- **수집 방식**: BFS 탐색 — 1자리 → 3자리 → 4자리 → 5자리 → 7자리 전체 계층
+- **적재 테이블**: `term.hira_atc_master` (atc_code PK, atc_name 영문, atc_hname 한글, vol 일일유지용량)
+- **결과**: 1322건 upsert (중복 제거 포함)
+- **실행**: `python3 hira_downloader/load_atc_master.py` (약 1분 소요)
+- `create_code_tables.sql`에 `hira_atc_master` DDL 추가 (vol 컬럼 포함)
+- 기존 DB에 vol 컬럼 없을 경우: `ALTER TABLE term.hira_atc_master ADD COLUMN IF NOT EXISTS vol VARCHAR(100);`
+
+---
+
 ## 로컬 DB 미적용 항목 (추후 LOINC 버전 업데이트 시 적용 예정)
 
 - `loinc.HIERARCHY` DESCENDANT_COUNT 재계산 (PATH 기반, 293,674행)
