@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 public class CapabilityStatementController {
 
     @RequestMapping(value = {FhirApi.BASE, FhirApi.BASE + "/"}, method = RequestMethod.GET,
-            produces = MediaType.TEXT_HTML_VALUE)
+            produces = "text/html;charset=UTF-8")
     public String fhirRoot() {
         return "<html><body style='font-family:sans-serif;padding:2em'>"
              + "<h2>STOM Browser FHIR Endpoint</h2>"
