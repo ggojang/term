@@ -58,7 +58,7 @@ public class CapabilityStatementController {
 
         // Implementation
         CapabilityStatement.CapabilityStatementImplementationComponent impl = new CapabilityStatement.CapabilityStatementImplementationComponent();
-        impl.setDescription("STOM FHIR R4 Terminology Server — SNOMED CT, LOINC, KCD-9 기반");
+        impl.setDescription("STOM FHIR R4 Terminology Server — SNOMED CT, LOINC, KCD-9, HIRA EDI (행위/약제/치료재료)");
         impl.setUrl(base);
         cs.setImplementation(impl);
 
@@ -83,6 +83,12 @@ public class CapabilityStatementController {
                 new String[]{"read", "create", "update", "delete", "search-type"},
                 new String[]{"url", "name", "status", "version"},
                 new String[]{"$translate"}));
+
+        // NamingSystem
+        rest.addResource(buildResource("NamingSystem",
+                new String[]{"read", "create", "update", "delete", "search-type"},
+                new String[]{"name", "status"},
+                new String[]{"$preferred-id"}));
 
         // System operations
         rest.addOperation(buildOperation("$install-package", base + "/OperationDefinition/install-package"));
