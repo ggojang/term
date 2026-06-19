@@ -22,7 +22,7 @@ echo "============================================"
 echo " REFERENCESET_ACTIVE 적재 시작 (PostgreSQL)"
 echo "============================================"
 
-${PSQL} -v ON_ERROR_STOP=1 -f "${LOCATION}/refset_active_loader_pg.sql"
+cat "${LOCATION}/refset_active_loader_pg.sql" | ${PSQL} -v ON_ERROR_STOP=1
 
 if [ $? -eq 0 ]; then
     echo "============================================"
