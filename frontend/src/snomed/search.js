@@ -232,7 +232,7 @@ export default function Search(props) {
             ref={inputRef}
             className="search-box-modern"
             type="search"
-            placeholder="Search by term, SCTID, FSN..."
+            placeholder="At least 2 characters"
             value={inputVal}
             onChange={e => setInputVal(e.target.value)}
             onKeyDown={e => {

@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 /**
  * TC (Transitive Closure) 조회 API
@@ -32,6 +34,7 @@ import lombok.NoArgsConstructor;
  *   DISORDER  → disorder
  *   FINDING   → finding
  */
+@Api(tags = "I-10 SNOMEDCT")
 @RestController
 public class TcController {
 
@@ -60,6 +63,7 @@ public class TcController {
      * @param q            검색어 (FSN 부분 매치)
      * @return TC 엔트리 목록 (최대 200건)
      */
+    @ApiOperation(value = "Transitive Closure (의미유형별 개념 목록) [GET]")
     @RequestMapping(value = "/TC/SNOMEDCT/{semanticType}", method = RequestMethod.GET)
     public List<TcEntry> getTcBySemanticType(
             @PathVariable String semanticType,

@@ -13,7 +13,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
+@Api(tags = "V-05. FHIR NamingSystem")
 @RestController
 public class FhirNamingSystemController {
 
@@ -23,6 +26,7 @@ public class FhirNamingSystemController {
     @Autowired
     private FhirResourceService svc;
 
+    @ApiOperation(value = "NamingSystem 단건 조회/수정/삭제 [GET]")
     @RequestMapping(value = FhirApi.NAMING_SYSTEM_ID, method = RequestMethod.GET,
             produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<String> read(@PathVariable String id) {
@@ -31,6 +35,7 @@ public class FhirNamingSystemController {
         return ResponseEntity.ok(json.get());
     }
 
+    @ApiOperation(value = "NamingSystem 목록 검색/생성 [GET]")
     @RequestMapping(value = FhirApi.NAMING_SYSTEM, method = RequestMethod.GET,
             produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public String search(@RequestParam(required = false) String name) {
@@ -38,6 +43,7 @@ public class FhirNamingSystemController {
         return buildBundle(results);
     }
 
+    @ApiOperation(value = "NamingSystem 목록 검색/생성 [POST]")
     @RequestMapping(value = FhirApi.NAMING_SYSTEM, method = RequestMethod.POST,
             consumes = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE},
             produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
@@ -48,6 +54,7 @@ public class FhirNamingSystemController {
                 .body("{\"id\":\"" + id + "\"}");
     }
 
+    @ApiOperation(value = "NamingSystem 단건 조회/수정/삭제 [PUT]")
     @RequestMapping(value = FhirApi.NAMING_SYSTEM_ID, method = RequestMethod.PUT,
             consumes = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE},
             produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
@@ -57,6 +64,7 @@ public class FhirNamingSystemController {
         return new ResponseEntity<String>(existed ? HttpStatus.OK : HttpStatus.CREATED);
     }
 
+    @ApiOperation(value = "NamingSystem 단건 조회/수정/삭제 [DELETE]")
     @RequestMapping(value = FhirApi.NAMING_SYSTEM_ID, method = RequestMethod.DELETE)
     public ResponseEntity<String> delete(@PathVariable String id) {
         svc.delete(RESOURCE_TYPE, id);
@@ -65,6 +73,7 @@ public class FhirNamingSystemController {
 
     // ── $preferred-id ─────────────────────────────────────────────────────────
     // GET /NamingSystem/$preferred-id?id={value}&type={oid|uri|uuid|other}
+    @ApiOperation(value = "NamingSystem $preferred-id [GET]")
     @RequestMapping(value = FhirApi.NAMING_SYSTEM + "/$preferred-id", method = RequestMethod.GET,
             produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<String> preferredId(@RequestParam String id,

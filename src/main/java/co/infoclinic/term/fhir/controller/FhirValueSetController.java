@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
+@Api(tags = "V-03. FHIR ValueSet")
 @RestController
 public class FhirValueSetController {
 
@@ -23,6 +26,7 @@ public class FhirValueSetController {
     @Autowired
     private FhirValueSetService svc;
 
+    @ApiOperation(value = "ValueSet 단건 조회/수정/삭제 [GET]")
     @RequestMapping(value = FhirApi.VALUE_SET_ID, method = RequestMethod.GET, produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<String> read(@PathVariable String id) {
         Optional<String> json = svc.findById(id);
@@ -30,6 +34,7 @@ public class FhirValueSetController {
         return ResponseEntity.ok(json.get());
     }
 
+    @ApiOperation(value = "ValueSet 목록 검색/생성 [GET]")
     @RequestMapping(value = FhirApi.VALUE_SET, method = RequestMethod.GET, produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public String search(@RequestParam(required = false) String name,
                          @RequestParam(required = false) String url) {
@@ -37,6 +42,7 @@ public class FhirValueSetController {
         return buildBundle(results);
     }
 
+    @ApiOperation(value = "ValueSet 목록 검색/생성 [POST]")
     @RequestMapping(value = FhirApi.VALUE_SET, method = RequestMethod.POST,
             consumes = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE},
             produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
@@ -47,6 +53,7 @@ public class FhirValueSetController {
                 .body("{\"id\":\"" + id + "\"}");
     }
 
+    @ApiOperation(value = "ValueSet 단건 조회/수정/삭제 [PUT]")
     @RequestMapping(value = FhirApi.VALUE_SET_ID, method = RequestMethod.PUT,
             consumes = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE},
             produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
@@ -56,6 +63,7 @@ public class FhirValueSetController {
         return new ResponseEntity<String>(existed ? HttpStatus.OK : HttpStatus.CREATED);
     }
 
+    @ApiOperation(value = "ValueSet 단건 조회/수정/삭제 [DELETE]")
     @RequestMapping(value = FhirApi.VALUE_SET_ID, method = RequestMethod.DELETE)
     public ResponseEntity<Void> delete(@PathVariable String id) {
         svc.delete(id);
@@ -64,6 +72,7 @@ public class FhirValueSetController {
 
     // ── $expand ───────────────────────────────────────────
 
+    @ApiOperation(value = "ValueSet $expand (by id) [GET]")
     @RequestMapping(value = FhirApi.VALUE_SET_EXPAND_ID, method = RequestMethod.GET, produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public String expandById(@PathVariable String id,
                              @RequestParam(required = false) String filter,
@@ -73,6 +82,7 @@ public class FhirValueSetController {
         return encode(result);
     }
 
+    @ApiOperation(value = "ValueSet $expand [GET]")
     @RequestMapping(value = FhirApi.VALUE_SET_EXPAND, method = RequestMethod.GET, produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public String expand(@RequestParam(required = false) String url,
                          @RequestParam(required = false) String filter,
@@ -84,6 +94,7 @@ public class FhirValueSetController {
 
     // ── $validate-code ────────────────────────────────────
 
+    @ApiOperation(value = "ValueSet $validate-code [GET]")
     @RequestMapping(value = FhirApi.VALUE_SET_VALIDATE, method = RequestMethod.GET,
             produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public String validateCode(@RequestParam(required = false) String url,
@@ -96,6 +107,7 @@ public class FhirValueSetController {
         return encode(result);
     }
 
+    @ApiOperation(value = "ValueSet $validate-code [POST]")
     @RequestMapping(value = FhirApi.VALUE_SET_VALIDATE, method = RequestMethod.POST,
             consumes = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE},
             produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})

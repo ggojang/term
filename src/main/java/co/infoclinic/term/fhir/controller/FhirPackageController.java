@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 /**
  * IG NPM 패키지(.tgz) 업로드
@@ -31,6 +33,7 @@ import java.util.Set;
  *
  * CodeSystem / ValueSet / ConceptMap 리소스만 추출하여 fhir.resource 테이블에 저장
  */
+@Api(tags = "V-06. FHIR Package")
 @RestController
 public class FhirPackageController {
 
@@ -41,6 +44,7 @@ public class FhirPackageController {
     @Autowired
     private FhirResourceService resourceSvc;
 
+    @ApiOperation(value = "IG 패키지 설치 (tgz 업로드) [POST]")
     @RequestMapping(value = FhirApi.INSTALL_PACKAGE, method = RequestMethod.POST,
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = {MediaType.APPLICATION_JSON_VALUE, "application/fhir+json"})
@@ -100,6 +104,7 @@ public class FhirPackageController {
     /**
      * JSON 단일 리소스 업로드 (Bundle 또는 단건)
      */
+    @ApiOperation(value = "IG 패키지 설치 (tgz 업로드) [POST]")
     @RequestMapping(value = FhirApi.INSTALL_PACKAGE, method = RequestMethod.POST,
             consumes = {MediaType.APPLICATION_JSON_VALUE, "application/fhir+json"},
             produces = {MediaType.APPLICATION_JSON_VALUE, "application/fhir+json"})

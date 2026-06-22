@@ -9,7 +9,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
+@Api(tags = "V-01. FHIR")
 @RestController
 public class CapabilityStatementController {
 
@@ -31,6 +34,7 @@ public class CapabilityStatementController {
 
     private static final FhirContext FHIR_CTX = FhirContext.forR4();
 
+    @ApiOperation(value = "CapabilityStatement 조회 [GET]")
     @RequestMapping(value = FhirApi.METADATA, method = RequestMethod.GET,
             produces = {MediaType.APPLICATION_JSON_VALUE, "application/fhir+json"})
     public String getCapabilityStatement(HttpServletRequest request) {

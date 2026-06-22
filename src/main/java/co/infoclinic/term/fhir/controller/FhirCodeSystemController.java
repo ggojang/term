@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
+@Api(tags = "V-02. FHIR CodeSystem")
 @RestController
 public class FhirCodeSystemController {
 
@@ -25,6 +28,7 @@ public class FhirCodeSystemController {
 
     // ── CRUD ──────────────────────────────────────────────
 
+    @ApiOperation(value = "CodeSystem 단건 조회/수정/삭제 [GET]")
     @RequestMapping(value = FhirApi.CODE_SYSTEM_ID, method = RequestMethod.GET, produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<String> read(@PathVariable String id) {
         Optional<String> json = svc.findById(id);
@@ -32,6 +36,7 @@ public class FhirCodeSystemController {
         return ResponseEntity.ok(json.get());
     }
 
+    @ApiOperation(value = "CodeSystem 목록 검색/생성 [GET]")
     @RequestMapping(value = FhirApi.CODE_SYSTEM, method = RequestMethod.GET, produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public String search(@RequestParam(required = false) String name,
                          @RequestParam(required = false) String url) {
@@ -39,6 +44,7 @@ public class FhirCodeSystemController {
         return buildBundle(results);
     }
 
+    @ApiOperation(value = "CodeSystem 목록 검색/생성 [POST]")
     @RequestMapping(value = FhirApi.CODE_SYSTEM, method = RequestMethod.POST,
             consumes = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE},
             produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
@@ -49,6 +55,7 @@ public class FhirCodeSystemController {
                 .body("{\"id\":\"" + id + "\"}");
     }
 
+    @ApiOperation(value = "CodeSystem 단건 조회/수정/삭제 [PUT]")
     @RequestMapping(value = FhirApi.CODE_SYSTEM_ID, method = RequestMethod.PUT,
             consumes = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE},
             produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
@@ -58,6 +65,7 @@ public class FhirCodeSystemController {
         return new ResponseEntity<String>(existed ? HttpStatus.OK : HttpStatus.CREATED);
     }
 
+    @ApiOperation(value = "CodeSystem 단건 조회/수정/삭제 [DELETE]")
     @RequestMapping(value = FhirApi.CODE_SYSTEM_ID, method = RequestMethod.DELETE)
     public ResponseEntity<Void> delete(@PathVariable String id) {
         svc.delete(id);
@@ -66,6 +74,7 @@ public class FhirCodeSystemController {
 
     // ── $lookup ───────────────────────────────────────────
 
+    @ApiOperation(value = "CodeSystem $lookup 코드 조회 [GET]")
     @RequestMapping(value = FhirApi.CODE_SYSTEM_LOOKUP, method = RequestMethod.GET, produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public String lookup(@RequestParam String system,
                          @RequestParam String code,
@@ -74,6 +83,7 @@ public class FhirCodeSystemController {
         return encode(result);
     }
 
+    @ApiOperation(value = "CodeSystem $lookup 코드 조회 [POST]")
     @RequestMapping(value = FhirApi.CODE_SYSTEM_LOOKUP, method = RequestMethod.POST,
             consumes = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE},
             produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
@@ -88,6 +98,7 @@ public class FhirCodeSystemController {
 
     // ── $validate-code ────────────────────────────────────
 
+    @ApiOperation(value = "CodeSystem $validate-code 유효성 검사 [GET]")
     @RequestMapping(value = FhirApi.CODE_SYSTEM_VALIDATE, method = RequestMethod.GET, produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public String validateCode(@RequestParam String system,
                                @RequestParam String code,
@@ -97,6 +108,7 @@ public class FhirCodeSystemController {
 
     // ── $subsumes ─────────────────────────────────────────
 
+    @ApiOperation(value = "CodeSystem $subsumes 포함관계 확인 [GET]")
     @RequestMapping(value = FhirApi.CODE_SYSTEM_SUBSUMES, method = RequestMethod.GET, produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public String subsumes(@RequestParam String system,
                            @RequestParam String codeA,

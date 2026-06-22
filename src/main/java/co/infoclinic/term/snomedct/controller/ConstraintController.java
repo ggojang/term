@@ -1,6 +1,7 @@
 package co.infoclinic.term.snomedct.controller;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -63,6 +64,9 @@ public class ConstraintController {
 	@Qualifier("conceptRepositoryImpl")
 	private ConceptRepositoryCustom conceptRepo;
 
+	@Autowired
+	private co.infoclinic.term.snomedct.repository.LatestRefsetMemberRepository latestRefsetMemberRepo;
+
 
 	@ApiOperation(value = "Get Entity List by ECL")
 	@RequestMapping(value = QryApi.API_GET_ENTITIES, method = RequestMethod.GET)
@@ -122,9 +126,35 @@ public class ConstraintController {
 	/** 복합 표현식: 공백+키워드+공백으로 분리하여 set 연산 적용 */
 	private List<ConceptViewDTO> evaluateCompound(String ecl, String keyword,
 			String effectiveTime, int page, int size, String op) {
-		// 대소문자 무관 분리
 		String[] parts = ecl.split("(?i)\\s+" + keyword + "\\s+");
 		if (parts.length < 2) return evaluateSimple(ecl, effectiveTime, page, size);
+
+		// AND 연산 최적화: ^ (memberOf) 파트는 ID Set만 가져와 필터링 (N+1 쿼리 방지)
+		if ("AND".equals(op)) {
+			List<String> refsetParts = new ArrayList<>();
+			List<String> hierParts = new ArrayList<>();
+			for (String p : parts) {
+				if (p.trim().startsWith("^")) refsetParts.add(p.trim());
+				else hierParts.add(p.trim());
+			}
+			if (!refsetParts.isEmpty() && !hierParts.isEmpty()) {
+				// 계층 파트 먼저 평가 (TC 기반, 상대적으로 빠름)
+				List<ConceptViewDTO> result = evaluateSimple(hierParts.get(0), effectiveTime, page, size);
+				for (int i = 1; i < hierParts.size(); i++) {
+					result = applySetOp(result, evaluateSimple(hierParts.get(i), effectiveTime, page, size), "AND");
+				}
+				// refset 파트는 ID Set만 로드하여 in-memory 필터 (단일 쿼리)
+				for (String rp : refsetParts) {
+					String refsetId = rp.substring(1).trim().split("\\s+")[0];
+					Set<String> memberIds = new HashSet<>(
+						latestRefsetMemberRepo.findMemberIdsByRefsetIdAndEffectiveTime(refsetId, effectiveTime));
+					result = result.stream()
+						.filter(c -> memberIds.contains(c.getConceptId()))
+						.collect(Collectors.toList());
+				}
+				return result;
+			}
+		}
 
 		List<ConceptViewDTO> result = evaluateSimple(parts[0].trim(), effectiveTime, page, size);
 		for (int i = 1; i < parts.length; i++) {

@@ -87,7 +87,7 @@ function Kcd9TreeNode({ node, onSelect, classes }) {
   const label = (
     <Typography className={classes.treeLabel}>
       <span style={{ color: '#888', fontWeight: 'bold', marginRight: 4 }}>{node.code}</span>
-      {node.isKcdExt && <span title="KCD-9 확장 코드" style={{ marginRight: 3 }}>🇰🇷</span>}
+      {node.isKcdExt && <img src="/flag-kr.svg" alt="KCD-9 확장 코드" title="KCD-9 확장 코드" style={{ height: '1em', width: 'auto', marginRight: 5, verticalAlign: 'middle', borderRadius: 2, border: '1px solid #ddd' }} />}
       {node.koreanLabel || node.label}
       {node.koreanLabel && node.label !== node.koreanLabel && (
         <span style={{ color: '#aaa', marginLeft: 4, fontSize: '0.85em' }}>{node.label}</span>
@@ -265,7 +265,7 @@ export default function Left({ setSelectedCode }) {
               <div className={classes.caption}>{results.length} 건</div>
               {results.map((r) => (
                 <div key={r.code} className={classes.resultItem} onClick={() => setSelectedCode(r.code)}>
-                  {r.isKcdExt && <span title="KCD-9 확장 코드" style={{ marginRight: 3 }}>🇰🇷</span>}
+                  {r.isKcdExt && <img src="/flag-kr.svg" alt="KCD-9 확장 코드" title="KCD-9 확장 코드" style={{ height: '1em', width: 'auto', marginRight: 5, verticalAlign: 'middle', borderRadius: 2, border: '1px solid #ddd' }} />}
                   <span className={classes.resultCode}>{r.code}</span>
                   {r.koreanLabel || r.label}
                   {r.koreanLabel && (

@@ -25,6 +25,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 /**
  * Map 탭 전용 검색 API
@@ -50,6 +52,7 @@ import lombok.NoArgsConstructor;
  *   3. 동의어(언더스코어→공백 변환)를 SEARCH_INDEX에서 ILIKE 검색
  * ──────────────────────────────────────────────────────────────────────────
  */
+@Api(tags = "VI-01. Map")
 @RestController
 public class MapSearchController {
 
@@ -115,6 +118,7 @@ public class MapSearchController {
     // ES _analyze (stop_analyzer) 대체: 불용어 제거 후 토큰 반환
     // =========================================================================
 
+    @ApiOperation(value = "Mapping 분석 (단어 토크나이징) [GET]")
     @RequestMapping(value = "/map/SNOMEDCT/analyze", method = RequestMethod.GET)
     public AnalyzeResponse analyze(@RequestParam("q") String q) {
         AnalyzeResponse resp = new AnalyzeResponse();
@@ -137,6 +141,7 @@ public class MapSearchController {
     // ES _search (stop / stop_synonym / stop_edge5) 통합 대체
     // =========================================================================
 
+    @ApiOperation(value = "Mapping 검색 (FTS + trigram) [POST]")
     @RequestMapping(value = "/map/SNOMEDCT/search", method = RequestMethod.POST)
     public MapSearchResponse search(@RequestBody MapSearchRequest req) {
         MapSearchResponse resp = new MapSearchResponse();

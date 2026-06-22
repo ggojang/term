@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
+@Api(tags = "V-04. FHIR ConceptMap")
 @RestController
 public class FhirConceptMapController {
 
@@ -23,6 +26,7 @@ public class FhirConceptMapController {
     @Autowired
     private FhirConceptMapService svc;
 
+    @ApiOperation(value = "ConceptMap 단건 조회/수정/삭제 [GET]")
     @RequestMapping(value = FhirApi.CONCEPT_MAP_ID, method = RequestMethod.GET, produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<String> read(@PathVariable String id) {
         Optional<String> json = svc.findById(id);
@@ -30,6 +34,7 @@ public class FhirConceptMapController {
         return ResponseEntity.ok(json.get());
     }
 
+    @ApiOperation(value = "ConceptMap 목록 검색/생성 [GET]")
     @RequestMapping(value = FhirApi.CONCEPT_MAP, method = RequestMethod.GET, produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public String search(@RequestParam(required = false) String name,
                          @RequestParam(required = false) String url) {
@@ -37,6 +42,7 @@ public class FhirConceptMapController {
         return buildBundle(results);
     }
 
+    @ApiOperation(value = "ConceptMap 목록 검색/생성 [POST]")
     @RequestMapping(value = FhirApi.CONCEPT_MAP, method = RequestMethod.POST,
             consumes = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE},
             produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
@@ -47,6 +53,7 @@ public class FhirConceptMapController {
                 .body("{\"id\":\"" + id + "\"}");
     }
 
+    @ApiOperation(value = "ConceptMap 단건 조회/수정/삭제 [PUT]")
     @RequestMapping(value = FhirApi.CONCEPT_MAP_ID, method = RequestMethod.PUT,
             consumes = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE},
             produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
@@ -56,6 +63,7 @@ public class FhirConceptMapController {
         return new ResponseEntity<String>(existed ? HttpStatus.OK : HttpStatus.CREATED);
     }
 
+    @ApiOperation(value = "ConceptMap 단건 조회/수정/삭제 [DELETE]")
     @RequestMapping(value = FhirApi.CONCEPT_MAP_ID, method = RequestMethod.DELETE)
     public ResponseEntity<Void> delete(@PathVariable String id) {
         svc.delete(id);
@@ -64,6 +72,7 @@ public class FhirConceptMapController {
 
     // ── $translate ────────────────────────────────────────
 
+    @ApiOperation(value = "ConceptMap $translate 매핑 변환 [GET]")
     @RequestMapping(value = FhirApi.CONCEPT_MAP_TRANSLATE, method = RequestMethod.GET, produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public String translate(@RequestParam String system,
                             @RequestParam String code,
