@@ -52,8 +52,9 @@ const useStyles = makeStyles((theme) => ({
     textAlign: 'center',
     whiteSpace: 'nowrap',
     verticalAlign: 'baseLine',
-    backgroundColor: '#999',
     borderRadius: '10px',
+    backgroundImage: 'linear-gradient(to bottom,#f7edb5 0,#f5e79e 100%)',
+    backgroundColor: '#f5e79e',
   },
   label: {
     fontSize: '0.9em',

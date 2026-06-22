@@ -79,6 +79,8 @@
 	-->
 	<mvc:resources location="/resources/" mapping="/resources/**" cache-period="0" />
 	<mvc:resources location="/template/" mapping="/resources/template/**"/>
+	<mvc:resources location="/" mapping="/index.html" cache-period="0" />
+	<mvc:resources location="/static/" mapping="/static/**" cache-period="0" />
 	
 	<bean class="org.springframework.data.web.config.SpringDataWebConfiguration" />
 

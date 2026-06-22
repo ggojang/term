@@ -178,56 +178,24 @@ export default function Search(props) {
       <div style={{padding: "0 0 0.5rem 0",}}></div>
       <Toolbar classes={{root: classes.toolbarRoot}} className={classes.toolbar} style={{backgroundColor: "#ffffff", padding: "0 0 0 0"}}>
       <Grid container justify="space-around">
-        <Grid item >
-          <FormControl>
-            <InputLabel shrink
-              className={classes.inputlabel}
-              id="queryLabel">At least 2 more characters (strings of FSN)
-            </InputLabel>
+        <Grid item md={12}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
             <TextField
-              labelid="queryLabel"
               className={classes.textfield}
               InputProps={{
-                classes: {
-                  input: classes.tf,
-                },
+                classes: { input: classes.tf },
+                placeholder: 'At least 2 characters (LOINC name or code)',
               }}
               id="query"
               type="search"
               onKeyUp={handleQueryKeyUp}
-              />
-          </FormControl>
-
+            />
+            <Typography className={classes.label} style={{ whiteSpace: 'nowrap', color: '#888' }}>
+              { (!q || !result.data) ? '' : `Total: ${result.data.totalElements}` }
+            </Typography>
+          </div>
+          <Divider className={classes.leftdivider}/>
         </Grid>
-
-        { (!q || !result2 || !result.data)
-        ? (
-          <Grid item md={12}>
-            <div className={classes.line}>
-              <Grid container justify="space-around" alignItems="center">
-                <Grid item>
-                  <Typography className={classes.label}>
-                    Total : 0
-                  </Typography>
-                </Grid>
-              </Grid>
-            </div>
-            <Divider className={classes.leftdivider}/>
-          </Grid>
-        ) : (
-          <Grid item md={11}>
-            <div className={classes.line}>
-            <Grid container justify="space-around" alignItems="center">
-              <Grid item>
-                <Typography className={classes.label} align="center">
-                  Total : {result.data.totalElements}
-                </Typography>
-              </Grid>
-            </Grid>
-            </div>
-            <Divider className={classes.leftdivider}/>
-          </Grid>
-        )}
       </Grid>
 
 

@@ -1,18 +1,14 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { makeStyles } from '@material-ui/core/styles';
-import clsx from 'clsx';
-import Toolbar from '@material-ui/core/Toolbar';
 import Grid from "@material-ui/core/Grid";
 import Divider from "@material-ui/core/Divider";
 import Typography from '@material-ui/core/Typography';
 import FormControl from '@material-ui/core/FormControl';
-import TextField from '@material-ui/core/TextField';
 import Select from "@material-ui/core/Select";
 import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from '@material-ui/core/MenuItem';
 import Container from '@material-ui/core/Container';
-import { Link } from "react-router-dom";
 import Drawer from '@material-ui/core/Drawer';
 import FormLabel from '@material-ui/core/FormLabel';
 import FormGroup from '@material-ui/core/FormGroup';
@@ -20,169 +16,98 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Button from '@material-ui/core/Button';
 
-
 const useStyles = makeStyles((theme) => ({
   container: {
-    '-ms-overflow-style': 'none', /* IE and Edge */
-    scrollbarWidth: 'none', /* Firefox */
-    '&::-webkit-scrollbar': {
-        display: 'none', /* Chrome, Safari, Opera*/
-    },
-  },
-  typography: {
-    padding: theme.spacing(1),
-    marginTop: '1ch',
-    marginBottom: '1ch',
-  },
-  alertWarning: {
-    backgroundImage: 'linear-gradient(to bottom,#f7edb5 0,#f5e79e 100%)',
-    backgroundRepeat: 'repeat-x',
-    color: '#8a6d3b',
-    backgroundColor: '#fcf8e3',
-    borderColor: '#f5e79e',
-    /*'&::after' : {
-      content: '"F"',
-    }*/
-  },
-  badge: {
-    display: 'inline-block',
-    minWidth: '10px',
-    padding: '3px 7px',
-    fontSize: '12px',
-    fontWeight: 'bold',
-    lineHeight: '1',
-    textAlign: 'center',
-    whiteSpace: 'nowrap',
-    verticalAlign: 'baseLine',
-    backgroundColor: '#999',
-    borderRadius: '10px',
-
-  },
-  label: {
-    fontSize: '0.7em',
-  },
-  badgeLabel: {
-    fontSize: '0.5em',
-  },
-  appbar : {
-    backgroundColor : '#ffffff',
-    padding: '4px',
-  },
-  toolbarRoot: {
-      minHeight: "12px",
-  },
-  toolbar: {
-    regular:{
-      position: "fixed",
-    }
-  },
-  divider: {
-    borderBottom: "solid 2px #2196F3",
-  },
-  leftdivider: {
-    borderBottom: "dotted 2px text.secondary",
-  },
-  inputlabel: {
-    minWidth: "10ch",
-    fontSize: '0.8em',
+    '-ms-overflow-style': 'none',
+    scrollbarWidth: 'none',
+    '&::-webkit-scrollbar': { display: 'none' },
   },
   select: {
-    minWidth: '10ch',
-    height: '3ch',
-    fontSize : "0.7em",
-    verticalAlign: "middle"
+    minWidth: '9ch',
+    height: '28px',
+    fontSize: '12px',
+    verticalAlign: 'middle',
   },
-  textfield: {
-    marginTop: theme.spacing(1),
-    width: "10rem",
-  },
-  tf: {
-    fontSize: "0.7em",
-  },
-  menuitem: {
-    fontSize : "0.7em",
-  },
-  fsn: {
-    fontSize:'0.4em', fontWeight:'800', color: '#d9534f',
-  },
-  preferred: {
-    fontSize:'0.4em', fontWeight:'800', color: '#468847'
-  },
-  synonym: {
-    fontSize:'0.4em', fontWeight:'800', color: '#3a87ad'
-  },
-  acceptable: {
-    fontSize:'1rem', fontWeight:'800', color: '#FFD700'
-  },
-  tooltip:{
-    color: '#fffff',
-  },
-  flagIcon : {
-    position: 'relative',
-    display: 'inline-block',
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: '50%',
-  },
-  line: {
-    padding: "0.5em 0 0.5rem 0",
-  },
-  link: {
-    textDecoration: "none",
-    color: '#000',
-    /* '&:hover': {
-      color: '#3a87ad',
-    }, */
-  },
-  list: { /* for drawer */
-    width: "17vw",
-  },
-  formControl: {
-    margin: theme.spacing(1),
-    alignItems : "center",
-  },
-  hover: {
-    /* 마우스 오버(마우스 올렸을때) */
-    '&:hover' : {
-        backgroundColor: "#dce6f0",
-
-    },
-  },
+  menuitem: { fontSize: '12px' },
+  inputlabel: { minWidth: '10ch', fontSize: '11px' },
+  list: { width: '17vw' },
+  formControl: { margin: theme.spacing(1), alignItems: 'center' },
+  label: { fontSize: '11px' },
 }));
+
+const HISTORY_KEY = 'stom-search-history';
+const MAX_HISTORY = 10;
+
+function getSemanticTag(fsn) {
+  if (!fsn) return null;
+  const m = fsn.match(/\(([^)]+)\)$/);
+  return m ? m[1] : null;
+}
+
+function getSemanticTagClass(tag) {
+  if (!tag) return 'badge-st-default';
+  const t = tag.toLowerCase();
+  if (t.includes('disorder')) return 'badge-st-disorder';
+  if (t.includes('procedure')) return 'badge-st-procedure';
+  if (t.includes('finding')) return 'badge-st-finding';
+  if (t.includes('observable')) return 'badge-st-observable';
+  if (t.includes('substance')) return 'badge-st-substance';
+  if (t.includes('organism')) return 'badge-st-organism';
+  if (t.includes('body')) return 'badge-st-body';
+  if (t.includes('qualifier')) return 'badge-st-qualifier';
+  if (t.includes('situation')) return 'badge-st-situation';
+  if (t.includes('event')) return 'badge-st-event';
+  return 'badge-st-default';
+}
 
 export default function Search(props) {
   const classes = useStyles();
 
   const [q, setQ] = useState('');
+  const [inputVal, setInputVal] = useState('');
   const [matchType, setMatchType] = useState('PARTIAL');
   const [state, setState] = useState('ACTIVE');
   const [page, setPage] = useState(1);
-  const [size, setSize] = useState(100);
-  const [stateTag, setStateTag] = useState({
-    left: false,
-  });
+  const [size] = useState(100);
+  const [stateTag, setStateTag] = useState({ left: false });
   const [semanticTags, setSemanticTags] = useState([]);
   const [listCheckBox, setListCheckBox] = useState({});
-  const [stateCheckBox, setStateCheckBox] = useState({});
-  /*
-  const [stateSearchResult, refetch] = useAsync(() => getSearch(matchType, state, q, tag, page, size), [], true);
-  const { loadingSearchResult, data: searchResult, errorSearchResult } = stateSearchResult;
-  */
   const [result, setResult] = useState([]);
   const [result2, setResult2] = useState([]);
-
   const [searchResult, setSearchResult] = useState([]);
   const [searchResult2, setSearchResult2] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; }
+  });
+  const inputRef = useRef(null);
 
-  /*
-  const preventDefault = (event) => event.preventDefault();
-  */
+  const saveHistory = (term) => {
+    const next = [term, ...history.filter(h => h !== term)].slice(0, MAX_HISTORY);
+    setHistory(next);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+  };
+
+  const removeHistory = (term, e) => {
+    e.stopPropagation();
+    const next = history.filter(h => h !== term);
+    setHistory(next);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+  };
+
+  const doSearch = (term) => {
+    if (term.length > 1) {
+      saveHistory(term);
+      setQ(term);
+      setInputVal(term);
+    }
+    setShowHistory(false);
+  };
 
   useEffect(() => {
     if (q.length > 1) {
-
       setPage(1);
       setListCheckBox({});
-
       axios
         .get(`/search/SNOMEDCT?match=${matchType}&state=${state}&q=${q}&page=${page}&size=${size}`)
         .then(response => setSearchResult(response));
@@ -191,22 +116,11 @@ export default function Search(props) {
 
   useEffect(() => {
     if (q.length > 1 && page > 1) {
-      let tmp="";
+      let tmp = '';
       for (var l in listCheckBox) {
-        if (listCheckBox[l]) {
-          tmp += "&semanticfilter=" + l;
-          /*
-          console.log(l + ":" + listCheckBox[l]);
-          */
-        }
+        if (listCheckBox[l]) tmp += '&semanticfilter=' + l;
       }
-      tmp = tmp.replace(/ /gi,'%20');
-      tmp = tmp.replace(/\+/gi,'%2B');
-      /*
-      console.log("tmp : " + tmp);
-      console.log("page : " + page);
-      console.log("page query: "+`match=${matchType}&state=${state}&q=${q}${tmp}&page=${page}&size=${size}`);
-      */
+      tmp = tmp.replace(/ /gi, '%20').replace(/\+/gi, '%2B');
       axios
         .get(`/search/SNOMEDCT?match=${matchType}&state=${state}&q=${q}${tmp}&page=${page}&size=${size}`)
         .then(response => setSearchResult(response));
@@ -214,523 +128,229 @@ export default function Search(props) {
   }, [page]);
 
   useEffect(() => {
-
-    if (searchResult.length !== 0)  {
-      /*console.log("=>");
-      */
+    if (searchResult.length !== 0) {
       if (searchResult.data.page.totalElements > 0) {
-        /*console.log("= =>");
-        */
         if (page === 1) {
-          /*console.log("= = =>");
-          */
           setResult(searchResult);
           setResult2(searchResult.data.page.content);
           setSemanticTags(searchResult.data.semanticTags);
-          /*if (listCheckBox.length === 0) {*/
-            /*var tmp={};*/
-            searchResult.data.semanticTags.map((tags) => {
-              /*tmp[tags.name] = false;*/
-              listCheckBox[tags.name] = false;
-            });
-            /*setListCheckBox(tmp);*/
-          /*}*/
+          searchResult.data.semanticTags.forEach(tags => { listCheckBox[tags.name] = false; });
         } else {
-          /*console.log("= = = =>");
-          */
-          /*searchResult.data.page.content.map(r => {*/
-            setResult2([...result2,  ...searchResult.data.page.content]);
-          /*});*/
+          setResult2([...result2, ...searchResult.data.page.content]);
         }
-        /*
-        console.log("result.length : " + Object.keys(result).length);
-        console.log("result : " + JSON.stringify(result));
-        console.log("result2.length : " + Object.keys(result2).length);
-        console.log("result2 : " + typeof(result2) + " , " + JSON.stringify(result2));
-        */
       } else {
-        setResult([]);
-        setResult2([]);
-        setSemanticTags([]);
+        setResult([]); setResult2([]); setSemanticTags([]);
       }
-    /*console.log(listCheckBox);*/
     }
-  }, [searchResult])
+  }, [searchResult]);
 
   useEffect(() => {
-    if (q.length>1 && listCheckBox.length !==0) {
+    if (q.length > 1 && listCheckBox.length !== 0) {
       setPage(1);
-      let tmp = "";
+      let tmp = '';
       for (var l in listCheckBox) {
-        if (listCheckBox[l]) {
-          /* console.log(l + ":" + listCheckBox[l]);
-          */
-          tmp += "&semanticfilter=" + l;
-        }
+        if (listCheckBox[l]) tmp += '&semanticfilter=' + l;
       }
-      tmp = tmp.replace(/ /gi,'%20');
-      tmp = tmp.replace(/\+/gi,'%2B');
-      /*
-      console.log("tmp : " + tmp );
-      console.log("==> " + `match=${matchType}&state=${state}&q=${q}${tmp}&page=1&size=${size}`);
-      */
+      tmp = tmp.replace(/ /gi, '%20').replace(/\+/gi, '%2B');
       axios
         .get(`/search/SNOMEDCT?match=${matchType}&state=${state}&q=${q}${tmp}&page=1&size=${size}`)
         .then(response => setSearchResult2(response));
-
     }
-  },[listCheckBox])
+  }, [listCheckBox]);
 
   useEffect(() => {
-    if (searchResult2.length !== 0)  {
+    if (searchResult2.length !== 0) {
       if (searchResult2.data.page.totalElements > 0) {
-        setResult2([]); /* 화면을 끝부분에 약간 올라간 상태에서 draw에서 숫자가 작은 semantic tag을 선택하면 scroll이 된 상태가 되어 결과가 없는 것 처럼보임. */
+        setResult2([]);
         setResult(searchResult2);
         setResult2([...searchResult2.data.page.content]);
         setSearchResult2([]);
       }
     }
-  }, [searchResult2])
+  }, [searchResult2]);
 
-
-
-  const handleMatchTypeChange = (event) => {
-    setMatchType(event.target.value);
-  };
-
-  const handleStatusChange = (event) => {
-    setState(event.target.value);
-  };
-
-  const handleQueryKeyUp = (event) => {
-    if (window.event.keyCode === 13) {
-      setQ(event.target.value);
-    }
-  };
-/*
-  const handleGotoMainOnClick = (event) => {
-
-    return `<Main conceptId=${event.target.value}/>`;
-  };
-*/
-  const nextPage = (event) => {
-      setPage(page + 1);
-  }
-
-  const handleCheckBoxChange = (event) => {
-    setListCheckBox({ ...listCheckBox, [event.target.name] : event.target.checked});
-  }
-
-  /* Drawer */
-
-  const toggleDrawer = (anchor, open) => (event) => {
-
-    if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
-      return;
-    }
-
+  const handleMatchTypeChange = (e) => setMatchType(e.target.value);
+  const handleStatusChange = (e) => setState(e.target.value);
+  const handleCheckBoxChange = (e) => setListCheckBox({ ...listCheckBox, [e.target.name]: e.target.checked });
+  const nextPage = () => setPage(page + 1);
+  const toggleDrawer = (anchor, open) => (e) => {
+    if (e.type === 'keydown' && (e.key === 'Tab' || e.key === 'Shift')) return;
     setStateTag({ ...stateTag, [anchor]: open });
-
   };
 
-  const list = (anchor) => (
-
-    <div
-      className={clsx(classes.list)}
-      role="presentation"
-    >
-
+  const filterDrawer = (anchor) => (
+    <div className={classes.list} role="presentation">
       <FormControl component="fieldset" className={classes.formControl}>
-        <FormLabel variant="body1" component="legend">Semantic Tag</FormLabel>
-        <div className={classes.line}></div>
+        <FormLabel component="legend" style={{ fontSize: 13, fontWeight: 700 }}>Semantic Tag</FormLabel>
+        <div style={{ height: 8 }} />
         <FormGroup>
-          { semanticTags.map((tags, index) => (
-          <FormControlLabel style={{height:"22px"}}
-            key={index}
-            control={<Checkbox checked={listCheckBox[tags.name]} onClick={handleCheckBoxChange} name={tags.name} />}
-            label={
-              <Grid container wrap="nowrap" spacing={1}>
-                <Grid item>
-                  <Typography color="secondary" className={classes.label}>{tags.count}</Typography>
+          {semanticTags.map((tags, i) => (
+            <FormControlLabel
+              key={i}
+              style={{ height: 26 }}
+              control={<Checkbox size="small" checked={!!listCheckBox[tags.name]} onClick={handleCheckBoxChange} name={tags.name} />}
+              label={
+                <Grid container wrap="nowrap" spacing={1} alignItems="center">
+                  <Grid item><Typography color="secondary" style={{ fontSize: 11 }}>{tags.count}</Typography></Grid>
+                  <Grid item><Typography style={{ fontSize: 12 }}>{tags.name}</Typography></Grid>
                 </Grid>
-                <Grid item>
-                  <Typography className={classes.label}>{tags.name}</Typography>
-                </Grid>
-              </Grid>
-            }
-          />
+              }
+            />
           ))}
         </FormGroup>
       </FormControl>
-
     </div>
   );
 
   return (
     <Grid container>
-    <Grid item md={12}>
-      <div style={{padding: "0 0 0.5rem 0",}}></div>
-      <Toolbar classes={{root: classes.toolbarRoot}} className={classes.toolbar} style={{backgroundColor: "#ffffff", padding: "0 0 0 0"}}>
-      <Grid container justify="space-around">
-        <Grid item>
-          <FormControl className={classes.form} >
-            <InputLabel className={classes.inputlabel} id="matchTypeLabel">Match Type</InputLabel>
-            <Select
-              labelId="matchTypeLabel"
-              id="matchType"
-              className={classes.select}
-              value={matchType}
-              onChange={handleMatchTypeChange}
+      <Grid item md={12}>
 
-            >
-              <MenuItem className={classes.menuitem} value={'FULLTEXT'}>exact</MenuItem>
-              <MenuItem className={classes.menuitem} value={'PARTIAL'}>partial</MenuItem>
-              <MenuItem className={classes.menuitem} value={'REGEX'}>regex</MenuItem>
+        {/* ── 필터 컨트롤 ── */}
+        <div style={{ padding: '6px 8px 4px', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <FormControl size="small">
+            <InputLabel style={{ fontSize: 11 }} id="matchTypeLabel">Match</InputLabel>
+            <Select labelId="matchTypeLabel" className={classes.select} value={matchType} onChange={handleMatchTypeChange}>
+              <MenuItem className={classes.menuitem} value="FULLTEXT">exact</MenuItem>
+              <MenuItem className={classes.menuitem} value="PARTIAL">partial</MenuItem>
+              <MenuItem className={classes.menuitem} value="REGEX">regex</MenuItem>
             </Select>
           </FormControl>
-        </Grid>
-        <Grid item>
-          <FormControl className={classes.form}>
-            <InputLabel className={classes.inputlabel} id="statusTypeLabel">Status Type</InputLabel>
-            <Select
-              labelId="statusTypeLabel"
-              id="statusType"
-              className={classes.select}
-              value={state}
-              onChange={handleStatusChange}
-
-            >
-              <MenuItem className={classes.menuitem} value={'ACTIVE'}>active</MenuItem>
-              <MenuItem className={classes.menuitem} value={'INACTIVE'}>inactive</MenuItem>
-              <MenuItem className={classes.menuitem} value={'BOTH'}>both</MenuItem>
+          <FormControl size="small">
+            <InputLabel style={{ fontSize: 11 }} id="statusTypeLabel">Status</InputLabel>
+            <Select labelId="statusTypeLabel" className={classes.select} value={state} onChange={handleStatusChange}>
+              <MenuItem className={classes.menuitem} value="ACTIVE">active</MenuItem>
+              <MenuItem className={classes.menuitem} value="INACTIVE">inactive</MenuItem>
+              <MenuItem className={classes.menuitem} value="BOTH">both</MenuItem>
             </Select>
           </FormControl>
-        </Grid>
-        <Grid item >
-          <FormControl>
-            <InputLabel shrink
-              className={classes.inputlabel}
-              id="queryLabel">At least 2 more characters
-            </InputLabel>
-            <TextField
-              labelid="queryLabel"
-              className={classes.textfield}
-              InputProps={{
-                classes: {
-                  input: classes.tf,
-                },
-              }}
-              id="query"
-              type="search"
-              onKeyUp={handleQueryKeyUp}
-              />
-          </FormControl>
+        </div>
 
-        </Grid>
+        {/* ── 검색박스 ── */}
+        <div className="search-box-wrap" style={{ position: 'relative' }}>
+          <input
+            ref={inputRef}
+            className="search-box-modern"
+            type="search"
+            placeholder="Search by term, SCTID, FSN..."
+            value={inputVal}
+            onChange={e => setInputVal(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && e.target.value.length > 1) doSearch(e.target.value);
+            }}
+            onFocus={() => setShowHistory(true)}
+            onBlur={() => setTimeout(() => setShowHistory(false), 150)}
+          />
+          {/* 검색 히스토리 드롭다운 */}
+          {showHistory && history.length > 0 && (
+            <div className="search-history">
+              <div className="search-history-label">Recent searches</div>
+              {history.map((h, i) => (
+                <div key={i} className="search-history-item" onMouseDown={() => doSearch(h)}>
+                  <span style={{ fontSize: 13 }}>🕐</span>
+                  <span style={{ flex: 1 }}>{h}</span>
+                  <span
+                    style={{ fontSize: 11, color: '#98a2b3', padding: '0 4px', cursor: 'pointer' }}
+                    onMouseDown={(e) => removeHistory(h, e)}
+                  >✕</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-        { (!q || !result2 || (result.length === 0)) ? (
-        <Grid item md={12}>
-          <div className={classes.line}>
-            <Grid container justify="space-around" alignItems="center">
-              <Grid item>
-                <Typography className={classes.label}>
-                  Total : 0
-                </Typography>
-              </Grid>
-            </Grid>
-          </div>
-          <Divider className={classes.leftdivider}/>
-        </Grid>
-        ) :
-        (
-        <Grid item md={11}>
-          <div className={classes.line}>
-          <Grid container justify="space-around" alignItems="center">
-            <Grid item>
-              <Typography className={classes.label} align="center">
-                Total : {result.data.page.totalElements}
-              </Typography>
-            </Grid>
+        {/* ── 검색 결과 요약 ── */}
+        <div style={{ padding: '4px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography style={{ fontSize: 11, color: '#98a2b3' }}>
+            {result.length !== 0 && result.data ? `${result.data.page.totalElements.toLocaleString()} results` : 'At least 2 characters'}
+          </Typography>
+          {result.length !== 0 && semanticTags.length > 0 && (
+            <div>
+              {['left'].map(anchor => (
+                <div key={anchor}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, textTransform: 'none' }}
+                    onClick={toggleDrawer(anchor, true)}
+                  >
+                    Filter ({semanticTags.length})
+                  </Button>
+                  <Drawer anchor={anchor} open={stateTag[anchor]} onClose={toggleDrawer(anchor, false)}>
+                    {filterDrawer(anchor)}
+                  </Drawer>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <Divider style={{ borderBottom: '1px solid #e4e7ec' }} />
 
-            <Grid item>
-            {['left'].map((anchor) => (
-              <div key={anchor} >
-                <Button
-                  style={{lineHeight:"10px"}}
-                  className={classes.label}
-                  variant="contained"
-                  disableElevation
-                  onClick={toggleDrawer(anchor, true)}>
-                  Semantic Tag ({semanticTags.length})
-                </Button>
-                <Drawer  className={classes.label} anchor={anchor} open={stateTag[anchor]} onClose={toggleDrawer(anchor, false)}>
-                  {list(anchor)}
-                </Drawer>
-              </div>
-            ))}
-            </Grid>
-          </Grid>
-          </div>
-          <Divider className={classes.leftdivider}/>
-        </Grid>
-        )}
-      </Grid>
-
-
-      </Toolbar>
-
-        { (q && result2 && (result.length !== 0)) &&
-
+        {/* ── 검색결과 목록 ── */}
+        {q && result2 && result.length !== 0 && (
           <Container
-            className={classes.container} /*ref={setRef}*/
-            style={{
-              padding: "0 0 0 12px",
-              height: "88vh",
-              overflow: "scroll",
-              maxWidth: '720px' }}>
+            className={classes.container}
+            style={{ padding: '4px 4px', height: '82vh', overflow: 'scroll', maxWidth: 720 }}
+          >
+            {result2.map((re, index) => {
+              const isActive = re.conceptActive && re.descriptionActive;
+              const isFullyDefined = re.definitionStatusId === '900000000000073002';
 
-            { result2
-              .map((re, index) => (
-              <div key={index}>
-                { (re.conceptActive === true && re.descriptionActive === true) &&
-                <div className={classes.line}>
-                  <div onClick={()=> {props.setFromId(re.conceptId); props.setMrcmFromSearch(re.conceptId)}} >
-                    <Grid container classes={{root:classes.hover}}>
-                      <Grid item md={5} >
-                        <Grid container wrap="nowrap" >
+              // 노란 원형 배지 스타일 (공통)
+              const yellowBadge = {
+                display: 'inline-block',
+                padding: '1px 6px',
+                fontSize: 11,
+                fontWeight: 'bold',
+                lineHeight: 1,
+                borderRadius: 10,
+                backgroundImage: 'linear-gradient(to bottom,#f7edb5 0,#f5e79e 100%)',
+                color: '#8a6d3b',
+                marginRight: 4,
+                verticalAlign: 'middle',
+              };
 
-                            {re.definitionStatusId === '900000000000073002' &&
-                              <>
-                              { re.typeId === "900000000000003001" && re.acceptabilityId === "900000000000548007" &&
-                                <>
-                                  <span style={{position: "relative"}}>
-                                    <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>≡</Typography>
-                                  </span>
-                                  <span style={{position: "relative", right:"5px"}}>
-                                    <sup className={classes.fsn}>F</sup>
-                                  </span>
-                                </>
-                              }
-                              { re.typeId === "900000000000013009" && re.acceptabilityId === "900000000000548007" &&
-                                <>
-                                  <span style={{position: "relative"}}>
-                                    <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>≡</Typography>
-                                  </span>
-                                  <span style={{position: "relative", right:"5px"}}>
-                                    <sup className={classes.preferred}>P</sup>
-                                  </span>
-                                </>
-                              }
-                              { re.typeId === "900000000000013009" && re.acceptabilityId === "900000000000549004" &&
-                                <>
-                                  <span style={{position: "relative"}}>
-                                    <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>≡</Typography>
-                                  </span>
-                                  <span style={{position: "relative", right:"5px"}}>
-                                    <sup className={classes.synonym}>S</sup>
-                                  </span>
-                                </>
-                              }
-                              </>
-                            }
-                            {re.definitionStatusId === '900000000000074008' &&
-                              <>
-                              { re.typeId === "900000000000003001" && re.acceptabilityId === "900000000000548007" &&
-                                <>
-                                  <span style={{position: "relative"}}>
-                                    <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>&nbsp;&nbsp;</Typography>
-                                  </span>
-                                  <span style={{position: "relative", right:"5px"}}>
-                                    <sup className={classes.fsn}>F</sup>
-                                  </span>
-                                </>
-                              }
-                              { re.typeId === "900000000000013009" && re.acceptabilityId === "900000000000548007" &&
-                                <>
-                                  <span style={{position: "relative"}}>
-                                    <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>&nbsp;&nbsp;</Typography>
-                                  </span>
-                                  <span style={{position: "relative", right:"5px"}}>
-                                    <sup className={classes.preferred}>P</sup>
-                                  </span>
-                                </>
-                              }
-                              { re.typeId === "900000000000013009" && re.acceptabilityId === "900000000000549004" &&
-                                <>
-                                  <span style={{position: "relative"}}>
-                                    <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>&nbsp;&nbsp;</Typography>
-                                  </span>
-                                  <span style={{position: "relative", right:"5px"}}>
-                                    <sup className={classes.synonym}>S</sup>
-                                  </span>
-                                </>
-                              }
-                              </>
-                            }
-
-                            <div display="inline" className={classes.label} > {re.term} </div>
-
-                        </Grid>
-                      </Grid>
-                      <Grid item md={7}>
-                        <Grid container wrap="nowrap" >
-
-                            {re.definitionStatusId === '900000000000073002' &&
-                              <>
-                                <span style={{position: "relative"}}>
-                                  <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>≡</Typography>
-                                </span>
-                                <span style={{position: "relative", right:"5px"}}>
-                                  <sup className={classes.fsn}>F</sup>
-                                </span>
-                              </>
-                            }
-                            {re.definitionStatusId === '900000000000074008' &&
-                              <>
-                                <span style={{position: "relative"}}>
-                                  <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>&nbsp;&nbsp;</Typography>
-                                </span>
-                                <span style={{position: "relative", right:"5px"}}>
-                                  <sup className={classes.fsn}>F</sup>
-                                </span>
-                              </>
-                            }
-
-                            <Typography display="inline" className={classes.label} > {re.fsn} </Typography>
-
-                        </Grid>
-                      </Grid>
-                    </Grid>
+              return (
+                <div key={index}>
+                  <div
+                    className={`result-item ${!isActive ? 'inactive' : ''}`}
+                    onClick={() => {
+                      props.setFromId(re.conceptId);
+                      if (isActive) props.setMrcmFromSearch(re.conceptId);
+                    }}
+                  >
+                    {/* 1줄: 정의상태 배지 + term(PT/SYN) + semantic tag */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="result-term">
+                          <span style={yellowBadge}>
+                            {isFullyDefined ? '≡' : '  '}
+                          </span>
+                          {re.term}
+                          {!isActive && <span style={{ fontSize: 10, color: '#ef4444', marginLeft: 6, fontWeight: 600 }}>Inactive</span>}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2, paddingLeft: 2 }}>
+                          {re.fsn}
+                        </div>
+                      </div>
+                    </div>
                   </div>
+                  <Divider style={{ borderBottom: '1px solid #f0f0f0' }} />
                 </div>
-                }
+              );
+            })}
 
-                { (re.conceptActive === false || re.descriptionActive === false) &&
-                <div className={classes.line} style={{backgroundColor: '#ffefef'}}>
-                  <div onClick={()=>props.setFromId(re.conceptId)} >
-                    <Grid container >
-                      <Grid item md={5}>
-                        <Grid container wrap="nowrap" >
-
-                            {re.definitionStatusId === '900000000000073002' &&
-                              <>
-                                { re.typeId === "900000000000003001" && re.acceptabilityId === "900000000000548007" &&
-                                  <>
-                                    <span style={{position: "relative"}}>
-                                      <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>≡</Typography>
-                                    </span>
-                                    <span style={{position: "relative", right:"5px"}}>
-                                      <sup className={classes.fsn}>F</sup>
-                                    </span>
-                                  </>
-                                }
-                                { re.typeId === "900000000000013009" && re.acceptabilityId === "900000000000548007" &&
-                                  <>
-                                    <span style={{position: "relative"}}>
-                                      <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>≡</Typography>
-                                    </span>
-                                    <span style={{position: "relative", right:"5px"}}>
-                                      <sup className={classes.preferred}>P</sup>
-                                    </span>
-                                  </>
-                                }
-                                { re.typeId === "900000000000013009" && re.acceptabilityId === "900000000000549004" &&
-                                  <>
-                                    <span style={{position: "relative"}}>
-                                      <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>≡</Typography>
-                                    </span>
-                                    <span style={{position: "relative", right:"5px"}}>
-                                      <sup className={classes.synonym}>S</sup>
-                                    </span>
-                                  </>
-                                }
-                              </>
-                            }
-                            {re.definitionStatusId === '900000000000074008' &&
-                              <>
-                              { re.typeId === "900000000000003001" && re.acceptabilityId === "900000000000548007" &&
-                                <>
-                                <span style={{position: "relative"}}>
-                                  <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>&nbsp;&nbsp;</Typography>
-                                </span>
-                                <span style={{position: "relative", right:"5px"}}>
-                                  <sup className={classes.fsn}>F</sup>
-                                </span>
-                                </>
-                              }
-                              { re.typeId === "900000000000013009" && re.acceptabilityId === "900000000000548007" &&
-                                <>
-                                <span style={{position: "relative"}}>
-                                  <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>&nbsp;&nbsp;</Typography>
-                                </span>
-                                <span style={{position: "relative", right:"5px"}}>
-                                  <sup className={classes.preferred}>P</sup>
-                                </span>
-                                </>
-                              }
-                              { re.typeId === "900000000000013009" && re.acceptabilityId === "900000000000549004" &&
-                                <>
-                                <span style={{position: "relative"}}>
-                                  <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>&nbsp;&nbsp;</Typography>
-                                </span>
-                                <span style={{position: "relative", right:"5px"}}>
-                                  <sup className={classes.synonym}>S</sup>
-                                </span>
-                                </>
-                              }
-                              </>
-                            }
-
-                            <Typography display="inline" className={classes.label} > {re.term} </Typography>
-
-                        </Grid>
-                      </Grid>
-                      <Grid item md={7}>
-                        <Grid container wrap="nowrap" >
-
-                            {re.definitionStatusId === '900000000000073002' &&
-                              <>
-                                <span style={{position: "relative"}}>
-                                  <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>≡</Typography>
-                                </span>
-                                <span style={{position: "relative", right:"5px"}}>
-                                  <sup className={classes.fsn}>F</sup>
-                                </span>
-                              </>
-                            }
-                            {re.definitionStatusId === '900000000000074008' &&
-                              <>
-                                <span style={{position: "relative"}}>
-                                  <Typography display="inline" className={classes.label} className={clsx(classes.alertWarning, classes.badge)}>&nbsp;&nbsp;</Typography>
-                                </span>
-                                <span style={{position: "relative", right:"5px"}}>
-                                  <sup className={classes.fsn}>F</sup>
-                                </span>
-                              </>
-                            }
-
-                            <Typography display="inline" className={classes.label} > {re.fsn} </Typography>
-
-                        </Grid>
-                      </Grid>
-                    </Grid>
-                  </div>
-                </div>
-                }
-                <Divider className={classes.leftdivider}/>
-              </div>
-            ))}
-            <Divider className={classes.leftdivider}/>
-            <div className={classes.line}>
-              { (page < result.data.page.totalPages) &&
-              <Grid container justify="center">
-                <Button variant="contained" onClick={nextPage}>Next Page</Button>
-              </Grid>
-              }
+            <div style={{ padding: '12px 0', textAlign: 'center' }}>
+              {page < result.data.page.totalPages && (
+                <Button variant="outlined" size="small" onClick={nextPage}
+                  style={{ fontSize: 12, borderRadius: 6, textTransform: 'none' }}>
+                  Load more
+                </Button>
+              )}
             </div>
           </Container>
-        }
-
-    </Grid></Grid>
-  )
+        )}
+      </Grid>
+    </Grid>
+  );
 }

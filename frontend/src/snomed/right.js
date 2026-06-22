@@ -64,6 +64,10 @@ const useStyles = makeStyles((theme) => ({
   root: {
     width: "100%",
   },
+  expansionPanel: {
+    backgroundColor: 'transparent !important',
+    boxShadow: 'none',
+  },
   container: {
     '-ms-overflow-style': 'none', /* IE and Edge */
     scrollbarWidth: 'none', /* Firefox */
@@ -209,33 +213,33 @@ export default function Right(props) {
           overflow: "scroll",
           maxWidth: '100vw'}}>
       <TabPanel style={{padding: "0 0 0 0"}} value={value} index={0}>
-        <ExpansionPanel expanded square={true} elevation={0}>
-          <ExpansionPanelSummary >
+        <ExpansionPanel expanded square={true} elevation={0} style={{ backgroundColor: 'transparent' }}>
+          <ExpansionPanelSummary>
             <Typography className={classes.heading}>Parent Hierarchy</Typography>
           </ExpansionPanelSummary>
-          <ExpansionPanelDetails style={{padding: "8px 0 0 0"}}>
-            <Container className={classes.container} /*ref={setRef}*/
+          <ExpansionPanelDetails style={{padding: "8px 0 0 0", backgroundColor: 'transparent'}}>
+            <Container className={classes.container}
               style={{
                 margin : "0 0 0 0",
                 padding: "0 0 0 0",
-
                 overflow: "scroll",
-                border:'none'}}>
+                border:'none',
+                backgroundColor: 'transparent'}}>
                 <Parent firstId={props.id} setFromId={props.setFromId} />
             </Container>
           </ExpansionPanelDetails>
         </ExpansionPanel>
-        <ExpansionPanel expanded square={true} elevation={0}>
+        <ExpansionPanel expanded square={true} elevation={0} style={{ backgroundColor: 'transparent' }}>
           <ExpansionPanelSummary>
-            <Typography  className={classes.heading}>Children Hierarchy</Typography>
+            <Typography className={classes.heading}>Children Hierarchy</Typography>
           </ExpansionPanelSummary>
-          <ExpansionPanelDetails style={{padding: "8px 0 0 0"}}>
-            <Container className={classes.container} /*ref={setRef}*/
+          <ExpansionPanelDetails style={{padding: "8px 0 0 0", backgroundColor: 'transparent'}}>
+            <Container className={classes.container}
               style={{
                 margin : "0 0 0 0",
                 padding: "0 0 0 0",
-
-                overflow: "scroll"}}>
+                overflow: "scroll",
+                backgroundColor: 'transparent'}}>
                 <Children firstId={props.id} setFromId={props.setFromId} />
             </Container>
           </ExpansionPanelDetails>

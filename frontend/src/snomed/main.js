@@ -1,10 +1,9 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import useScrollTrigger from './useScrollTrigger.js';
 import useAsync from "../useAsync.js";
 import { withStyles, makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
-
 import Grid from "@material-ui/core/Grid";
 import Box from "@material-ui/core/Box";
 import Divider from "@material-ui/core/Divider";
@@ -21,6 +20,35 @@ import Tooltip from '@material-ui/core/Tooltip';
 import {Star, StarBorder} from '@material-ui/icons';
 import Container from '@material-ui/core/Container';
 import { BrowserRouter as Link} from "react-router-dom";
+
+const BOOKMARK_KEY = 'stom-bookmarks';
+
+function useToast() {
+  const [msg, setMsg] = useState('');
+  const show = (m) => { setMsg(m); setTimeout(() => setMsg(''), 2200); };
+  return [msg, show];
+}
+
+function getSemanticTag(fsn) {
+  if (!fsn) return null;
+  const m = fsn.match(/\(([^)]+)\)$/);
+  return m ? m[1] : null;
+}
+function getSemanticTagClass(tag) {
+  if (!tag) return 'badge-st-default';
+  const t = tag.toLowerCase();
+  if (t.includes('disorder')) return 'badge-st-disorder';
+  if (t.includes('procedure')) return 'badge-st-procedure';
+  if (t.includes('finding')) return 'badge-st-finding';
+  if (t.includes('observable')) return 'badge-st-observable';
+  if (t.includes('substance')) return 'badge-st-substance';
+  if (t.includes('organism')) return 'badge-st-organism';
+  if (t.includes('body')) return 'badge-st-body';
+  if (t.includes('qualifier')) return 'badge-st-qualifier';
+  if (t.includes('situation')) return 'badge-st-situation';
+  if (t.includes('event')) return 'badge-st-event';
+  return 'badge-st-default';
+}
 
 const StyledTableCell = withStyles((theme) => ({
   head: {
@@ -70,7 +98,8 @@ const useStyles = makeStyles((theme) => ({
     height: '100vh',
   },
   divider: {
-    borderBottom: "solid 2px #2196F3",
+    borderBottom: "solid 1px #e4e7ec",
+    marginBottom: 2,
   },
   gridBorder: {
     borderRight: "dotted 1px lightGray",
@@ -170,10 +199,54 @@ async function getHistories(id) {
 export default function Main(props) {
 
   const id = props.id;
-
   const classes = useStyles();
-
   const [language, setLanguage] = useState("US");
+  const [toastMsg, showToast] = useToast();
+  const [bookmarks, setBookmarks] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(BOOKMARK_KEY) || '[]'); } catch { return []; }
+  });
+
+  const isBookmarked = bookmarks.some(b => b.id === id);
+
+  const toggleBookmark = (conceptId, term) => {
+    const exists = bookmarks.find(b => b.id === conceptId);
+    const next = exists
+      ? bookmarks.filter(b => b.id !== conceptId)
+      : [...bookmarks, { id: conceptId, term }];
+    setBookmarks(next);
+    localStorage.setItem(BOOKMARK_KEY, JSON.stringify(next));
+    showToast(exists ? 'Bookmark removed' : '⭐ Bookmarked');
+  };
+
+  const copySCTID = (sctid) => {
+    navigator.clipboard.writeText(sctid).then(() => showToast('SCTID copied!'));
+  };
+
+  const shareLink = (conceptId) => {
+    const url = `${window.location.origin}${window.location.pathname}#${conceptId}`;
+    navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
+  };
+
+  const exportCSV = (entity, desc, asso) => {
+    const rows = [['Section', 'Field', 'Value']];
+    rows.push(['Concept', 'SCTID', entity.conceptId]);
+    rows.push(['Concept', 'FSN', entity.term]);
+    rows.push(['Concept', 'Semantic Tag', entity.semanticTag || '']);
+    rows.push(['Concept', 'Definition Status', entity.definitionStatus ? entity.definitionStatus.id : '']);
+    if (desc) {
+      desc.forEach(d => rows.push(['Description', d.typeId, d.term]));
+    }
+    if (asso) {
+      asso.forEach(a => rows.push(['Relationship', a.type ? a.type.term : '', a.destination ? a.destination.term : '']));
+    }
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `SNOMEDCT_${entity.conceptId}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV downloaded');
+  };
   /*
   const [trigger, setRef] = useScrollTrigger({ disableHysteresis: true,threshold: 0 });
   */
@@ -484,20 +557,50 @@ export default function Main(props) {
   /*console.log(conHist);
   console.log(descHist);*/
 
+  const semTag = entity ? getSemanticTag(entity.term) : null;
+  const semTagClass = getSemanticTagClass(semTag);
+
   return (
     <div>
+      {/* ── 토스트 ── */}
+      <div className={`stom-toast ${toastMsg ? 'show' : ''}`}>{toastMsg}</div>
+
+      {/* ── 액션 바 ── */}
+      <div className="concept-action-bar">
+        <button className="concept-action-btn" onClick={() => copySCTID(entity.conceptId)}>
+          📋 {entity.conceptId}
+        </button>
+        <button
+          className={`concept-action-btn ${isBookmarked ? 'active' : ''}`}
+          onClick={() => toggleBookmark(entity.conceptId, entity.term)}
+        >
+          {isBookmarked ? '⭐ Bookmarked' : '☆ Bookmark'}
+        </button>
+        <button className="concept-action-btn" onClick={() => shareLink(entity.conceptId)}>
+          🔗 Share
+        </button>
+        <button className="concept-action-btn" onClick={() => exportCSV(entity, desc, asso)}>
+          ⬇ CSV
+        </button>
+        {semTag && (
+          <span className={`badge badge-st ${semTagClass}`} style={{ marginLeft: 'auto' }}>
+            {semTag}
+          </span>
+        )}
+      </div>
+
       <Container
-        className={classes.container} /*ref={setRef}*/
+        className={classes.container}
         style={{
-          padding: "0 4px 0 04px",
-          height: "91vh",
+          padding: "0 4px 0 4px",
+          height: "87vh",
           overflow: "scroll",
           maxWidth: '100vw'}}>
 
       <Grid container className={classes.gridcontainer} spacing={1} >
         <Grid item className={classes.gridBorder} p={0} md={12}>
-          <Box p={1}>
-            <Typography variant="body1"><b>Definition</b></Typography>
+          <Box pt={2} pb={0} px={1}>
+            <Typography className="section-label">Definition</Typography>
           </Box>
           <Divider className={classes.divider}/>
           <br />
@@ -605,8 +708,8 @@ export default function Main(props) {
           </div>
         </Grid>
         <Grid item className={classes.gridBorder} md={12} >
-          <Box p={1}>
-            <Typography variant="body1"><b>Post-coordinated expression</b></Typography>
+          <Box pt={2} pb={0} px={1}>
+            <Typography className="section-label">Post-coordinated expression</Typography>
           </Box>
           <Divider className={classes.divider}/>
           <br />
@@ -627,8 +730,8 @@ export default function Main(props) {
           </div>
         </Grid>
         <Grid item className={classes.gridBorder} md={12} >
-          <Box p={1}>
-            <Typography variant="body1"><b>Description</b></Typography>
+          <Box pt={2} pb={0} px={1}>
+            <Typography className="section-label">Description</Typography>
           </Box>
           <Divider className={classes.divider}/>
           <Box align="right" p={1}>
@@ -661,34 +764,23 @@ export default function Main(props) {
                     </span>
                   </StyledTableCell>
 
-                  { row.typeId === 'F' &&
-                    <StyledTableCell width="5%" align="center">
-                      <Tooltip className={classes.tooltip} placement="top-end" title="Fully Specified Name" arrow>
-                        <i className={classes.fsn}>F</i>
-                      </Tooltip>
-                    </StyledTableCell> }
-                  { row.typeId === 'P' &&
-                    <StyledTableCell width="5%" align="center">
-                      <Tooltip className={classes.tooltip} placement="top-end" title="Preferred Name" arrow>
-                        <i className={classes.synonym}>S</i>
-                      </Tooltip>
-                    </StyledTableCell> }
-                  { row.typeId === 'S' &&
-                    <StyledTableCell width="5%" align="center">
-                      <Tooltip className={classes.tooltip} placement="top-end" title="Synonym" arrow>
-                        <i className={classes.synonym}>S</i>
-                      </Tooltip>
-                    </StyledTableCell> }
+                  <StyledTableCell width="5%" align="center">
+                    <Tooltip placement="top-end" title={row.typeId === 'F' ? 'Fully Specified Name' : row.typeId === 'P' ? 'Preferred Name' : 'Synonym'} arrow>
+                      <span className={`badge ${row.typeId === 'F' ? 'badge-fsn' : 'badge-syn'}`}>
+                        {row.typeId === 'F' ? 'FSN' : row.typeId === 'P' ? 'PT' : 'SY'}
+                      </span>
+                    </Tooltip>
+                  </StyledTableCell>
 
                   <StyledTableCell className={classes.label} width="10%" align="center">
                     {row.acceptabilityId === PREFERRED &&
-                      <Tooltip className={classes.tooltip} placement="top-end" title="Preferred Name" arrow>
-                        <i className={classes.preferred}>P</i>
+                      <Tooltip placement="top-end" title="Preferred" arrow>
+                        <span className="badge badge-pref">P</span>
                       </Tooltip>
                     }
                     {row.acceptabilityId === ACCEPTABLE &&
-                      <Tooltip className={classes.tooltip} placement="top-end" title="Acceptable" arrow>
-                        <i className={classes.acceptable}>A</i>
+                      <Tooltip placement="top-end" title="Acceptable" arrow>
+                        <span className="badge badge-accept">A</span>
                       </Tooltip>
                     }
                   </StyledTableCell>
@@ -710,34 +802,23 @@ export default function Main(props) {
                     </span>
                   </StyledTableCell>
 
-                  { row.typeId === 'F' &&
-                    <StyledTableCell width="5%" align="center">
-                      <Tooltip className={classes.tooltip} placement="top-end" title="Fully Specified Name" arrow>
-                        <i className={classes.fsn}>F</i>
-                      </Tooltip>
-                    </StyledTableCell> }
-                  { row.typeId === 'P' &&
-                    <StyledTableCell width="5%" align="center">
-                      <Tooltip className={classes.tooltip} placement="top-end" title="Preferred Name" arrow>
-                        <i className={classes.preferred}>S</i>
-                      </Tooltip>
-                    </StyledTableCell> }
-                  { row.typeId === 'S' &&
-                    <StyledTableCell width="5%" align="center">
-                      <Tooltip className={classes.tooltip} placement="top-end" title="Synonym" arrow>
-                        <i className={classes.synonym}>S</i>
-                      </Tooltip>
-                    </StyledTableCell> }
+                  <StyledTableCell width="5%" align="center">
+                    <Tooltip placement="top-end" title={row.typeId === 'F' ? 'Fully Specified Name' : row.typeId === 'P' ? 'Preferred Name' : 'Synonym'} arrow>
+                      <span className={`badge ${row.typeId === 'F' ? 'badge-fsn' : 'badge-syn'}`}>
+                        {row.typeId === 'F' ? 'FSN' : row.typeId === 'P' ? 'PT' : 'SY'}
+                      </span>
+                    </Tooltip>
+                  </StyledTableCell>
 
                     <StyledTableCell className={classes.label} width="10%" align="center">
                       {row.acceptabilityId === PREFERRED &&
-                        <Tooltip className={classes.tooltip} placement="top-end" title="Preferred Name" arrow>
-                          <i className={classes.preferred}>P</i>
+                        <Tooltip placement="top-end" title="Preferred" arrow>
+                          <span className="badge badge-pref">P</span>
                         </Tooltip>
                       }
                       {row.acceptabilityId === ACCEPTABLE &&
-                        <Tooltip className={classes.tooltip} placement="top-end" title="Acceptable" arrow>
-                          <i className={classes.acceptable}>A</i>
+                        <Tooltip placement="top-end" title="Acceptable" arrow>
+                          <span className="badge badge-accept">A</span>
                         </Tooltip>
                       }
                     </StyledTableCell>
@@ -755,8 +836,8 @@ export default function Main(props) {
 
         </Grid>
         <Grid item className={classes.gridBorder} md={12} >
-          <Box p={1}>
-            <Typography variant="body1"><b>Reference Set</b></Typography>
+          <Box pt={2} pb={0} px={1}>
+            <Typography className="section-label">Reference Set</Typography>
           </Box>
           <Divider className={classes.divider}/>
           < br/>
@@ -889,8 +970,8 @@ export default function Main(props) {
         </Grid>
 
         <Grid item className={classes.gridBorder} md={12} >
-          <Box p={1}>
-            <Typography variant="body1"><b>History</b></Typography>
+          <Box pt={2} pb={0} px={1}>
+            <Typography className="section-label">History</Typography>
           </Box>
           <Divider className={classes.divider}/>
 

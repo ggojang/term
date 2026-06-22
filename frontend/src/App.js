@@ -52,45 +52,61 @@ function a11yProps(index) {
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    backgroundColor: theme.palette.background.paper,
+    backgroundColor: '#f7f8fa',
     width: '100vw',
     position: 'relative',
     minHeight: '100vh',
     fontSize: '0.8em',
   },
   appbar: {
-    backgroundColor: '#2e3e4e',
-    padding: '4px',
+    backgroundColor: '#1b2733',
+    padding: '0 8px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
   },
   indicator: {
-    backgroundColor: '#2e3e4e',
+    backgroundColor: '#2f6fed',
+    height: '3px',
+    borderRadius: '3px 3px 0 0',
   },
   toolbar: {
-    minHeight: '40px',
+    minHeight: '48px',
   },
   label: {
-    fontSize: '1.3em',
+    fontSize: '1.15em',
+    fontWeight: 600,
+    letterSpacing: '-0.01em',
   },
   msg: {
-    fontSize: '1em',
+    fontSize: '0.85em',
+    color: 'rgba(255,255,255,0.55)',
+    fontWeight: 400,
   },
   tabs: {
     padding: '0',
   },
   tab1: {
-    minHeight: '50px',
+    minHeight: '48px',
     minWidth: '150px',
-    opacity: 0.5,
+    opacity: 0.6,
+    transition: 'opacity 150ms ease, color 150ms ease',
+    '&:hover': { opacity: 0.85 },
+    '&.Mui-selected': { opacity: 1 },
   },
   tab2: {
-    minHeight: '50px',
+    minHeight: '48px',
     minWidth: '110px',
-    opacity: 0.5,
+    opacity: 0.6,
+    transition: 'opacity 150ms ease, color 150ms ease',
+    '&:hover': { opacity: 0.85 },
+    '&.Mui-selected': { opacity: 1 },
   },
   tab3: {
-    minHeight: '50px',
-    minWidth: '65px',
-    opacity: 0.5,
+    minHeight: '48px',
+    minWidth: '80px',
+    opacity: 0.6,
+    transition: 'opacity 150ms ease, color 150ms ease',
+    '&:hover': { opacity: 0.85 },
+    '&.Mui-selected': { opacity: 1 },
   },
 }));
 

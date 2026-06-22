@@ -24,10 +24,9 @@ public class HomeController {
     }
     
     
-	@RequestMapping(value = "", method = RequestMethod.GET)
+	@RequestMapping(value = {"", "/"}, method = RequestMethod.GET)
 	public ModelAndView index(Locale locale, Model model) {
-		
-		return new ModelAndView("index");
+		return new ModelAndView("redirect:/index.html");
 	}
 	
 	

@@ -1,5 +1,10 @@
 #!/bin/bash
-export JAVA_HOME=/usr/lib/jvm/java-17-oracle
+# 로컬(Mac): sdkman Java 25 사용. 원격 서버: /usr/lib/jvm/java-17-oracle
+if [ -d "$HOME/.sdkman/candidates/java/current" ]; then
+  export JAVA_HOME="$HOME/.sdkman/candidates/java/current"
+elif [ -d "/usr/lib/jvm/java-17-oracle" ]; then
+  export JAVA_HOME=/usr/lib/jvm/java-17-oracle
+fi
 export PATH=$JAVA_HOME/bin:$PATH
 
 export MAVEN_OPTS="\
@@ -13,4 +18,4 @@ export MAVEN_OPTS="\
   --add-opens java.base/java.nio=ALL-UNNAMED \
   --add-opens java.base/sun.nio.ch=ALL-UNNAMED"
 
-mvn tomcat7:run -P run "$@"
+cd "$(dirname "$0")" && mvn tomcat7:run -P run "$@"

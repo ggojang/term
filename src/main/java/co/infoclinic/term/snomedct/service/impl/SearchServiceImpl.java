@@ -110,7 +110,7 @@ public class SearchServiceImpl implements SearchService {
             long total = 0;
             try (PreparedStatement ps = conn.prepareStatement(countSql)) {
                 setTermParam(ps, 1, idSearch ? word : termParam, matchType, idSearch);
-                setSemParams(ps, idSearch ? 2 : nextParamIdx(matchType, idSearch), semanticFilter);
+                setSemParams(ps, idSearch ? 2 : nextParamIdx(matchType, idSearch, word), semanticFilter);
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) total = rs.getLong(1);
                 }
@@ -126,7 +126,7 @@ public class SearchServiceImpl implements SearchService {
             List<SemanticTag> semTags = new ArrayList<>();
             try (PreparedStatement ps = conn.prepareStatement(semSql)) {
                 setTermParam(ps, 1, idSearch ? word : termParam, matchType, idSearch);
-                setSemParams(ps, idSearch ? 2 : nextParamIdx(matchType, idSearch), semanticFilter);
+                setSemParams(ps, idSearch ? 2 : nextParamIdx(matchType, idSearch, word), semanticFilter);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         SemanticTag st = new SemanticTag();
@@ -358,9 +358,16 @@ public class SearchServiceImpl implements SearchService {
 
     private String buildTermWhere(MatchType matchType, String word) {
         if (MatchType.PARTIAL.equals(matchType)) {
-            // 단어가 여러 개면 FTS, 하나면 trgm LIKE
             if (word.contains(" ")) {
-                return "to_tsvector('english', term) @@ plainto_tsquery('english', ?)";
+                // 각 단어를 독립적으로 ILIKE '%token%' AND 로 연결 → 부분어 다중 매칭
+                String[] tokens = word.trim().split("\\s+");
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < tokens.length; i++) {
+                    if (tokens[i].length() < 2) continue; // 2글자 미만 단어 제외
+                    if (sb.length() > 0) sb.append(" AND ");
+                    sb.append("term ILIKE ?");
+                }
+                return sb.length() > 0 ? sb.toString() : "term ILIKE ?";
             }
             return "term ILIKE ?";
         } else if (MatchType.REGEX.equals(matchType)) {
@@ -387,7 +394,11 @@ public class SearchServiceImpl implements SearchService {
             ps.setString(idx++, word);
         } else if (MatchType.PARTIAL.equals(matchType)) {
             if (word.contains(" ")) {
-                ps.setString(idx++, word);   // plainto_tsquery
+                // buildTermWhere와 동일하게 각 단어별 파라미터 바인딩
+                for (String token : word.trim().split("\\s+")) {
+                    if (token.length() < 2) continue;
+                    ps.setString(idx++, "%" + token + "%");
+                }
             } else {
                 ps.setString(idx++, "%" + word + "%");  // ILIKE
             }
@@ -409,8 +420,16 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /** term 파라미터 다음 인덱스 계산 (시맨틱 파라미터 시작점) */
-    private int nextParamIdx(MatchType matchType, boolean idSearch) {
-        return 2;  // term 파라미터는 항상 1개
+    private int nextParamIdx(MatchType matchType, boolean idSearch, String word) {
+        if (!idSearch && MatchType.PARTIAL.equals(matchType) && word != null && word.contains(" ")) {
+            // 멀티워드: 2글자 이상인 토큰 수만큼 파라미터 사용
+            int cnt = 0;
+            for (String t : word.trim().split("\\s+")) {
+                if (t.length() >= 2) cnt++;
+            }
+            return cnt + 1; // 1-based 다음 인덱스
+        }
+        return 2;  // term 파라미터 1개
     }
 
     /** ResultSet → TermSearchResult 변환 */

@@ -160,13 +160,10 @@ export default function Main(props) {
   return (
     <>
     <FormControl className={classes.formControl}>
-      <InputLabel shrink className={classes.inputlabel} id="queryLabel">At least 2 more characters
-      </InputLabel>
-      <TextField labelid="queryLabel" className={classes.textfield} id="query" type="search" onKeyUp={handleQueryKeyUp}
+      <TextField className={classes.textfield} id="query" type="search" onKeyUp={handleQueryKeyUp}
         InputProps={{
-          classes: {
-            input: classes.tf,
-          },
+          classes: { input: classes.tf },
+          placeholder: 'At least 2 characters',
         }}
       />
     </FormControl>
