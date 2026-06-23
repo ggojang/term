@@ -246,6 +246,63 @@ python3 hira_downloader/load_atc_master.py                      # ATC 마스터 
 
 ---
 
+## UI 개선 및 기능 수정 (2026-06-22)
+
+### Context path 변경
+- `pom.xml` 로컬 실행 프로파일 `<path>`: `/stom` → `/`
+- `frontend/package.json` `"homepage"`: `"/stom"` → `"/"`
+- 접속: `http://localhost:8088/stom/` → `http://localhost:8088/`
+- 프론트엔드 빌드 출력 경로: `src/main/webapp/stom/` → `src/main/webapp/`
+- `frontend/package.json` build 스크립트 변경: `BUILD_PATH`로 직접 복사 → `build/` 빌드 후 `cp -r build/. ../src/main/webapp/` 방식으로 수정 (Node 18에서 BUILD_PATH 미동작 대응)
+
+### SNOMED CT 검색 개선
+- 다중단어 부분 검색 수정 (`hypers cond` → `hypersensitivity condition` 검색 가능)
+  - `SearchServiceImpl.buildTermWhere()`: 단어별 `term ILIKE ?` AND 조건으로 분리
+  - `setTermParam()`: 토큰별 `%token%` 바인딩
+  - `nextParamIdx()`: 2글자 이상 토큰 수 기반 offset 계산
+- 검색창 placeholder: `"Search by term, SCTID, FSN..."` → `"At least 2 characters"`
+- 검색 아이콘(돋보기) 제거, padding 조정
+
+### SNOMED CT 검색결과 UI
+- 2줄 표시: 1줄(노란 배지 + term), 2줄(FSN 회색) 복원
+- semantic tag 색깔 배지 제거
+- Parent/Children/Hierarchy 트리 배지 배경: `#999` → 노란 그라디언트 (`#f7edb5 → #f5e79e`)
+
+### RefSet Viewer
+- 트리에서 member가 존재하는 노드명 black bold 표시
+  - 마운트 시 `/refsets/SNOMEDCT?release=itn&hasmbrs=true` 단일 API 호출 → memberSet 구성
+  - 노드 렌더링 시 memberSet 포함 여부로 스타일 분기
+
+### ECL AND ^ refset 쿼리 타임아웃 수정
+- `ConstraintController.evaluateCompound()` AND 연산 최적화
+  - `^` (memberOf) 파트와 계층(`<<`) 파트 분리
+  - 계층 파트는 TC 기반으로 먼저 평가
+  - refset 파트는 `findMemberIdsByRefsetIdAndEffectiveTime()` 단일 쿼리 → in-memory Set 필터
+  - 기존 N+1 쿼리로 인한 타임아웃 해소
+- `LatestRefsetMemberRepository` 주입 추가
+
+### LOINC / Mapping Support 검색창
+- LOINC: `InputLabel` 제거 → `TextField placeholder` 방식으로 변경
+- Mapping Support: label `"At least 2 more characters"` → placeholder `"At least 2 characters"`
+
+### Swagger UI 확장 (57 → 111 엔드포인트)
+- `SwaggerConfig`: `withMethodAnnotation(ApiOperation.class)` → `basePackage("co.infoclinic.term")`
+- 모든 컨트롤러에 `@Api`, `@ApiOperation` 추가
+  - FHIR: CapabilityStatement, CodeSystem, ValueSet, ConceptMap, NamingSystem, Package
+  - HIRA: HiraController
+  - SNOMED: TcController, MapSearchController
+- Tag 정의 추가: `V-01~06 FHIR`, `IV-01 HIRA`, `VI-01 Map`
+- API 버전: `"2.0"`, 설명: "SNOMED CT · LOINC · ICD-10/KCD · HIRA · FHIR R4 통합 용어 서비스 API"
+
+### KCD-9 확장 코드 태극기 표시
+- 기존: `🇰🇷` 이모지 (Windows/Linux에서 "KR" 텍스트로 렌더링되는 문제)
+- 변경: 공식 태극기 SVG 이미지 (`/flag-kr.svg`) 사용
+  - `frontend/public/flag-kr.svg` 추가 (위키미디어 공식 SVG)
+  - `frontend/src/icd10/left.js`: `<img src="/flag-kr.svg" height="1em">` 로 교체 (트리 + 검색결과)
+  - 빌드 스크립트에 `cp public/flag-kr.svg ../src/main/webapp/flag-kr.svg` 자동 복사 추가
+
+---
+
 ## 로컬 DB 미적용 항목 (추후 LOINC 버전 업데이트 시 적용 예정)
 
 - `loinc.HIERARCHY` DESCENDANT_COUNT 재계산 (PATH 기반, 293,674행)
