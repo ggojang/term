@@ -30,7 +30,10 @@ public class FhirCodeSystemService {
     // Well-known canonical URLs
     public static final String URL_SNOMED           = "http://snomed.info/sct";
     public static final String URL_LOINC            = "http://loinc.org";
-    public static final String URL_KCD9             = "http://koicd.kr/fhir/kcd9";
+    public static final String URL_KCD9             = "http://www.hl7korea.or.kr/CodeSystem/kostat-kcd-9";
+    public static final String URL_KCD8             = "http://www.hl7korea.or.kr/CodeSystem/kostat-kcd-8";
+    public static final String URL_ATC               = "http://www.whocc.no/atc";
+    public static final String URL_KPIS_KDCODE       = "http://www.hl7korea.or.kr/CodeSystem/kpis-kdcode";
     public static final String URL_HIRA_PROCEDURE   = "http://www.hl7korea.or.kr/CodeSystem/hira-edi-procedure";
     public static final String URL_HIRA_MEDICATION  = "http://www.hl7korea.or.kr/CodeSystem/hira-edi-medication";
     public static final String URL_HIRA_MATERIAL    = "http://www.hl7korea.or.kr/CodeSystem/hira-edi-material";
@@ -54,10 +57,12 @@ public class FhirCodeSystemService {
     }
 
     public Optional<String> findById(String id) {
-        // 내장 코드시스템 처리
         if ("snomed".equals(id)) return Optional.of(buildSnomedStub());
         if ("loinc".equals(id))  return Optional.of(buildLoincStub());
         if ("kcd9".equals(id))   return Optional.of(buildKcd9Stub());
+        if ("kcd8".equals(id))   return Optional.of(buildKcd8Stub());
+        if ("atc".equals(id))       return Optional.of(buildAtcStub());
+        if ("kpis-kdcode".equals(id)) return Optional.of(buildKpisKdcodeStub());
         return resourceSvc.findById("CodeSystem", id);
     }
 
@@ -65,6 +70,9 @@ public class FhirCodeSystemService {
         if (URL_SNOMED.equals(url)) return Optional.of(buildSnomedStub());
         if (URL_LOINC.equals(url))  return Optional.of(buildLoincStub());
         if (URL_KCD9.equals(url))   return Optional.of(buildKcd9Stub());
+        if (URL_KCD8.equals(url))   return Optional.of(buildKcd8Stub());
+        if (URL_ATC.equals(url))          return Optional.of(buildAtcStub());
+        if (URL_KPIS_KDCODE.equals(url))  return Optional.of(buildKpisKdcodeStub());
         return resourceSvc.findByUrl("CodeSystem", url);
     }
 
@@ -124,14 +132,56 @@ public class FhirCodeSystemService {
             return out;
         }
 
-        if (URL_KCD9.equals(system)) {
+        if (URL_KCD9.equals(system) || URL_KCD8.equals(system)) {
+            String name = URL_KCD9.equals(system) ? "KCD-9" : "KCD-8";
             Icd10Class icd10 = icd10Repo.findByCode(code);
             if (icd10 == null) return outcomeNotFound(out, system, code);
             String display = icd10.getKoreanLabel() != null ? icd10.getKoreanLabel() : icd10.getLabel();
-            out.addParameter().setName("name").setValue(new StringType("KCD-9"));
+            out.addParameter().setName("name").setValue(new StringType(name));
             out.addParameter().setName("display").setValue(new StringType(display != null ? display : ""));
             out.addParameter().setName("system").setValue(new UriType(system));
             out.addParameter().setName("code").setValue(new CodeType(code));
+            return out;
+        }
+
+        if (URL_KPIS_KDCODE.equals(system)) {
+            Query q = em.createNativeQuery(
+                "SELECT 표준코드명칭, 급여비급여구분, 상한가, 적용개시일자 FROM term.kdcode WHERE 표준코드 = :code ORDER BY 적용개시일자 DESC LIMIT 1");
+            q.setParameter("code", code);
+            List<Object[]> rows = q.getResultList();
+            if (rows.isEmpty()) return outcomeNotFound(out, system, code);
+            Object[] row = rows.get(0);
+            String display = row[0] != null ? (String) row[0] : "";
+            out.addParameter().setName("name").setValue(new StringType("KPIS KD코드 (표준코드목록)"));
+            out.addParameter().setName("display").setValue(new StringType(display));
+            out.addParameter().setName("system").setValue(new UriType(system));
+            out.addParameter().setName("code").setValue(new CodeType(code));
+            if (row[1] != null) {
+                Parameters.ParametersParameterComponent des = out.addParameter().setName("designation");
+                des.addPart().setName("language").setValue(new CodeType("ko"));
+                des.addPart().setName("value").setValue(new StringType(
+                    display + " [급여구분:" + row[1] + (row[2] != null ? ", 상한가:" + row[2] : "") + "]"));
+            }
+            return out;
+        }
+
+        if (URL_ATC.equals(system)) {
+            Query q = em.createNativeQuery(
+                "SELECT atc_name, atc_hname FROM term.hira_atc_master WHERE atc_code = :code LIMIT 1");
+            q.setParameter("code", code);
+            List<Object[]> rows = q.getResultList();
+            if (rows.isEmpty()) return outcomeNotFound(out, system, code);
+            Object[] row = rows.get(0);
+            String display = row[0] != null ? (String) row[0] : "";
+            out.addParameter().setName("name").setValue(new StringType("ATC"));
+            out.addParameter().setName("display").setValue(new StringType(display));
+            out.addParameter().setName("system").setValue(new UriType(system));
+            out.addParameter().setName("code").setValue(new CodeType(code));
+            if (row[1] != null && !((String) row[1]).isEmpty()) {
+                Parameters.ParametersParameterComponent des = out.addParameter().setName("designation");
+                des.addPart().setName("language").setValue(new CodeType("ko"));
+                des.addPart().setName("value").setValue(new StringType((String) row[1]));
+            }
             return out;
         }
 
@@ -208,10 +258,24 @@ public class FhirCodeSystemService {
             List<String> rows = q.getResultList();
             valid = !rows.isEmpty();
             if (valid) actualDisplay = rows.get(0);
-        } else if (URL_KCD9.equals(system)) {
+        } else if (URL_KCD9.equals(system) || URL_KCD8.equals(system)) {
             Icd10Class icd10 = icd10Repo.findByCode(code);
             valid = (icd10 != null);
             if (valid) actualDisplay = icd10.getKoreanLabel() != null ? icd10.getKoreanLabel() : icd10.getLabel();
+        } else if (URL_KPIS_KDCODE.equals(system)) {
+            Query q = em.createNativeQuery(
+                "SELECT 표준코드명칭 FROM term.kdcode WHERE 표준코드 = :code ORDER BY 적용개시일자 DESC LIMIT 1");
+            q.setParameter("code", code);
+            List<String> rows = q.getResultList();
+            valid = !rows.isEmpty();
+            if (valid) actualDisplay = rows.get(0);
+        } else if (URL_ATC.equals(system)) {
+            Query q = em.createNativeQuery(
+                "SELECT atc_name FROM term.hira_atc_master WHERE atc_code = :code LIMIT 1");
+            q.setParameter("code", code);
+            List<String> rows = q.getResultList();
+            valid = !rows.isEmpty();
+            if (valid) actualDisplay = rows.get(0);
         } else if (URL_HIRA_PROCEDURE.equals(system)) {
             Query q = em.createNativeQuery(
                 "SELECT 한글명 FROM term.hira_행위_code WHERE 수가코드 = :code LIMIT 1");
@@ -399,6 +463,42 @@ public class FhirCodeSystemService {
         cs.setUrl(URL_KCD9);
         cs.setName("KCD9");
         cs.setTitle("한국표준질병사인분류 (KCD-9)");
+        cs.setStatus(Enumerations.PublicationStatus.ACTIVE);
+        cs.setContent(CodeSystem.CodeSystemContentMode.NOTPRESENT);
+        cs.setPublisher("통계청");
+        return FhirResourceService.FHIR_CTX.newJsonParser().setPrettyPrint(true).encodeResourceToString(cs);
+    }
+
+    private String buildKpisKdcodeStub() {
+        CodeSystem cs = new CodeSystem();
+        cs.setId("kpis-kdcode");
+        cs.setUrl(URL_KPIS_KDCODE);
+        cs.setName("KPIS_KDCode");
+        cs.setTitle("KPIS KD코드 (약제코드)");
+        cs.setStatus(Enumerations.PublicationStatus.ACTIVE);
+        cs.setContent(CodeSystem.CodeSystemContentMode.NOTPRESENT);
+        cs.setPublisher("HIRA");
+        return FhirResourceService.FHIR_CTX.newJsonParser().setPrettyPrint(true).encodeResourceToString(cs);
+    }
+
+    private String buildAtcStub() {
+        CodeSystem cs = new CodeSystem();
+        cs.setId("atc");
+        cs.setUrl(URL_ATC);
+        cs.setName("ATC");
+        cs.setTitle("Anatomical Therapeutic Chemical Classification System");
+        cs.setStatus(Enumerations.PublicationStatus.ACTIVE);
+        cs.setContent(CodeSystem.CodeSystemContentMode.NOTPRESENT);
+        cs.setPublisher("WHO Collaborating Centre for Drug Statistics Methodology");
+        return FhirResourceService.FHIR_CTX.newJsonParser().setPrettyPrint(true).encodeResourceToString(cs);
+    }
+
+    private String buildKcd8Stub() {
+        CodeSystem cs = new CodeSystem();
+        cs.setId("kcd8");
+        cs.setUrl(URL_KCD8);
+        cs.setName("KCD8");
+        cs.setTitle("한국표준질병사인분류 (KCD-8)");
         cs.setStatus(Enumerations.PublicationStatus.ACTIVE);
         cs.setContent(CodeSystem.CodeSystemContentMode.NOTPRESENT);
         cs.setPublisher("통계청");

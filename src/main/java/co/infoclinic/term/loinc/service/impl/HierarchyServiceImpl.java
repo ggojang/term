@@ -88,8 +88,9 @@ public class HierarchyServiceImpl implements HierarchyService {
 			return convertToDTOList(entities);
 		}
 
-		// group 하위 노드(카테고리 이름)
-		if (!code.matches(LOINCUtils.CODE_PATTERN) || code.contains(" ")) {
+		// group 하위 노드(카테고리 이름): LP/LG/LA/LL 코드나 숫자 LOINC 코드가 아니면 hierarchy_lg에서 조회
+		boolean isLoincCode = code.matches("^(LP|LG|LA|LL)[\\-0-9]{1,8}$") || code.matches("^[0-9].*");
+		if (!isLoincCode) {
 			List<Hierarchy> entities = hierRepo.findChildrenInLGHierarchy(code);
 			return convertToDTOList(entities);
 		}

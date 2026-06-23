@@ -84,7 +84,7 @@ export default function LGTree(props) {
                 result.data
                 .sort((a,b) => a.name > b.name?1:-1)
                 .map( (node, index) => (
-                  <LGTree setLoincId={props.setLoincId} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.code} label={renderLabel(node)} count={node.desCnt}/>
+                  <LGTree setLoincId={props.setLoincId} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.code} label={renderLabel(node)} count={node.chdCnt}/>
                 ))
               )
             );
@@ -118,7 +118,7 @@ export default function LGTree(props) {
             result.data
             .sort((a,b) => a.name > b.name?1:-1)
             .map((node,index) => (
-              <LGTree setLoincId={props.setLoincId} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.code} label={renderLabel(node)} count={node.desCnt}/>
+              <LGTree setLoincId={props.setLoincId} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.code} label={renderLabel(node)} count={node.chdCnt}/>
             ))
           )
         );

@@ -96,6 +96,13 @@ public class FhirValueSetService {
 
         if (vs.hasCompose()) {
             for (ValueSet.ConceptSetComponent include : vs.getCompose().getInclude()) {
+                // include.valueSet 참조 처리 (다른 ValueSet 포함)
+                if (!include.hasSystem() && include.hasValueSet()) {
+                    for (CanonicalType refUrl : include.getValueSet()) {
+                        expandReferencedValueSet(refUrl.getValue(), filter, offset, count, expansion);
+                    }
+                    continue;
+                }
                 String system = include.getSystem();
                 expandInclude(system, include, filter, offset, count, expansion);
             }
@@ -166,6 +173,54 @@ public class FhirValueSetService {
                     expandLoincByClass(f.getValue(), filter, offset, count, expansion, system);
                 }
             }
+            return;
+        }
+
+        // SNOMED CT 전체 조회 (concept/filter 없이 system=http://snomed.info/sct 만 선언된 경우)
+        if (FhirCodeSystemService.URL_SNOMED.equals(system)) {
+            expandSnomedAll(filter, offset, count, expansion, system);
+            return;
+        }
+
+        // LOINC 전체 조회 (concept/filter 없이 system=http://loinc.org 만 선언된 경우)
+        if (FhirCodeSystemService.URL_LOINC.equals(system)) {
+            expandLoincAll(filter, offset, count, expansion, system);
+            return;
+        }
+
+        // KCD-8/9 전체 조회
+        if (FhirCodeSystemService.URL_KCD9.equals(system) || FhirCodeSystemService.URL_KCD8.equals(system)) {
+            expandKcdAll(filter, offset, count, expansion, system);
+            return;
+        }
+
+        // ATC 전체 조회
+        if (FhirCodeSystemService.URL_ATC.equals(system)) {
+            expandAtcAll(filter, offset, count, expansion, system);
+            return;
+        }
+
+        // KPIS KD코드 전체 조회
+        if (FhirCodeSystemService.URL_KPIS_KDCODE.equals(system)) {
+            expandKdcodeAll(filter, offset, count, expansion, system);
+            return;
+        }
+
+        // HIRA EDI Procedure 전체 조회
+        if (FhirCodeSystemService.URL_HIRA_PROCEDURE.equals(system)) {
+            expandHiraEdiProcedureAll(filter, offset, count, expansion, system);
+            return;
+        }
+
+        // HIRA EDI Medication 전체 조회
+        if (FhirCodeSystemService.URL_HIRA_MEDICATION.equals(system)) {
+            expandHiraEdiMedicationAll(filter, offset, count, expansion, system);
+            return;
+        }
+
+        // HIRA EDI Material 전체 조회
+        if (FhirCodeSystemService.URL_HIRA_MATERIAL.equals(system)) {
+            expandHiraEdiMaterialAll(filter, offset, count, expansion, system);
             return;
         }
 
@@ -261,6 +316,225 @@ public class FhirValueSetService {
                 }
             }
             if (c.hasConcept()) addConcepts(c.getConcept(), system, filter, expansion);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandSnomedAll(String filter, Integer offset, Integer count,
+                                 ValueSet.ValueSetExpansionComponent expansion, String system) {
+        int from  = offset != null ? offset : 0;
+        int limit = count  != null ? count  : 100;
+
+        String where = filter != null
+                ? " WHERE d.term ILIKE :f OR c.concept_id ILIKE :f" : "";
+        String sql = "SELECT c.concept_id, d.term FROM term.concept c" +
+                " JOIN term.description d ON d.concept_id = c.concept_id" +
+                " AND d.type_id = '900000000000003001' AND d.active = 1" +
+                " WHERE c.active = 1" +
+                (filter != null ? " AND (d.term ILIKE :f OR c.concept_id ILIKE :f)" : "") +
+                " ORDER BY c.concept_id LIMIT " + limit + " OFFSET " + from;
+        Query q = em.createNativeQuery(sql);
+        if (filter != null) q.setParameter("f", "%" + filter + "%");
+
+        String cntSql = "SELECT COUNT(*) FROM term.concept c" +
+                " JOIN term.description d ON d.concept_id = c.concept_id" +
+                " AND d.type_id = '900000000000003001' AND d.active = 1" +
+                " WHERE c.active = 1" +
+                (filter != null ? " AND (d.term ILIKE :f OR c.concept_id ILIKE :f)" : "");
+        Query cq = em.createNativeQuery(cntSql);
+        if (filter != null) cq.setParameter("f", "%" + filter + "%");
+        expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+        if (offset != null) expansion.setOffset(offset);
+
+        for (Object[] r : (List<Object[]>) q.getResultList()) {
+            expansion.addContains()
+                    .setSystem(system)
+                    .setCode(String.valueOf(r[0]))
+                    .setDisplay(r[1] != null ? (String) r[1] : "");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandLoincAll(String filter, Integer offset, Integer count,
+                                ValueSet.ValueSetExpansionComponent expansion, String system) {
+        int from  = offset != null ? offset : 0;
+        int limit = count  != null ? count  : 100;
+
+        String where = filter != null ? " WHERE code ILIKE :f OR long_common_name ILIKE :f" : "";
+        String sql = "SELECT code, long_common_name FROM loinc.loinc" + where
+                + " ORDER BY code LIMIT " + limit + " OFFSET " + from;
+        Query q = em.createNativeQuery(sql);
+        if (filter != null) q.setParameter("f", "%" + filter + "%");
+
+        String cntSql = "SELECT COUNT(*) FROM loinc.loinc" + where;
+        Query cq = em.createNativeQuery(cntSql);
+        if (filter != null) cq.setParameter("f", "%" + filter + "%");
+        expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+        if (offset != null) expansion.setOffset(offset);
+
+        for (Object[] r : (List<Object[]>) q.getResultList()) {
+            String loincCode = (String) r[0];
+            ValueSet.ValueSetExpansionContainsComponent contains = expansion.addContains()
+                    .setSystem(system).setCode(loincCode)
+                    .setDisplay(r[1] != null ? (String) r[1] : "");
+            addLoincKoreanDesignation(loincCode, contains);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandKcdAll(String filter, Integer offset, Integer count,
+                              ValueSet.ValueSetExpansionComponent expansion, String system) {
+        int from  = offset != null ? offset : 0;
+        int limit = count  != null ? count  : 100;
+
+        String where = filter != null
+                ? " WHERE code ILIKE :f OR korean_label ILIKE :f OR label ILIKE :f" : "";
+        String sql = "SELECT code, korean_label, label FROM icd10.icd10_class" + where
+                + " ORDER BY code LIMIT " + limit + " OFFSET " + from;
+        Query q = em.createNativeQuery(sql);
+        if (filter != null) q.setParameter("f", "%" + filter + "%");
+
+        String cntSql = "SELECT COUNT(*) FROM icd10.icd10_class" + where;
+        Query cq = em.createNativeQuery(cntSql);
+        if (filter != null) cq.setParameter("f", "%" + filter + "%");
+        expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+        if (offset != null) expansion.setOffset(offset);
+
+        for (Object[] r : (List<Object[]>) q.getResultList()) {
+            String kcdCode = (String) r[0];
+            String display = r[1] != null ? (String) r[1] : (r[2] != null ? (String) r[2] : "");
+            expansion.addContains().setSystem(system).setCode(kcdCode).setDisplay(display);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandAtcAll(String filter, Integer offset, Integer count,
+                              ValueSet.ValueSetExpansionComponent expansion, String system) {
+        int from  = offset != null ? offset : 0;
+        int limit = count  != null ? count  : 100;
+        String where = filter != null ? " WHERE atc_code ILIKE :f OR atc_name ILIKE :f OR atc_hname ILIKE :f" : "";
+        String sql = "SELECT atc_code, atc_hname, atc_name FROM term.hira_atc_master" + where
+                + " ORDER BY atc_code LIMIT " + limit + " OFFSET " + from;
+        Query q = em.createNativeQuery(sql);
+        if (filter != null) q.setParameter("f", "%" + filter + "%");
+        String cntSql = "SELECT COUNT(*) FROM term.hira_atc_master" + where;
+        Query cq = em.createNativeQuery(cntSql);
+        if (filter != null) cq.setParameter("f", "%" + filter + "%");
+        expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+        if (offset != null) expansion.setOffset(offset);
+        for (Object[] r : (List<Object[]>) q.getResultList()) {
+            String display = r[1] != null ? (String) r[1] : (r[2] != null ? (String) r[2] : "");
+            expansion.addContains().setSystem(system).setCode((String) r[0]).setDisplay(display);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandKdcodeAll(String filter, Integer offset, Integer count,
+                                 ValueSet.ValueSetExpansionComponent expansion, String system) {
+        int from  = offset != null ? offset : 0;
+        int limit = count  != null ? count  : 100;
+        String where = filter != null ? " WHERE 표준코드 ILIKE :f OR 표준코드명칭 ILIKE :f" : "";
+        String sql = "SELECT DISTINCT ON (표준코드) 표준코드, 표준코드명칭 FROM term.kdcode" + where
+                + " ORDER BY 표준코드, 적용개시일자 DESC LIMIT " + limit + " OFFSET " + from;
+        Query q = em.createNativeQuery(sql);
+        if (filter != null) q.setParameter("f", "%" + filter + "%");
+        String cntSql = "SELECT COUNT(DISTINCT 표준코드) FROM term.kdcode" + where;
+        Query cq = em.createNativeQuery(cntSql);
+        if (filter != null) cq.setParameter("f", "%" + filter + "%");
+        expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+        if (offset != null) expansion.setOffset(offset);
+        for (Object[] r : (List<Object[]>) q.getResultList()) {
+            expansion.addContains().setSystem(system).setCode((String) r[0])
+                    .setDisplay(r[1] != null ? (String) r[1] : "");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandHiraEdiProcedureAll(String filter, Integer offset, Integer count,
+                                           ValueSet.ValueSetExpansionComponent expansion, String system) {
+        int from  = offset != null ? offset : 0;
+        int limit = count  != null ? count  : 100;
+        String where = filter != null ? " WHERE 수가코드 ILIKE :f OR 한글명 ILIKE :f" : "";
+        String sql = "SELECT 수가코드, 한글명 FROM term.hira_행위_code" + where
+                + " ORDER BY 수가코드 LIMIT " + limit + " OFFSET " + from;
+        Query q = em.createNativeQuery(sql);
+        if (filter != null) q.setParameter("f", "%" + filter + "%");
+        String cntSql = "SELECT COUNT(*) FROM term.hira_행위_code" + where;
+        Query cq = em.createNativeQuery(cntSql);
+        if (filter != null) cq.setParameter("f", "%" + filter + "%");
+        expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+        if (offset != null) expansion.setOffset(offset);
+        for (Object[] r : (List<Object[]>) q.getResultList()) {
+            expansion.addContains().setSystem(system).setCode((String) r[0])
+                    .setDisplay(r[1] != null ? (String) r[1] : "");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandHiraEdiMedicationAll(String filter, Integer offset, Integer count,
+                                            ValueSet.ValueSetExpansionComponent expansion, String system) {
+        int from  = offset != null ? offset : 0;
+        int limit = count  != null ? count  : 100;
+        String where = filter != null ? " WHERE 표준코드 ILIKE :f OR 표준코드명칭 ILIKE :f" : "";
+        String sql = "SELECT DISTINCT ON (표준코드) 표준코드, 표준코드명칭 FROM term.kdcode" + where
+                + " ORDER BY 표준코드, 적용개시일자 DESC LIMIT " + limit + " OFFSET " + from;
+        Query q = em.createNativeQuery(sql);
+        if (filter != null) q.setParameter("f", "%" + filter + "%");
+        String cntSql = "SELECT COUNT(DISTINCT 표준코드) FROM term.kdcode" + where;
+        Query cq = em.createNativeQuery(cntSql);
+        if (filter != null) cq.setParameter("f", "%" + filter + "%");
+        expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+        if (offset != null) expansion.setOffset(offset);
+        for (Object[] r : (List<Object[]>) q.getResultList()) {
+            expansion.addContains().setSystem(system).setCode((String) r[0])
+                    .setDisplay(r[1] != null ? (String) r[1] : "");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandHiraEdiMaterialAll(String filter, Integer offset, Integer count,
+                                          ValueSet.ValueSetExpansionComponent expansion, String system) {
+        int from  = offset != null ? offset : 0;
+        int limit = count  != null ? count  : 100;
+        String where = filter != null ? " WHERE 코드 ILIKE :f OR 품명 ILIKE :f" : "";
+        String sql = "SELECT 코드, 품명 FROM term.hira_치료재료_code" + where
+                + " ORDER BY 코드 LIMIT " + limit + " OFFSET " + from;
+        Query q = em.createNativeQuery(sql);
+        if (filter != null) q.setParameter("f", "%" + filter + "%");
+        String cntSql = "SELECT COUNT(*) FROM term.hira_치료재료_code" + where;
+        Query cq = em.createNativeQuery(cntSql);
+        if (filter != null) cq.setParameter("f", "%" + filter + "%");
+        expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+        if (offset != null) expansion.setOffset(offset);
+        for (Object[] r : (List<Object[]>) q.getResultList()) {
+            expansion.addContains().setSystem(system).setCode((String) r[0])
+                    .setDisplay(r[1] != null ? (String) r[1] : "");
+        }
+    }
+
+    private void expandReferencedValueSet(String refUrl, String filter, Integer offset, Integer count,
+                                          ValueSet.ValueSetExpansionComponent expansion) {
+        String json = resourceSvc.findByUrl("ValueSet", refUrl)
+                .orElseGet(() -> {
+                    // URL에서 ID 추출 시도
+                    String id = refUrl.contains("/") ? refUrl.substring(refUrl.lastIndexOf('/') + 1) : refUrl;
+                    return resourceSvc.findById("ValueSet", id).orElse(null);
+                });
+        if (json == null) {
+            log.warn("Referenced ValueSet not found: {}", refUrl);
+            return;
+        }
+        IParser parser = FhirResourceService.FHIR_CTX.newJsonParser();
+        ValueSet refVs = (ValueSet) parser.parseResource(json);
+        if (!refVs.hasCompose()) return;
+        for (ValueSet.ConceptSetComponent include : refVs.getCompose().getInclude()) {
+            if (!include.hasSystem() && include.hasValueSet()) {
+                for (CanonicalType nested : include.getValueSet()) {
+                    expandReferencedValueSet(nested.getValue(), filter, offset, count, expansion);
+                }
+                continue;
+            }
+            expandInclude(include.getSystem(), include, filter, offset, count, expansion);
         }
     }
 

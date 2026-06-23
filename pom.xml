@@ -558,7 +558,7 @@
 						<version>2.2</version>
 						<configuration>
 							<port>8088</port>
-							<path>/stom</path>
+							<path>/</path>
 							<uriEncoding>UTF-8</uriEncoding>
 						</configuration>
 					</plugin>

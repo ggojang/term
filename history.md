@@ -303,6 +303,83 @@ python3 hira_downloader/load_atc_master.py                      # ATC 마스터 
 
 ---
 
+---
+
+## FHIR Terminology Server 기능 확장 (2026-06-23)
+
+### KR-Core Terminology 전체 지원
+
+#### FHIR CodeSystem DB 연결
+
+| URL | DB 테이블 | 비고 |
+|-----|-----------|------|
+| `http://www.hl7korea.or.kr/CodeSystem/kostat-kcd-8` | `icd10.icd10_class` | 버전 무관 동일 조회 |
+| `http://www.hl7korea.or.kr/CodeSystem/kostat-kcd-9` | `icd10.icd10_class` | 버전 무관 동일 조회 |
+| `http://www.whocc.no/atc` | `term.hira_atc_master` | atc_code, atc_name, atc_hname |
+| `http://www.hl7korea.or.kr/CodeSystem/kpis-kdcode` | `term.kdcode` | 표준코드, 표준코드명칭, 급여비급여구분, 상한가 |
+
+- `FhirCodeSystemService`: 위 4개 URL에 대해 `$lookup`, `$validate-code` 분기 추가
+- `FhirCodeSystemService`: `buildKcd8Stub()`, `buildAtcStub()`, `buildKpisKdcodeStub()` 메서드 추가
+
+#### FHIR ValueSet $expand 전체 DB 조회 분기 추가
+
+`FhirValueSetService.expandInclude()`에 시스템별 전체 조회 분기 추가:
+
+| CodeSystem URL | 메서드 | DB 테이블 |
+|---|---|---|
+| `http://www.whocc.no/atc` | `expandAtcAll()` | `term.hira_atc_master` |
+| `http://www.hl7korea.or.kr/CodeSystem/kpis-kdcode` | `expandKdcodeAll()` | `term.kdcode` |
+| `http://www.hl7korea.or.kr/CodeSystem/hira-edi-procedure` | `expandHiraEdiProcedureAll()` | `term.hira_행위_code` |
+| `http://www.hl7korea.or.kr/CodeSystem/hira-edi-medication` | `expandHiraEdiMedicationAll()` | `term.kdcode` |
+| `http://www.hl7korea.or.kr/CodeSystem/hira-edi-material` | `expandHiraEdiMaterialAll()` | `term.hira_치료재료_code` |
+| SNOMED CT | `expandSnomedAll()` | `term.concept` + `term.description` |
+| LOINC | `expandLoincAll()` | `loinc.loinc` |
+| KCD-8/9 | `expandKcdAll()` | `icd10.icd10_class` |
+
+#### include.valueSet 참조 지원
+- `FhirValueSetService.expandReferencedValueSet()` 추가
+- `compose.include`에 `valueSet` 참조가 있는 경우 재귀적으로 expand
+- 적용 ValueSet: `krcore-diagnostic-imaging-codes`, `krcore-laboratory-codes`, `krcore-pathology-codes`, `krcore-procedure-codes`
+
+#### KR-Core ValueSet $expand 지원 현황 (전체 20개 ✅)
+
+| ValueSet | total |
+|---|---|
+| krcore-kcd8-codes | 25,426 |
+| krcore-snomed-ct-codes | 1,172,605 |
+| krcore-loinc-codes | 109,325 |
+| krcore-atc-codes | 1,322 |
+| krcore-korea-drug-codes | 327,280 |
+| krcore-edi-procedure-codes | 419,024 |
+| krcore-edi-medication-codes | 327,280 |
+| krcore-edi-material-codes | 32,062 |
+| krcore-diagnostic-imaging-codes | EDI + LOINC 합산 |
+| krcore-laboratory-codes | EDI + LOINC 합산 |
+| krcore-pathology-codes | EDI + SNOMED 합산 |
+| krcore-procedure-codes | EDI + SNOMED 합산 |
+| 소규모 8종 (condition-category 등) | 저장된 CodeSystem 기반 |
+
+### KPIS KD코드 표준코드목록 DB 적재
+
+- **출처**: `release_files/hira_incoming/StdCdList.csv` (HIRA 표준코드목록 배포파일)
+- **컬럼 정의**: `release_files/hira_incoming/StdCdListTitle.csv` (17개 컬럼)
+- **적재 테이블**: `term.kdcode`
+- **적재 건수**: 530,223건 (DISTINCT 표준코드 기준 327,280개)
+- **신규 파일**:
+  - `hira_downloader/create_code_tables.sql` — `term.kdcode` DDL 추가
+  - `hira_downloader/load_kdcode.py` — StdCdList.csv → `term.kdcode` 적재 스크립트
+
+#### 신규 서버 설치 순서 (업데이트)
+```bash
+psql -U postgres -d term -f fhir/create_fhir_schema.sql
+psql -U postgres -d term -f hira_downloader/create_code_tables.sql
+python3 hira_downloader/load_hira_codes.py
+python3 hira_downloader/load_atc_master.py
+python3 hira_downloader/load_kdcode.py    # StdCdList.csv 필요
+```
+
+---
+
 ## 로컬 DB 미적용 항목 (추후 LOINC 버전 업데이트 시 적용 예정)
 
 - `loinc.HIERARCHY` DESCENDANT_COUNT 재계산 (PATH 기반, 293,674행)

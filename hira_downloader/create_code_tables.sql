@@ -66,6 +66,30 @@ CREATE INDEX IF NOT EXISTS idx_hira_치료재료_search ON hira_치료재료_cod
     to_tsvector('simple', coalesce(코드,'') || ' ' || coalesce(품명,'') || ' ' || coalesce(중분류,''))
 );
 
+-- ── KPIS KD코드 표준코드목록 (release_files/hira_incoming/StdCdList.csv) ────────
+-- StdCdListTitle.csv 컬럼 순서 기준
+CREATE TABLE IF NOT EXISTS term.kdcode (
+    표준코드            TEXT,
+    표준코드명칭        TEXT,
+    적용개시일자        TEXT,
+    적용종료일자        TEXT,
+    양도개시일자        TEXT,
+    양도종료일자        TEXT,
+    포장내제품총수량    TEXT,
+    상한가              TEXT,
+    급여비급여구분      TEXT,
+    안전상비의약품여부  TEXT,
+    일반전문구분        TEXT,
+    퇴장방지저가방사선  TEXT,
+    품목기준코드        TEXT,
+    식약처취소일자      TEXT,
+    일련번호제외여부    TEXT,
+    일련번호제외사유    TEXT,
+    의약품판독장비구분  TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_kdcode_std_code ON term.kdcode(표준코드);
+
 -- ── ATC 마스터 (약학정보원 health.kr) ──────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS term.hira_atc_master (
     atc_code  VARCHAR(10)  PRIMARY KEY,
