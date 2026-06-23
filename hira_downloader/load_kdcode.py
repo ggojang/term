@@ -5,7 +5,6 @@
   python3 load_kdcode.py [StdCdList.csv 경로]
   경로 생략 시 release_files/hira_incoming/StdCdList.csv 사용
 """
-from __future__ import annotations
 import csv
 import logging
 import sys
