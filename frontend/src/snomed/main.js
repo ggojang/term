@@ -218,13 +218,33 @@ export default function Main(props) {
     showToast(exists ? 'Bookmark removed' : '⭐ Bookmarked');
   };
 
+  const copyToClipboard = (text, msg) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => showToast(msg)).catch(() => fallbackCopy(text, msg));
+    } else {
+      fallbackCopy(text, msg);
+    }
+  };
+
+  const fallbackCopy = (text, msg) => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); showToast(msg); } catch (e) { showToast('복사 실패'); }
+    document.body.removeChild(ta);
+  };
+
   const copySCTID = (sctid) => {
-    navigator.clipboard.writeText(sctid).then(() => showToast('SCTID copied!'));
+    copyToClipboard(sctid, 'SCTID copied!');
   };
 
   const shareLink = (conceptId) => {
     const url = `${window.location.origin}${window.location.pathname}#${conceptId}`;
-    navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
+    copyToClipboard(url, 'Link copied!');
   };
 
   const exportCSV = (entity, desc, asso) => {
