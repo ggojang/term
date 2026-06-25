@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 import co.infoclinic.term.common.utils.SNOMEDCTUtils;
 import co.infoclinic.term.snomedct.model.entity.Scheme;
 import co.infoclinic.term.snomedct.repository.SchemeRepository;
-import co.infoclinic.term.snomedct.repository.TransitiveClosureRepository;
 import co.infoclinic.term.snomedct.service.SchemeService;
+import co.infoclinic.term.snomedct.service.TransitiveClosureService;
 
 @Service("SCTSchemeSvc")
 public class SchemeServiceImpl implements SchemeService {
@@ -24,7 +24,7 @@ public class SchemeServiceImpl implements SchemeService {
 	private SchemeRepository schemeRepo;
 
 	@Autowired
-	private TransitiveClosureRepository tcRepo;
+	private TransitiveClosureService tcSvc;
 
 
 	@Override
@@ -88,7 +88,7 @@ public class SchemeServiceImpl implements SchemeService {
 		String et = getEffectiveTime(version);
 
 		// TC에서 해당 날짜 이하의 가장 최신 effectiveTime 선택 (International/Extension 공통)
-		List<String> availableTimes = tcRepo.findDistinctEffectiveTimes(); // 최신순 정렬
+		List<String> availableTimes = tcSvc.getAvailableEffectiveTimes(); // 캐싱된 값 사용
 		for (String t : availableTimes) {
 			if (t.compareTo(et) <= 0) {
 				return t;

@@ -32,11 +32,26 @@ public class TransitiveClosureServiceImpl implements TransitiveClosureService {
 	/** 언어 Refset ID 목록 캐시 (effectiveTime → List) */
 	private final Map<String, List<String>> languageRefsetIdCache = new HashMap<>();
 
+	/** TC에 존재하는 effectiveTime 목록 캐시 (앱 기동 시 1회 로드) */
+	private volatile List<String> availableTimesCache = null;
+
 
 	@Override
 	public List<String> getAvailableEffectiveTimes() {
-		List<String> times = tcRepo.findDistinctEffectiveTimes();
-		return times != null ? times : new ArrayList<>();
+		if (availableTimesCache == null) {
+			synchronized (this) {
+				if (availableTimesCache == null) {
+					List<String> times = tcRepo.findDistinctEffectiveTimes();
+					availableTimesCache = times != null ? times : new ArrayList<>();
+				}
+			}
+		}
+		return availableTimesCache;
+	}
+
+	/** TC effectiveTime 캐시를 초기화 (TC 배치 완료 후 호출) */
+	public void invalidateAvailableTimesCache() {
+		availableTimesCache = null;
 	}
 
 

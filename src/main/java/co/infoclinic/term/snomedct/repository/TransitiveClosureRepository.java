@@ -13,9 +13,9 @@ import co.infoclinic.term.snomedct.model.entity.TransitiveClosure;
 public interface TransitiveClosureRepository extends JpaRepository<TransitiveClosure, Long> {
 
 	/**
-	 * TC에 저장된 릴리즈 effectiveTime 목록 (최신순)
+	 * TC에 저장된 릴리즈 effectiveTime 목록 (최신순) — tc_meta 테이블에서 빠르게 조회
 	 */
-	@Query(value = "SELECT DISTINCT EFFECTIVE_TIME FROM TC ORDER BY EFFECTIVE_TIME DESC", nativeQuery = true)
+	@Query(value = "SELECT EFFECTIVE_TIME FROM TC_META ORDER BY EFFECTIVE_TIME DESC", nativeQuery = true)
 	List<String> findDistinctEffectiveTimes();
 
 
