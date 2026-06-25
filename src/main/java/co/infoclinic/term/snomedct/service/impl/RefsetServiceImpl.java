@@ -68,10 +68,13 @@ public class RefsetServiceImpl implements RefsetService {
 		Set<String> existSet = new HashSet<String>();
 		List<String> idList = getReferencesetIdList();
 
+		List<String> availableTimes = tcSvc.getAvailableEffectiveTimes();
+		String latestEt = availableTimes.isEmpty() ? "" : availableTimes.get(0);
+
 		int idListSize = idList.size();
 		for (int i = 0; i < idListSize; i++) {
 			String id = idList.get(i);
-			List<String> ancestorPaths = tcSvc.getParentPathListByConceptId(id); 
+			List<String> ancestorPaths = tcSvc.getParentPathListByConceptId(id, latestEt);
 			// 부모 경로가 1개 존재하는 경우
 			if (ancestorPaths != null && ancestorPaths.size() == 1) {
 				String ancestorPath = ancestorPaths.get(0);

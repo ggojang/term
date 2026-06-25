@@ -344,10 +344,10 @@ public class ConstraintController {
 			boolean pass = false;
 			switch (key) {
 				case "DESCENDANTOF":
-					pass = !cid.equals(focusId) && tcRepo.findCountByCriteriaIdAndConceptId(focusId, cid) > 0;
+					pass = !cid.equals(focusId) && tcRepo.findCountByCriteriaIdAndConceptId(focusId, cid, effectiveTime) > 0;
 					break;
 				case "DESCENDANTORSELFOF":
-					pass = cid.equals(focusId) || tcRepo.findCountByCriteriaIdAndConceptId(focusId, cid) > 0;
+					pass = cid.equals(focusId) || tcRepo.findCountByCriteriaIdAndConceptId(focusId, cid, effectiveTime) > 0;
 					break;
 				case "CHILDOF": {
 					List<ConceptViewDTO> parents = conceptService.getParentList(cid, effectiveTime);

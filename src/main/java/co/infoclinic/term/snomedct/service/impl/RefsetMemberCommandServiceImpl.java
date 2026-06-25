@@ -193,7 +193,7 @@ public class RefsetMemberCommandServiceImpl implements RefsetMemberCommandServic
 	private List<String> expandAll(List<String> conceptIds, List<String> descriptionIds, List<String> expandableConceptIds, String effectiveTime) {
 		List<String> mbrs = new ArrayList<String>();
 		
-		List<String> paths = tcSvc.getPathListByConceptIds(expandableConceptIds);
+		List<String> paths = tcSvc.getPathListByConceptIds(expandableConceptIds, effectiveTime);
 		
 		List<Description> descs = descSvc.expandAll(conceptIds, descriptionIds, paths, effectiveTime);
 		Description desc;

@@ -49,4 +49,8 @@ public class TransitiveClosure {
 	/** 루트로부터 현재 경로의 깊이 */
 	@Column
 	private int depth;
+
+	/** 릴리즈 기준 effectiveTime (예: "20241001") */
+	@Column
+	private String effectiveTime;
 }

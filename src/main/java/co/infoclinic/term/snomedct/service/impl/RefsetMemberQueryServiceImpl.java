@@ -186,7 +186,7 @@ public class RefsetMemberQueryServiceImpl implements RefsetMemberQueryService {
 		// 1. referencesetId의 ancestorPath를 찾는다.
 		// 2. 900000000000455006 다음의 id를 찾는다.
 		String matchId = null;
-		List<String> ancestorPathList = tcSvc.getParentPathListByConceptId(refsetId);
+		List<String> ancestorPathList = tcSvc.getParentPathListByConceptId(refsetId, effectiveTime);
 		if (ancestorPathList.size() == 1) {
 			String ancestorPath = ancestorPathList.get(0);
 			int idx = ancestorPath.indexOf(SNOMEDCTUtils.MetadataType.Referenceset);
@@ -446,8 +446,8 @@ public class RefsetMemberQueryServiceImpl implements RefsetMemberQueryService {
 		String categoryId = null;
 		
 		// 루트~부모경로 목록(경로간 구분은 '~')
-		List<String> paths = tcSvc.getParentPathListByConceptId(refsetId);
-		
+		List<String> paths = tcSvc.getParentPathListByConceptId(refsetId, effectiveTime);
+
 		// 루트~부모경로 목록의 크기
 		int pathsSize = paths.size();
 		
@@ -637,7 +637,7 @@ public class RefsetMemberQueryServiceImpl implements RefsetMemberQueryService {
 		for (int i = 0; i < membersLen; i++) {
 			member = members.get(i);
 			String referencesetId = member.getRefsetId();
-			ancestorPaths = tcSvc.getParentPathListByConceptId(referencesetId);
+			ancestorPaths = tcSvc.getParentPathListByConceptId(referencesetId, effectiveTime);
 			String refsetTypeId = null;
 			if (ancestorPaths.size() == 1) {
 				String ancestorPath = ancestorPaths.get(0);

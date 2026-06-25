@@ -124,8 +124,10 @@ public class MrcmServiceImpl implements MrcmService {
 		
 		List<DefiningAttributeDTO> allowDefiningAttributeList = null;
 		
-		// 1. 13887500(최상위 컨셉:SNOMED CT Concept) 부터 파라메터 conceptId까지의 경로에 해당하는 모든 컨셉아이디 리스트 구성
-		List<String> ancestorIdWithFocusConceptIdSet = tcSvc.getAncestorIdWithFocusConceptIdSet(conceptId);
+		// 1. 138875005(최상위 컨셉:SNOMED CT Concept) 부터 파라메터 conceptId까지의 경로에 해당하는 모든 컨셉아이디 리스트 구성
+		List<String> availableTimes = tcSvc.getAvailableEffectiveTimes();
+		String latestEt = availableTimes.isEmpty() ? "" : availableTimes.get(0);
+		List<String> ancestorIdWithFocusConceptIdSet = tcSvc.getAncestorIdWithFocusConceptIdSet(conceptId, latestEt);
 		
 		// start // 20190919
 		// 20190731부터 clinical finding과 disorder 그리고 procedure와 evaluation procedure의 MRCM이 각각존재

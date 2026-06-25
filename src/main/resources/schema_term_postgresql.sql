@@ -398,13 +398,18 @@ CREATE TABLE TC (
     -- MySQL VARCHAR(300) → TEXT (깊은 계층에서 경로 길이 초과 방지)
     PATH              TEXT         NOT NULL,
     DATE_CREATED      CHAR(8)      DEFAULT NULL,
+    -- 릴리즈별 TC 구분 (International effectiveTime: 20241001 등)
+    EFFECTIVE_TIME    CHAR(8)      NOT NULL DEFAULT '00000000',
     PRIMARY KEY (SEQ)
 );
 
-CREATE INDEX IDX_TC_C_ID ON TC (CONCEPT_ID);
-CREATE INDEX IDX_TC_P_ID ON TC (PARENT_ID);
+CREATE INDEX IDX_TC_C_ID        ON TC (CONCEPT_ID);
+CREATE INDEX IDX_TC_P_ID        ON TC (PARENT_ID);
 -- TEXT 컬럼은 직접 인덱스 불가 → 앞 300자에만 인덱스 (MySQL KEY IDX_TC_PATH 대응)
-CREATE INDEX IDX_TC_PATH ON TC ((LEFT(PATH, 300)));
+CREATE INDEX IDX_TC_PATH        ON TC ((LEFT(PATH, 300)));
+CREATE INDEX IDX_TC_ETIME       ON TC (EFFECTIVE_TIME);
+CREATE INDEX IDX_TC_ETIME_C_ID  ON TC (EFFECTIVE_TIME, CONCEPT_ID);
+CREATE INDEX IDX_TC_ETIME_P_ID  ON TC (EFFECTIVE_TIME, PARENT_ID);
 
 -- -----------------------------------------------------------------------------
 -- SCHEME
@@ -465,12 +470,14 @@ CREATE INDEX IDX_SRCH_TERM_FTS  ON SEARCH_INDEX USING gin (to_tsvector('english'
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS SCHEME;
 CREATE TABLE SCHEME (
-    ID        VARCHAR(45) NOT NULL,
-    NAME      VARCHAR(45) NOT NULL,
-    EDITION   VARCHAR(45) NOT NULL,
-    VERSION   VARCHAR(10) NOT NULL,
-    AUTHORITY VARCHAR(45) NOT NULL,
-    DATE      VARCHAR(10) NOT NULL,
+    ID             VARCHAR(45)  NOT NULL,
+    NAME           VARCHAR(45)  NOT NULL,
+    EDITION        VARCHAR(45)  NOT NULL,
+    VERSION        VARCHAR(10)  NOT NULL,
+    AUTHORITY      VARCHAR(45)  NOT NULL,
+    DATE           VARCHAR(10)  NOT NULL,
+    -- null=International Edition, 값 있으면 Extension 명칭 (예: 'Korean Edition')
+    EXTENSION_NAME VARCHAR(100) DEFAULT NULL,
     PRIMARY KEY (ID)
 );
 
@@ -888,3 +895,11 @@ CREATE INDEX idx_icd10_class_path  ON icd10.ICD10_CLASS(PATH);
 CREATE INDEX idx_icd10_rubric_code ON icd10.ICD10_RUBRIC(CODE);
 CREATE INDEX idx_icd10_rubric_kind ON icd10.ICD10_RUBRIC(KIND);
 -- pg_trgm 설치 후 활성화: CREATE INDEX idx_icd10_rubric_label_trgm ON icd10.ICD10_RUBRIC USING GIN (LABEL gin_trgm_ops);
+
+-- =============================================================================
+-- TC effectiveTime 마이그레이션 (기존 TC 데이터에 최신 effectiveTime 적용)
+-- PostgreSQLImporter.sh 실행 시 자동 처리됨.
+-- 수동으로 실행할 경우:
+--   UPDATE TC SET EFFECTIVE_TIME = (SELECT MAX(EFFECTIVE_TIME) FROM INFERRED_RELATIONSHIP)
+--   WHERE EFFECTIVE_TIME = '00000000';
+-- =============================================================================

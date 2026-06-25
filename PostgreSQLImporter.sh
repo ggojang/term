@@ -108,9 +108,44 @@ fi
 # ── STEP 3: Transitive Closure ────────────────────────────────
 echo ""
 echo "[3] Transitive Closure 생성..."
-cd "${LOCATION}"
-bash TransitiveClosureGeneratorFromInferred.sh
-echo "    ✓ TC 생성 완료"
+compile_loader "${LOADER_DIR}/TransitiveClosureLoader.java"
+
+# International ZIP 파일명에서 effectiveTime 추출 (예: SnomedCT_InternationalRF2_PRODUCTION_20241001T120000Z.zip → 20241001)
+INT_ET=$(basename "${INT_ZIP}" | grep -oE '[0-9]{8}' | head -1)
+if [ -z "${INT_ET}" ]; then
+    echo "    ⚠ ZIP 파일명에서 effectiveTime 추출 실패. inferred_relationship 최신값 사용."
+    INT_ET=""
+fi
+
+echo "    International effectiveTime: ${INT_ET:-<auto>}"
+java -Xmx6g -cp "${CLASS_DIR}:${PG_JDBC_JAR}" \
+    co.infoclinic.term.common.loader.TransitiveClosureLoader "${INT_ET}"
+echo "    ✓ TC 생성 완료 (effectiveTime=${INT_ET:-auto})"
+
+# International 릴리즈를 SCHEME 테이블에 등록/갱신
+if [ -n "${INT_ET}" ]; then
+    INT_NAME=$(basename "${INT_ZIP}" | sed 's/\.zip$//')
+    echo "    SCHEME 등록: SNOMEDCT v${INT_ET} (International)"
+    psql -h ${PG_HOST} -p ${PG_PORT} -U ${PG_USER} -d ${PG_DB} -c \
+        "INSERT INTO scheme (id, name, edition, version, authority, date, extension_name)
+         VALUES ('SNOMEDCT-INT-v${INT_ET}', 'SNOMEDCT-INT', 'INT', 'v${INT_ET}', 'SNOMED International', '${INT_ET}', NULL)
+         ON CONFLICT (id) DO UPDATE SET date = EXCLUDED.date;"
+fi
+
+# Extension ZIP들의 effectiveTime 추출 및 SCHEME 등록
+if [ -n "${EXT_ZIPS}" ]; then
+    for ZIP in ${EXT_ZIPS}; do
+        EXT_ET=$(basename "${ZIP}" | grep -oE '[0-9]{8}' | head -1)
+        EXT_NAME=$(basename "${ZIP}" | sed 's/SnomedCT_//' | sed 's/_PRODUCTION_.*//' | sed 's/_SNAPSHOT_.*//')
+        if [ -n "${EXT_ET}" ]; then
+            echo "    SCHEME 등록: ${EXT_NAME} v${EXT_ET} (Extension)"
+            psql -h ${PG_HOST} -p ${PG_PORT} -U ${PG_USER} -d ${PG_DB} -c \
+                "INSERT INTO scheme (id, name, edition, version, authority, date, extension_name)
+                 VALUES ('SNOMEDCT-${EXT_NAME}-v${EXT_ET}', 'SNOMEDCT-${EXT_NAME}', '${EXT_NAME}', 'v${EXT_ET}', 'SNOMED International', '${EXT_ET}', '${EXT_NAME}')
+                 ON CONFLICT (id) DO UPDATE SET date = EXCLUDED.date;"
+        fi
+    done
+fi
 
 # ── STEP 4: REFERENCESET_ACTIVE ───────────────────────────────
 echo ""

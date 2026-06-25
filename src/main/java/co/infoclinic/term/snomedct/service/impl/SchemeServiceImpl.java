@@ -12,92 +12,95 @@ import org.springframework.stereotype.Service;
 import co.infoclinic.term.common.utils.SNOMEDCTUtils;
 import co.infoclinic.term.snomedct.model.entity.Scheme;
 import co.infoclinic.term.snomedct.repository.SchemeRepository;
+import co.infoclinic.term.snomedct.repository.TransitiveClosureRepository;
 import co.infoclinic.term.snomedct.service.SchemeService;
 
 @Service("SCTSchemeSvc")
 public class SchemeServiceImpl implements SchemeService {
 
-	/** Logger */
 	Logger log = LoggerFactory.getLogger(SchemeServiceImpl.class);
-	
-	/** DI: TransitiveClosure repository */
+
 	@Autowired
 	private SchemeRepository schemeRepo;
-	
 
-	
-	
-	/*
-	 * (non-Javadoc)
-	 * @see co.infoclinic.term.snomedct.service.SchemeService#getAllSchemeList()
-	 */
+	@Autowired
+	private TransitiveClosureRepository tcRepo;
+
+
 	@Override
 	public List<Scheme> getSchemeList() {
-		List<Scheme> schemes = schemeRepo.findAll();
-		return schemes != null ? schemes:new ArrayList<Scheme>();
+		List<Scheme> schemes = schemeRepo.findAllOrderByVersionDesc();
+		return schemes != null ? schemes : new ArrayList<>();
 	}
 
-	
-	/*
-	 * (non-Javadoc)
-	 * @see co.infoclinic.term.snomedct.service.SchemeService#getLatestScheme()
-	 */
+
 	@Override
 	public Scheme getLatestScheme() {
 		Scheme scheme = schemeRepo.findLatest();
-		return scheme != null ? scheme:new Scheme();
+		return scheme != null ? scheme : new Scheme();
 	}
 
-	
-	/*
-	 * (non-Javadoc)
-	 * @see co.infoclinic.term.snomedct.service.SchemeService#getLatestVersion()
-	 */
+
 	@Override
 	public String getLatestVersion() {
 		String version = "";
 		Scheme scheme = getLatestScheme();
-		
 		try {
 			version = scheme.getVersion();
 		} catch (NullPointerException e) {
 			version = "";
 		} finally {
-			if (version == null) {
-				version = "";
-			}
+			if (version == null) version = "";
 		}
-		
 		return version;
 	}
 
-	
-	/*
-	 * (non-Javadoc)
-	 * @see co.infoclinic.term.snomedct.service.SchemeService#isValidVersion(java.lang.String)
-	 */
+
 	@Override
 	public boolean isValid(String version) {
 		if (StringUtils.isEmpty(version) || !version.matches(SNOMEDCTUtils.CODE_PATTERN)) {
 			return false;
 		}
-		
-		boolean isValid = false;
 		Scheme scheme = schemeRepo.findByVersion(version);
-		isValid = scheme != null && version.equals(scheme.getVersion()) ? true:false;
-		
-		return isValid;
+		return scheme != null && version.equals(scheme.getVersion());
 	}
 
 
 	@Override
 	public String getEffectiveTime(String version) {
-		if (!isValid(version)) {
-			return "";
-		}
-		
+		if (!isValid(version)) return "";
 		return version.toLowerCase().replace("v", "");
 	}
-	
-	
+
+
+	/**
+	 * version에 대응하는 TC effectiveTime 반환.
+	 * - International 릴리즈: EXTENSION_NAME IS NULL → effectiveTime 그대로
+	 * - Extension 릴리즈: TC에 존재하는 가장 가까운 이전 International effectiveTime 반환
+	 */
+	@Override
+	public String getTcEffectiveTime(String version) {
+		if (!isValid(version)) return "";
+
+		Scheme scheme = schemeRepo.findByVersion(version);
+		if (scheme == null) return "";
+
+		String et = getEffectiveTime(version);
+
+		// International 릴리즈는 TC effectiveTime과 동일
+		if (scheme.getExtensionName() == null) {
+			return et;
+		}
+
+		// Extension 릴리즈: TC에서 해당 날짜 이하의 가장 최신 International effectiveTime 선택
+		List<String> availableTimes = tcRepo.findDistinctEffectiveTimes(); // 최신순 정렬
+		for (String t : availableTimes) {
+			if (t.compareTo(et) <= 0) {
+				return t;
+			}
+		}
+
+		// fallback: TC의 가장 오래된 버전
+		return availableTimes.isEmpty() ? et : availableTimes.get(availableTimes.size() - 1);
+	}
 }

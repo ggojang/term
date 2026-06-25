@@ -385,3 +385,83 @@ python3 hira_downloader/load_kdcode.py    # StdCdList.csv 필요
 - `loinc.HIERARCHY` DESCENDANT_COUNT 재계산 (PATH 기반, 293,674행)
 - `loinc.HIERARCHY_LG` DESCENDANT_COUNT 재계산 (43,767행)
 - 현재 로컬에서 트리 descendant count가 틀리게 표시될 수 있으나 기능 동작에는 무관
+
+---
+
+## 2026-06-25 — SNOMED CT 멀티 릴리즈 지원 (TC effectiveTime)
+
+### 배경
+- TC 테이블이 단일 릴리즈만 유지하던 구조에서, effectiveTime 컬럼 추가로 여러 릴리즈 공존 가능
+- Extension 릴리즈(한국판 등)도 드롭다운에 표시 및 선택 가능
+- SNOMED CT International 릴리즈 주기: 2002~2011 연1회(1월31일), 2012~현재 연2회(1월31일·7월31일)
+
+### 변경 파일
+- **`src/main/resources/schema_term_postgresql.sql`**
+  - `TC` 테이블에 `EFFECTIVE_TIME CHAR(8) NOT NULL DEFAULT '00000000'` 컬럼 추가
+  - `IDX_TC_ETIME`, `IDX_TC_ETIME_C_ID`, `IDX_TC_ETIME_P_ID` 인덱스 추가
+  - `SCHEME` 테이블에 `EXTENSION_NAME VARCHAR(100) DEFAULT NULL` 컬럼 추가
+
+- **`src/main/java/co/infoclinic/term/common/loader/TransitiveClosureLoader.java`**
+  - `load(conn)` → `load(conn, effectiveTime)` 시그니처 변경
+  - effectiveTime null 시 `inferred_relationship`의 최신 날짜 자동 조회
+  - TRUNCATE 제거 → effectiveTime 단위 DELETE 후 INSERT (멀티 릴리즈 append)
+  - INSERT SQL에 `effective_time` 컬럼 추가
+  - IS-A 쿼리에 `effective_time <= target` 필터 추가 (과거 릴리즈 재현)
+
+- **`src/main/java/co/infoclinic/term/snomedct/model/entity/TransitiveClosure.java`**
+  - `effectiveTime` 필드 추가
+
+- **`src/main/java/co/infoclinic/term/snomedct/model/entity/Scheme.java`**
+  - `extensionName` 필드 추가 (null=International, 값 있으면 Extension 명칭)
+
+- **`src/main/java/co/infoclinic/term/snomedct/repository/TransitiveClosureRepository.java`**
+  - 모든 쿼리에 `EFFECTIVE_TIME = ?` 조건 추가
+  - `findDistinctEffectiveTimes()` 메서드 추가
+
+- **`src/main/java/co/infoclinic/term/snomedct/repository/SchemeRepository.java`**
+  - `findAllOrderByVersionDesc()` — International+Extension 전체 목록
+  - `findLatest()` — `EXTENSION_NAME IS NULL` 조건으로 International 최신만 조회
+
+- **`src/main/java/co/infoclinic/term/snomedct/service/TransitiveClosureService.java`**
+  - 모든 메서드에 `effectiveTime` 파라미터 추가
+  - `getAvailableEffectiveTimes()` 메서드 추가
+
+- **`src/main/java/co/infoclinic/term/snomedct/service/impl/TransitiveClosureServiceImpl.java`**
+  - effectiveTime 파라미터 적용, languageRefsetId 캐시 effectiveTime별 관리
+
+- **`src/main/java/co/infoclinic/term/snomedct/service/SchemeService.java`**
+  - `getTcEffectiveTime(version)` 메서드 추가 (Extension → 가장 가까운 Int TC effectiveTime 반환)
+
+- **`src/main/java/co/infoclinic/term/snomedct/service/impl/SchemeServiceImpl.java`**
+  - `getTcEffectiveTime()` 구현: Extension 릴리즈는 TC 테이블에서 이전 International effectiveTime 자동 선택
+  - `TransitiveClosureRepository` DI 추가
+
+- **호출부 6개 파일**: effectiveTime 전달
+  - `ConceptServiceImpl` — private `getPathList`, `getParentPathList`에 effectiveTime 추가
+  - `ConceptService.subsumptionTest()` 시그니처에 effectiveTime 추가
+  - `RefsetServiceImpl`, `RefsetMemberServiceImpl` — latest effectiveTime 자동 조회 후 전달
+  - `RefsetMemberQueryServiceImpl` — 3곳 tcSvc 호출에 effectiveTime 전달
+  - `RefsetMemberCommandServiceImpl`, `MrcmServiceImpl`, `DescriptionServiceImpl` 수정
+
+- **`src/main/java/co/infoclinic/term/snomedct/controller/EntityController.java`**
+  - `schemeSvc.getEffectiveTime(ver)` → `schemeSvc.getTcEffectiveTime(ver)` 전환
+
+- **`src/main/java/co/infoclinic/term/snomedct/controller/ConstraintController.java`**
+  - `tcRepo.findCountByCriteriaIdAndConceptId(...)` 에 effectiveTime 추가
+
+- **`PostgreSQLImporter.sh`** (STEP 3 대폭 수정)
+  - ZIP 파일명에서 effectiveTime 자동 추출 (`grep -oE '[0-9]{8}'`)
+  - `TransitiveClosureLoader.java` 컴파일 후 effectiveTime 전달
+  - International + Extension SCHEME 테이블 자동 등록 (`ON CONFLICT DO UPDATE`)
+
+### 기존 TC 데이터 마이그레이션 (최초 1회)
+```sql
+UPDATE TC 
+SET EFFECTIVE_TIME = (SELECT MAX(EFFECTIVE_TIME) FROM INFERRED_RELATIONSHIP)
+WHERE EFFECTIVE_TIME = '00000000';
+```
+
+### 프론트엔드 (미구현 — 다음 작업)
+- SNOMED CT Browser 상단에 릴리즈 날짜 드롭다운 추가
+- GET /version/SNOMEDCT API 활용하여 목록 조회
+- 선택된 version을 `?version=vYYYYMMDD` 파라미터로 전달

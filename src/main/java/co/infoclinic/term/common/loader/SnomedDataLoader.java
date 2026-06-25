@@ -84,7 +84,7 @@ public class SnomedDataLoader {
             // IS-A 계층 Transitive Closure 계산 및 TC 테이블 적재
             // (TransitiveClosureGeneratorFromInferred.sh + TransitiveClosureGenerator.java 통합 Java 버전)
             System.out.println("[INFO] TC (Transitive Closure) 테이블 적재 시작...");
-            TransitiveClosureLoader.load(conn);
+            TransitiveClosureLoader.load(conn, null); // null = inferred_relationship 최신 effectiveTime 자동 사용
             conn.commit();
 
             // SEARCH_INDEX 적재 (Elasticsearch 대체: pg_trgm GIN 인덱스 기반 검색)

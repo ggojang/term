@@ -1,9 +1,15 @@
 # CLAUDE.md
 
+## 기본정보
+
+STOM Browser의 로컬 root는 ~/github/term, 프론트엔드 root는 ~/github/term/frontend, 로컬 연결 URL은 http://localhost:8088, 실행은 ./run.sh
+
+FHIR Endpoint URL은 http://localhost:8088/fhir
+
 ## 작업 이력 참조
 - 이전 서버에서 했던 작업 요약은 `work_history.md`에 있으니 참고할 것
 - 절대 이전 서비스가 작업 중인 소스에  나타나지 않도록 해줘 (예. api.infoclinic.co, MySQL SQL, Elasticsearch 등)
-- 앞으로 할 작업의 요약은 `~/github/term/history.md`에 기록하고 작업할 때마다 참고할 것
+- 앞으로 할 작업의 요약은 `~/github/term/history.md`에 수실로 기록하고 작업할 때마다 참고할 것
 
 ## 배포 흐름
 

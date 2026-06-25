@@ -246,7 +246,7 @@ public class ConceptServiceImpl implements ConceptService {
 	@Override
 	public List<ConceptViewDTO> getAllDescendantList(String conceptId, String effectiveTime) {
 		if (!SNOMEDCTComponentTypeEnum.isValidIdentifier(conceptId)) return new ArrayList<>();
-		List<String> paths = getPathList(conceptId);
+		List<String> paths = getPathList(conceptId, effectiveTime);
 		if (CollectionUtils.isEmpty(paths)) return new ArrayList<>();
 		return conceptRepository.findAllDescendantListByPathsAndEffectiveTime(paths, effectiveTime);
 	}
@@ -257,7 +257,7 @@ public class ConceptServiceImpl implements ConceptService {
 		List<ConceptViewDTO> result = new ArrayList<>();
 		ConceptViewDTO self = conceptRepository.findByConceptIdAndEffectiveTime(conceptId, effectiveTime);
 		if (self != null) result.add(self);
-		List<String> paths = getPathList(conceptId);
+		List<String> paths = getPathList(conceptId, effectiveTime);
 		if (!CollectionUtils.isEmpty(paths)) {
 			result.addAll(conceptRepository.findAllDescendantListByPathsAndEffectiveTime(paths, effectiveTime));
 		}
@@ -283,19 +283,18 @@ public class ConceptServiceImpl implements ConceptService {
 	 * @see co.infoclinic.term.snomedct.service.ConceptService#subsumptionTest(java.lang.String, java.lang.String)
 	 */
 	@Override
-	public SubsumptionTestDTO subsumptionTest(String criteriaId, String conceptId) {
+	public SubsumptionTestDTO subsumptionTest(String criteriaId, String conceptId, String effectiveTime) {
 		SubsumptionTestDTO dto = new SubsumptionTestDTO();
 		dto.setCriteriaId(criteriaId);
 		dto.setConceptId(conceptId);
-		
+
 		if (SNOMEDCTComponentTypeEnum.isValidIdentifier(criteriaId) && SNOMEDCTComponentTypeEnum.isValidIdentifier(conceptId)) {
-			// 포함여부 조회
-			boolean isSubsumes = tcSvc.isSubsumption(criteriaId, conceptId) > 0 ? true:false;			
+			boolean isSubsumes = tcSvc.isSubsumption(criteriaId, conceptId, effectiveTime) > 0;
 			dto.setCriteriaId(criteriaId);
 			dto.setConceptId(conceptId);
 			dto.setResult(isSubsumes);
 		}
-		
+
 		return dto;
 	}
 	
@@ -446,45 +445,31 @@ public class ConceptServiceImpl implements ConceptService {
 	 * @param conceptId
 	 * @return
 	 */
-	private List<String> getPathList(String conceptId) {
-		// SCTID 규칙을 따르지 않는 경우 반환
+	private List<String> getPathList(String conceptId, String effectiveTime) {
 		if (!SNOMEDCTComponentTypeEnum.isValidIdentifier(conceptId)) {
 			return new ArrayList<String>();
 		}
-				
 		List<String> paths;
-		
 		if (!SNOMEDCTUtils.PrimaryId.SnomedCTConcept.equals(conceptId)) {
-			paths = tcSvc.getPathListByConceptId(conceptId);
+			paths = tcSvc.getPathListByConceptId(conceptId, effectiveTime);
 		} else {
 			paths = new ArrayList<String>();
 			paths.add(conceptId);
 		}
-		
 		return paths;
 	}
-	
-	
-	/**
-	 * Entity ID의 부모 경로 록록 조회
-	 * 
-	 * @param conceptId
-	 * @return
-	 */
-	private List<String> getParentPathList(String conceptId) {
-		// SCTID 규칙을 따르지 않는 경우 반환
+
+
+	private List<String> getParentPathList(String conceptId, String effectiveTime) {
 		if (!SNOMEDCTComponentTypeEnum.isValidIdentifier(conceptId)) {
 			return new ArrayList<String>();
 		}
-				
 		List<String> paths;
-		
 		if (!SNOMEDCTUtils.PrimaryId.SnomedCTConcept.equals(conceptId)) {
-			paths = tcSvc.getParentPathListByConceptId(conceptId);
+			paths = tcSvc.getParentPathListByConceptId(conceptId, effectiveTime);
 		} else {
 			paths = new ArrayList<String>();
 		}
-		
 		return paths;
 	}
 	
@@ -538,13 +523,13 @@ public class ConceptServiceImpl implements ConceptService {
 			
 		List<ConceptViewDTO> dtos;
 		// 자신의 경로 목록 조회
-		List<String> paths = getPathList(conceptId);
-				
+		List<String> paths = getPathList(conceptId, effectiveTime);
+
 		if (CollectionUtils.isEmpty(paths)) {
 			return new PageImpl<ConceptViewDTO>(new ArrayList<ConceptViewDTO>());
 		}
-		
-		int totalSize = tcSvc.getDescendantCount(conceptId);
+
+		int totalSize = tcSvc.getDescendantCount(conceptId, effectiveTime);
 		int offset = 0;
 		int limit = 0;
 		if (inclSelf) {
@@ -641,7 +626,7 @@ public class ConceptServiceImpl implements ConceptService {
 		List<ConceptViewDTO> dtos;
 		
 		// 부모의 경로 목록 조회
-		List<String> paths = getParentPathList(conceptId);
+		List<String> paths = getParentPathList(conceptId, effectiveTime);
 		List<String> ids = getIdList(paths);
 		
 		if (CollectionUtils.isEmpty(paths) || CollectionUtils.isEmpty(ids)) {

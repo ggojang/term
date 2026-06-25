@@ -41,4 +41,8 @@ public class Scheme {
 	/** Date: Updated Date */
 	@Column
 	private String date;
+
+	/** Extension 명칭 (null = International Edition, 예: "Korean Edition") */
+	@Column
+	private String extensionName;
 }

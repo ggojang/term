@@ -148,7 +148,7 @@ public interface ConceptService {
 	 * @param conceptId
 	 * @return
 	 */
-	SubsumptionTestDTO subsumptionTest(String criteriaId, String conceptId);
+	SubsumptionTestDTO subsumptionTest(String criteriaId, String conceptId, String effectiveTime);
 
 	
 	/**

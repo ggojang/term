@@ -397,7 +397,7 @@ public class DescriptionServiceImpl implements DescriptionService {
 		// SNOMEDCT Hiearchy에서 (SNOMED CT Model Component>Foundation metadata
 		// concept>Reference set>Language type reference set)
 		// 하위에 정의되어있는 모든 Concept의 Id 가져오기 (From Search Service)
-		List<String> languageRefsetIdList = tcSvc.getLanguageRefsetIdList();
+		List<String> languageRefsetIdList = tcSvc.getLanguageRefsetIdList(effectiveTime);
 
 		// ReferenceSet리스트 가져오기
 		List<Referenceset> langRefsetList = referencesetService.getRefsetIds(

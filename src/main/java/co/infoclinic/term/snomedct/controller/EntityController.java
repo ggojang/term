@@ -88,7 +88,7 @@ public class EntityController {
 			return new ConceptViewDTO();
 		}
 		
-		return conceptService.getConcept(code, schemeSvc.getEffectiveTime(ver));
+		return conceptService.getConcept(code, schemeSvc.getTcEffectiveTime(ver));
 	}
 
 	
@@ -110,7 +110,7 @@ public class EntityController {
 			return new ArrayList<ConceptViewDTO>();
 		}
 		
-		return conceptService.getChildren(code, schemeSvc.getEffectiveTime(ver));
+		return conceptService.getChildren(code, schemeSvc.getTcEffectiveTime(ver));
 	}
 	
 	
@@ -136,7 +136,7 @@ public class EntityController {
 			return new PageImpl<ConceptViewDTO>(new ArrayList<ConceptViewDTO>());
 		}
 		
-		return conceptService.getDescendantList(code, schemeSvc.getEffectiveTime(ver), page, size);
+		return conceptService.getDescendantList(code, schemeSvc.getTcEffectiveTime(ver), page, size);
 	}
 	
 	
@@ -162,7 +162,7 @@ public class EntityController {
 			return new PageImpl<ConceptViewDTO>(new ArrayList<ConceptViewDTO>());
 		}
 		
-		return conceptService.getDescendantListOrSelf(code, schemeSvc.getEffectiveTime(ver), page, size);
+		return conceptService.getDescendantListOrSelf(code, schemeSvc.getTcEffectiveTime(ver), page, size);
 	}
 	 
 	/**
@@ -185,7 +185,7 @@ public class EntityController {
 			return new ConceptTreeDTO();
 		}
 		
-		return conceptService.getDescendantTree(code, schemeSvc.getEffectiveTime(ver));
+		return conceptService.getDescendantTree(code, schemeSvc.getTcEffectiveTime(ver));
 	}
 	
 	/**
@@ -206,7 +206,7 @@ public class EntityController {
 			return new ArrayList<ConceptViewDTO>();
 		}
 		
-		return conceptService.getParentList(code, schemeSvc.getEffectiveTime(ver));
+		return conceptService.getParentList(code, schemeSvc.getTcEffectiveTime(ver));
 	}
 	
 	
@@ -232,7 +232,7 @@ public class EntityController {
 			return new PageImpl<ConceptViewDTO>(new ArrayList<ConceptViewDTO>());
 		}
 		
-		return conceptService.getAncestorList(code, schemeSvc.getEffectiveTime(ver), page, size);
+		return conceptService.getAncestorList(code, schemeSvc.getTcEffectiveTime(ver), page, size);
 	}
 	
 	
@@ -258,7 +258,7 @@ public class EntityController {
 			return new PageImpl<ConceptViewDTO>(new ArrayList<ConceptViewDTO>());
 		}
 		
-		return conceptService.getAncestorListOrSelf(code, schemeSvc.getEffectiveTime(ver), page, size);
+		return conceptService.getAncestorListOrSelf(code, schemeSvc.getTcEffectiveTime(ver), page, size);
 	}
 	
 	
@@ -282,7 +282,7 @@ public class EntityController {
 			return new SubsumptionTestDTO();
 		}
 		
-		return conceptService.subsumptionTest(criteria, code);
+		return conceptService.subsumptionTest(criteria, code, schemeSvc.getTcEffectiveTime(ver));
 	}
 	
 }

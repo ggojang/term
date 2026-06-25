@@ -290,13 +290,16 @@ public class RefsetMemberServiceImpl implements RefsetMemberService {
 			}
 		}
 
+		List<String> availableTimes = tcSvc.getAvailableEffectiveTimes();
+		String latestEt = availableTimes.isEmpty() ? "" : availableTimes.get(0);
+
 		List<AbstractReferenceset> refsets = null;
 		List<String> ancestorPathList = null;
 		Iterator<String> itr = map.keySet().iterator();
 		while (itr.hasNext()) {
 			refsets = map.get(itr.next());
 			String matchId = null;
-			ancestorPathList = tcSvc.getParentPathListByConceptId(refsets.get(0).getRefsetId());
+			ancestorPathList = tcSvc.getParentPathListByConceptId(refsets.get(0).getRefsetId(), latestEt);
 			if (ancestorPathList.size() == 1) {
 				String ancestorPath = ancestorPathList.get(0);
 				int idx = ancestorPath.indexOf(SNOMEDCTUtils.MetadataType.Referenceset);
