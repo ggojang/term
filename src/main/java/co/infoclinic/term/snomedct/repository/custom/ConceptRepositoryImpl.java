@@ -200,7 +200,7 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 			if (i > 0) sb.append(',');
 			sb.append('\'').append(conceptIds.get(i)).append('\'');
 		}
-		String closureQry = "SELECT DISTINCT CONCEPT_ID, CHILDREN_COUNT, DESCENDANT_COUNT FROM TC WHERE CONCEPT_ID IN (" + sb + ")";
+		String closureQry = "SELECT DISTINCT CONCEPT_ID, CHILDREN_COUNT, DESCENDANT_COUNT FROM TC WHERE EFFECTIVE_TIME = '" + effectiveTime + "' AND CONCEPT_ID IN (" + sb + ")";
 		String qry = getConceptListByClosureQry(closureQry, effectiveTime);
 		return getResultList(qry);
 	}
@@ -881,6 +881,7 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 				"  SELECT DISTINCT(CONCEPT_ID), CHILDREN_COUNT, DESCENDANT_COUNT " +
 				"  FROM TC " +
 				"  WHERE CONCEPT_ID = '" + conceptId + "' " +
+				"  AND EFFECTIVE_TIME = '" + effectiveTime + "' " +
 				") AS T " +
 				"ON C.CONCEPT_ID = T.CONCEPT_ID ";
 				
@@ -904,7 +905,8 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 		
 		closureQry = "SELECT DISTINCT(PARENT_ID) AS CONCEPT_ID, CHILDREN_COUNT, DESCENDANT_COUNT " +
 					 "FROM TC " +
-			 		 "WHERE CONCEPT_ID = '" + conceptId + "' ";
+			 		 "WHERE CONCEPT_ID = '" + conceptId + "' " +
+			 		 "AND EFFECTIVE_TIME = '" + effectiveTime + "' ";
 		
 		//closureQry += "ORDER BY PATH ";
 		
@@ -973,10 +975,11 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 	private String getChildrenQuery(String conceptId, String effectiveTime) {
 		String qry;
 		String closureQry;
-		
+
 		closureQry = "SELECT DISTINCT(CONCEPT_ID), CHILDREN_COUNT, DESCENDANT_COUNT " +
 					 "FROM TC " +
-			 		 "WHERE PARENT_ID = '" + conceptId + "' ";
+			 		 "WHERE PARENT_ID = '" + conceptId + "' " +
+			 		 "AND EFFECTIVE_TIME = '" + effectiveTime + "' ";
 		
 		//closureQry += "ORDER BY PATH ";
 		
@@ -1037,10 +1040,11 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 	private String getChildrenQuery2(String conceptId, String effectiveTime) {
 		String qry;
 		String closureQry;
-		
+
 		closureQry = "SELECT DISTINCT(CONCEPT_ID), CHILDREN_COUNT, DESCENDANT_COUNT " +
 					 "FROM TC " +
-			 		 "WHERE PARENT_ID = '" + conceptId + "' ";
+			 		 "WHERE PARENT_ID = '" + conceptId + "' " +
+			 		 "AND EFFECTIVE_TIME = '" + effectiveTime + "' ";
 			 		
 		
 		//closureQry += "ORDER BY PATH ";
@@ -1118,13 +1122,14 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 		
 		closureQry = "SELECT DISTINCT(CONCEPT_ID), CHILDREN_COUNT, DESCENDANT_COUNT " +
 					 "FROM TC " +
-			 		 "WHERE PATH LIKE '" + paths.get(0) + "%' ";
-		
+			 		 "WHERE EFFECTIVE_TIME = '" + effectiveTime + "' " +
+			 		 "AND (PATH LIKE '" + paths.get(0) + "%' ";
+
 		for (int i = 1; i < pathsSize; i++) {
-			closureQry += "OR PATH LIKE '" + paths.get(i) + "%' "; 
+			closureQry += "OR PATH LIKE '" + paths.get(i) + "%' ";
 		}
-		
-		closureQry += "LIMIT " + limit +  " " +
+
+		closureQry += ") LIMIT " + limit + " " +
 					  "OFFSET " + offset + " ";
 
 		qry = "SELECT C.*, D.TERM, MODULE.TERM AS MODULE_NAME, DEF.TERM AS DEF_NAME, T.CHILDREN_COUNT, T.DESCENDANT_COUNT " +
@@ -1188,10 +1193,12 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 
 		String closureQry = "SELECT DISTINCT(CONCEPT_ID), CHILDREN_COUNT, DESCENDANT_COUNT " +
 							"FROM TC " +
-							"WHERE PATH LIKE '" + paths.get(0) + "%' ";
+							"WHERE EFFECTIVE_TIME = '" + effectiveTime + "' " +
+							"AND (PATH LIKE '" + paths.get(0) + "%' ";
 		for (int i = 1; i < paths.size(); i++) {
 			closureQry += "OR PATH LIKE '" + paths.get(i) + "%' ";
 		}
+		closureQry += ") ";
 		// LIMIT 없음
 
 		String qry = "SELECT C.*, D.TERM, MODULE.TERM AS MODULE_NAME, DEF.TERM AS DEF_NAME, T.CHILDREN_COUNT, T.DESCENDANT_COUNT " +
@@ -1317,9 +1324,10 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 				"LEFT JOIN ( " +
 				"  SELECT DISTINCT(CONCEPT_ID), CHILDREN_COUNT, DESCENDANT_COUNT " +
 				"  FROM TC " +
-				"    WHERE ( ";
+				"  WHERE EFFECTIVE_TIME = '" + effectiveTime + "' " +
+				"  AND ( ";
 		qry += orInClause;
-		qry +=  "    ) " +
+		qry +=  "  ) " +
 				") AS TC " +
 				"ON C.CONCEPT_ID = TC.CONCEPT_ID ";
 				
