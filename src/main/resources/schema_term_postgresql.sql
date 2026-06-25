@@ -903,3 +903,19 @@ CREATE INDEX idx_icd10_rubric_kind ON icd10.ICD10_RUBRIC(KIND);
 --   UPDATE TC SET EFFECTIVE_TIME = (SELECT MAX(EFFECTIVE_TIME) FROM INFERRED_RELATIONSHIP)
 --   WHERE EFFECTIVE_TIME = '00000000';
 -- =============================================================================
+
+-- =============================================================================
+-- TC_META: TC effectiveTime 목록 관리 테이블
+-- TC 테이블 full scan(115초) 없이 빠른 effectiveTime 목록 조회 지원
+-- TC 배치 생성 완료 후 INSERT ... ON CONFLICT DO UPDATE로 갱신
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS term.TC_META (
+    EFFECTIVE_TIME CHAR(8) PRIMARY KEY,
+    ROW_COUNT      BIGINT,
+    CREATED_AT     TIMESTAMP DEFAULT NOW()
+);
+
+-- TC 적재 완료 후 아래 SQL로 갱신:
+-- INSERT INTO term.TC_META (EFFECTIVE_TIME, ROW_COUNT)
+-- SELECT EFFECTIVE_TIME, COUNT(*) FROM term.TC GROUP BY EFFECTIVE_TIME
+-- ON CONFLICT (EFFECTIVE_TIME) DO UPDATE SET ROW_COUNT = EXCLUDED.ROW_COUNT;
