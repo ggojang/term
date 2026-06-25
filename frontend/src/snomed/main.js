@@ -397,7 +397,7 @@ export default function Main(props) {
 
   for (let des of desc) {
     if (des.typeId === FSN) {
-      for (let de of des.languageReferencesetList) {
+      for (let de of (des.languageReferencesetList || [])) {
   	    if (de.refsetId === GB) {
 
           GBArr.push({
@@ -421,7 +421,7 @@ export default function Main(props) {
 
   for (let des of desc) {
     if (des.typeId === SYNONYM) {
-      for (let de of des.languageReferencesetList) {
+      for (let de of (des.languageReferencesetList || [])) {
         if (de.acceptabilityId === PREFERRED) {
 	        if (de.refsetId === GB) {
 
@@ -447,7 +447,7 @@ export default function Main(props) {
 
   for (let des of desc) {
     if (des.typeId === SYNONYM) {
-      for (let de of des.languageReferencesetList) {
+      for (let de of (des.languageReferencesetList || [])) {
         if (de.acceptabilityId === ACCEPTABLE) {
 	        if (de.refsetId === GB) {
 

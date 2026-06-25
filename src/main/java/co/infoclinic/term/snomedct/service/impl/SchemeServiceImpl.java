@@ -87,12 +87,7 @@ public class SchemeServiceImpl implements SchemeService {
 
 		String et = getEffectiveTime(version);
 
-		// International 릴리즈는 TC effectiveTime과 동일
-		if (scheme.getExtensionName() == null) {
-			return et;
-		}
-
-		// Extension 릴리즈: TC에서 해당 날짜 이하의 가장 최신 International effectiveTime 선택
+		// TC에서 해당 날짜 이하의 가장 최신 effectiveTime 선택 (International/Extension 공통)
 		List<String> availableTimes = tcRepo.findDistinctEffectiveTimes(); // 최신순 정렬
 		for (String t : availableTimes) {
 			if (t.compareTo(et) <= 0) {
