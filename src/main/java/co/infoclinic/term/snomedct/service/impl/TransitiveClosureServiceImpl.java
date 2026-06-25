@@ -64,14 +64,25 @@ public class TransitiveClosureServiceImpl implements TransitiveClosureService {
 	}
 
 
+	// 국제 표준 Language Refset ID (TC 유무와 무관하게 항상 포함)
+	private static final List<String> DEFAULT_LANG_REFSET_IDS = Arrays.asList(
+		"900000000000508004", // Great Britain English language reference set
+		"900000000000509007"  // United States of America English language reference set
+	);
+
 	@Override
 	public List<String> getLanguageRefsetIdList(String effectiveTime) {
 		if (languageRefsetIdCache.containsKey(effectiveTime)) {
 			return languageRefsetIdCache.get(effectiveTime);
 		}
 		List<String> langRefsetIds = tcRepo.findLanguageRefsetIdList(effectiveTime);
-		if (langRefsetIds == null) langRefsetIds = new ArrayList<>();
-		langRefsetIds.add("247781000300103");
+		if (langRefsetIds == null || langRefsetIds.isEmpty()) {
+			// TC가 없는 날짜이거나 TC에서 Language Refset을 찾지 못한 경우 표준 고정값 사용
+			langRefsetIds = new ArrayList<>(DEFAULT_LANG_REFSET_IDS);
+		}
+		if (!langRefsetIds.contains("247781000300103")) {
+			langRefsetIds.add("247781000300103"); // KR language refset
+		}
 		languageRefsetIdCache.put(effectiveTime, langRefsetIds);
 		return langRefsetIds;
 	}
