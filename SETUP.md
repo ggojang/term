@@ -81,11 +81,39 @@ cd ~/services/term
 적재 순서:
 1. SNOMED CT 코어 테이블 (스키마 재생성)
 2. SNOMED CT 익스텐션 (append)
-3. Transitive Closure 생성
+3. Transitive Closure 생성 → **TC_META 자동 갱신 포함**
 4. REFERENCESET_ACTIVE (`refset_active_pg.sh`)
 5. MRCM CONSTRAINTS (`mrcm_pg.sh`)
 6. LOINC 테이블
 7. KCD-9 (`icd10.icd10_class` 한글, `icd10.kcd9_morph`)
+
+> **기존 DB에 TC가 이미 적재된 경우** (최초 마이그레이션 시): TC_META를 수동으로 초기화해야 합니다.
+> ```sql
+> -- 최초 1회 실행
+> CREATE TABLE IF NOT EXISTS term.TC_META (
+>     EFFECTIVE_TIME CHAR(8) PRIMARY KEY,
+>     ROW_COUNT BIGINT,
+>     CREATED_AT TIMESTAMP DEFAULT NOW()
+> );
+> INSERT INTO term.TC_META (EFFECTIVE_TIME, ROW_COUNT)
+> SELECT EFFECTIVE_TIME, COUNT(*) FROM term.TC GROUP BY EFFECTIVE_TIME
+> ON CONFLICT (EFFECTIVE_TIME) DO UPDATE SET ROW_COUNT = EXCLUDED.ROW_COUNT;
+> ```
+> 이후 `build_tc_batch.sh` 또는 `PostgreSQLImporter.sh` 실행 시 자동 갱신됩니다.
+
+### 3-1-1. Semi-annual TC 배치 (선택)
+
+최초 임포트 이후 과거 릴리즈 TC를 추가로 생성하려면:
+
+```bash
+cd ~/services/term
+
+# 디스크 여유 확인 (릴리즈당 약 3~4GB 필요)
+df -h /
+
+./build_tc_batch.sh
+# 로그: tc_batch.log
+```
 
 ### 3-2. HIRA 코드 테이블 생성
 
