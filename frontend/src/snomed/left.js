@@ -194,7 +194,7 @@ export default function Left(props) {
         </Toolbar>
         
         <TabPanel value={value} index={0}>
-          <Search setFromId={props.setFromId} setMrcmFromSearch={props.setMrcmFromSearch}/>
+          <Search setFromId={props.setFromId} setMrcmFromSearch={props.setMrcmFromSearch} version={props.version}/>
         </TabPanel>
         <TabPanel value={value} index={1}>
           <Container
@@ -207,12 +207,13 @@ export default function Left(props) {
           <ErrorBoundary>
           <Hierarchy
             setFromId={props.setFromId}
+            version={props.version}
           />
           </ErrorBoundary>
           </Container>
         </TabPanel>
         <TabPanel value={value} index={2}>
-          <Ecl setFromId={props.setFromId} />
+          <Ecl setFromId={props.setFromId} version={props.version} />
         </TabPanel>
         <TabPanel value={value} index={3}>
           <div style={{ padding: '8px 4px' }}>

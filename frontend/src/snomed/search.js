@@ -108,8 +108,9 @@ export default function Search(props) {
     if (q.length > 1) {
       setPage(1);
       setListCheckBox({});
+      const vq = props.version ? `&version=${props.version}` : '';
       axios
-        .get(`/search/SNOMEDCT?match=${matchType}&state=${state}&q=${q}&page=${page}&size=${size}`)
+        .get(`/search/SNOMEDCT?match=${matchType}&state=${state}&q=${q}&page=${page}&size=${size}${vq}`)
         .then(response => setSearchResult(response));
     }
   }, [q, state, matchType]);
@@ -121,8 +122,9 @@ export default function Search(props) {
         if (listCheckBox[l]) tmp += '&semanticfilter=' + l;
       }
       tmp = tmp.replace(/ /gi, '%20').replace(/\+/gi, '%2B');
+      const vq2 = props.version ? `&version=${props.version}` : '';
       axios
-        .get(`/search/SNOMEDCT?match=${matchType}&state=${state}&q=${q}${tmp}&page=${page}&size=${size}`)
+        .get(`/search/SNOMEDCT?match=${matchType}&state=${state}&q=${q}${tmp}&page=${page}&size=${size}${vq2}`)
         .then(response => setSearchResult(response));
     }
   }, [page]);
@@ -152,8 +154,9 @@ export default function Search(props) {
         if (listCheckBox[l]) tmp += '&semanticfilter=' + l;
       }
       tmp = tmp.replace(/ /gi, '%20').replace(/\+/gi, '%2B');
+      const vq3 = props.version ? `&version=${props.version}` : '';
       axios
-        .get(`/search/SNOMEDCT?match=${matchType}&state=${state}&q=${q}${tmp}&page=1&size=${size}`)
+        .get(`/search/SNOMEDCT?match=${matchType}&state=${state}&q=${q}${tmp}&page=1&size=${size}${vq3}`)
         .then(response => setSearchResult2(response));
     }
   }, [listCheckBox]);

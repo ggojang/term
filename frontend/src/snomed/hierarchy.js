@@ -79,14 +79,15 @@ export default function Hierarchy(props) {
       if (expandingNodes[0]) {
         const childId = expandingNodes[0];
         setTimeout(() => {
+          const vq = props.version ? `?version=${props.version}` : '';
           axios
-            .get(`/children/SNOMEDCT/${childId}`)
+            .get(`/children/SNOMEDCT/${childId}${vq}`)
             .then(result =>
               setChildNodes(
                 result.data
                 .sort((a,b) => a.term > b.term?1:-1)
                 .map( (node, index) => (
-                  <Hierarchy setFromId={props.setFromId} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
+                  <Hierarchy setFromId={props.setFromId} version={props.version} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
                 ))
               )
             );
@@ -121,20 +122,21 @@ export default function Hierarchy(props) {
   useEffect(() => {
     if (props.nodeId === undefined) {
     setTimeout(() => {
+      const vq = props.version ? `?version=${props.version}` : '';
       axios
-        .get(`/children/SNOMEDCT/138875005`)
+        .get(`/children/SNOMEDCT/138875005${vq}`)
         .then(result =>
           setChildNodes(
             result.data
             .sort((a,b) => a.term > b.term?1:-1)
             .map((node,index) => (
-              <Hierarchy setFromId={props.setFromId} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
+              <Hierarchy setFromId={props.setFromId} version={props.version} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
             ))
           )
         );
     }, 50);
   }
-  }, [props.nodeId]);
+  }, [props.nodeId, props.version]);
 
   return (
 

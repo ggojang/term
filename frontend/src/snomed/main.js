@@ -154,45 +154,38 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-async function getEntity(id) {
-  const response = await axios.get(
-    `/entity/SNOMEDCT/${id}`
-  );
+function versionParam(version) {
+  return version ? `?version=${version}` : '';
+}
+
+async function getEntity(id, version) {
+  const response = await axios.get(`/entity/SNOMEDCT/${id}${versionParam(version)}`);
   return response.data;
 }
 
-async function getDescriptions(id) {
-  const response = await axios.get(
-    `/descriptions/SNOMEDCT/${id}`
-  );
+async function getDescriptions(id, version) {
+  const response = await axios.get(`/descriptions/SNOMEDCT/${id}${versionParam(version)}`);
   return response.data;
 }
 
-async function getAssociations(id) {
-  const response = await axios.get(
-    `/associations/SNOMEDCT/${id}`
-  );
+async function getAssociations(id, version) {
+  const response = await axios.get(`/associations/SNOMEDCT/${id}${versionParam(version)}`);
   return response.data;
 }
 
-async function getPostexpr(id) {
-  const response = await axios.get(
-    `/postexpr/SNOMEDCT/${id}`
-  );
+async function getPostexpr(id, version) {
+  const response = await axios.get(`/postexpr/SNOMEDCT/${id}${versionParam(version)}`);
   return response.data;
 }
 
-async function getMembers(id) {
-  const response = await axios.get(
-    `/members/SNOMEDCT?refcpntid=${id}`
-  );
+async function getMembers(id, version) {
+  const vq = version ? `&version=${version}` : '';
+  const response = await axios.get(`/members/SNOMEDCT?refcpntid=${id}${vq}`);
   return response.data;
 }
 
-async function getHistories(id) {
-  const response = await axios.get(
-    `/histories/SNOMEDCT/${id}`
-  );
+async function getHistories(id, version) {
+  const response = await axios.get(`/histories/SNOMEDCT/${id}${versionParam(version)}`);
   return response.data;
 }
 
@@ -270,12 +263,13 @@ export default function Main(props) {
   /*
   const [trigger, setRef] = useScrollTrigger({ disableHysteresis: true,threshold: 0 });
   */
-  const [stateEntity] = useAsync(() => getEntity(id), [id]);
-  const [stateAsso] = useAsync(() => getAssociations(id), [id]);
-  const [statePost] = useAsync(() => getPostexpr(id), [id]);
-  const [stateDesc] = useAsync(() => getDescriptions(id), [id]);
-  const [stateMemb] = useAsync(() => getMembers(id), [id]);
-  const [stateHist] = useAsync(() => getHistories(id), [id]);
+  const version = props.version;
+  const [stateEntity] = useAsync(() => getEntity(id, version), [id, version]);
+  const [stateAsso] = useAsync(() => getAssociations(id, version), [id, version]);
+  const [statePost] = useAsync(() => getPostexpr(id, version), [id, version]);
+  const [stateDesc] = useAsync(() => getDescriptions(id, version), [id, version]);
+  const [stateMemb] = useAsync(() => getMembers(id, version), [id, version]);
+  const [stateHist] = useAsync(() => getHistories(id, version), [id, version]);
 
   const { loadingEntity, data: entity, errorEntity } = stateEntity;
   const { loadingAsso, data: asso, errorAsso } = stateAsso;
