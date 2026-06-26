@@ -76,23 +76,37 @@ public class HierarchyServiceImpl implements HierarchyService {
 			return new ArrayList<HierarchyDTO>();
 		}
 
+		// class 키워드: hierarchy 테이블 (type=1) CLASS 루트
+		if ("class".equalsIgnoreCase(code)) {
+			return convertToDTOList(hierRepo.findChildrenByCode("CLASS"));
+		}
+
 		// group 키워드: hierarchy_lg 테이블에서 조회
 		if ("group".equalsIgnoreCase(code)) {
-			List<Hierarchy> entities = hierRepo.findChildrenInLGHierarchy("GROUP");
-			return convertToDTOList(entities);
+			return convertToDTOList(hierRepo.findChildrenInLGHierarchy("GROUP"));
 		}
 
 		// parts 키워드: LP432695-7이 PARTS 루트
 		if ("parts".equalsIgnoreCase(code)) {
-			List<Hierarchy> entities = hierRepo.findChildrenByCode("LP432695-7");
-			return convertToDTOList(entities);
+			return convertToDTOList(hierRepo.findChildrenByCode("LP432695-7"));
 		}
 
-		// group 하위 노드(카테고리 이름): LP/LG/LA/LL 코드나 숫자 LOINC 코드가 아니면 hierarchy_lg에서 조회
-		boolean isLoincCode = code.matches("^(LP|LG|LA|LL)[\\-0-9]{1,8}$") || code.matches("^[0-9].*");
-		if (!isLoincCode) {
-			List<Hierarchy> entities = hierRepo.findChildrenInLGHierarchy(code);
-			return convertToDTOList(entities);
+		// LG 코드 → hierarchy_lg 테이블 (GROUP 트리)
+		if (code.matches("^LG[0-9].*")) {
+			return convertToDTOList(hierRepo.findChildrenInLGHierarchy(code));
+		}
+
+		// LP/LA/LL 코드 또는 숫자 LOINC 코드 → hierarchy 테이블
+		boolean isLpCode = code.matches("^(LP|LA|LL)[0-9].*") || code.matches("^[0-9].*");
+
+		// 非LP/LG 코드 (CLASS 중간 노드: LABORATORY, BLDBK 등)
+		// hierarchy 테이블 먼저, 없으면 hierarchy_lg (GROUP 카테고리명) 시도
+		if (!isLpCode) {
+			List<Hierarchy> classEntities = hierRepo.findChildrenByCode(code);
+			if (!classEntities.isEmpty()) {
+				return convertToDTOList(classEntities);
+			}
+			return convertToDTOList(hierRepo.findChildrenInLGHierarchy(code));
 		}
 
 		// 자식 목록

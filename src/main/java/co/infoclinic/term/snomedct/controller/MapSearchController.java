@@ -83,7 +83,7 @@ public class MapSearchController {
         private String q;
         private List<String> semanticTags;
         private String state = "active";
-        private int size = 20;
+        private int size = 500;
         private int page = 1;
     }
 
@@ -177,7 +177,7 @@ public class MapSearchController {
 
             List<MapSearchHit> allHits = new ArrayList<>(merged.values());
             resp.setTotal(allHits.size());
-            resp.setHits(allHits.size() > req.getSize() ? allHits.subList(0, req.getSize()) : allHits);
+            resp.setHits(allHits);
 
             // ── 시맨틱태그 집계 ────────────────────────────────────────────────
             resp.setSemanticTags(aggregateSemanticTags(conn, word, activeWhere, semWhere, semParams));

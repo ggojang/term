@@ -97,7 +97,6 @@ export default function Main(props) {
         .post(`${BASE}/map/SNOMEDCT/search`, {
           q: q.replace(/(^\s*)|(\s*$)/gi, "").replace(/\s+/g, ' ').replace(/\s*-\s*/gi,' '),
           semanticTags: semanticTags,
-          size: 40,
         })
         .then(response => {
           const hits = (response.data && response.data.hits) ? response.data.hits : [];
@@ -128,9 +127,7 @@ export default function Main(props) {
         }
       }
 
-      value.sort(function(a,b) {
-        return b[0]-a[0];
-      });
+      // backend returns results in priority order (stop > synonym > edge)
 
       Promise.all(promises).then(() => setTmp(tmp2));
     }
@@ -180,14 +177,14 @@ export default function Main(props) {
         <TableContainer align="center">
           <Table stickyHeader aria-label="sticky table" size="small" aria-label="a small table">
             <colgroup>
-              <col style={{width:'5%'}}/>
-              <col style={{width:'20%'}}/>
+              <col style={{width:'3%'}}/>
+              <col style={{width:'22%'}}/>
               <col style={{width:'75%'}}/>
             </colgroup>
             <TableHead>
               <TableRow >
                 <StyledTableCell className={classes.label}>
-                  <strong>Scores</strong>
+                  <strong>No.</strong>
                 </StyledTableCell>
                 <StyledTableCell className={classes.label}>
                   <strong>Mapped term</strong>
@@ -201,7 +198,7 @@ export default function Main(props) {
               { val.map((v, index) => (
                 <TableRow key={index}>
                   <StyledTableCell className={classes.label}>
-                    {v[0]}
+                    {index + 1}
                   </StyledTableCell>
                   <StyledTableCell className={classes.label}>
                     {v[3]}
@@ -221,7 +218,7 @@ export default function Main(props) {
         <>
         { !q &&
           <>
-          <Typography style={{margin: "0 0 0 12px"}} variant="body2">[Usage] Check "Semantic Tag" -> Type "strings" which you want to map [and Enter] -> The Closest terms of SNOMED CT will be displayed (Up to 40 terms)</Typography>
+          <Typography style={{margin: "0 0 0 12px"}} variant="body2">[Usage] Check "Semantic Tag" -> Type "strings" which you want to map [and Enter] -> The matching terms of SNOMED CT will be displayed</Typography>
           <br />
           <Typography style={{margin: "0 0 0 12px"}} variant="body2">[Note 1] Available browser : Chrome, Safari</Typography>
           <br />

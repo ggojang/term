@@ -894,7 +894,7 @@ export default function Main(props) {
             </Box>
           }
 
-          { refset2[0][0].refsetName &&
+          { refset2.length > 0 && refset2[0].length > 0 && refset2[0][0].refsetName &&
             <>
             {refset2.map((rs, index5) => (
               <Box p={1} key={index5}>

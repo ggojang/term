@@ -79,8 +79,9 @@ SKIPPED=0
 
 for ET in "${DATES[@]}"; do
   EXISTING=$(${PSQL} -tAc "SELECT COUNT(*) FROM term.tc_meta WHERE effective_time = '${ET}'" 2>/dev/null || echo "0")
-  if [ "${EXISTING}" -gt "0" ]; then
-    echo "[SKIP] ${ET} — TC_META에 이미 등록됨" | tee -a "${LOG_FILE}"
+  STATS_EXIST=$(${PSQL} -tAc "SELECT COUNT(*) FROM term.tc_concept_stats WHERE effective_time = '${ET}' LIMIT 1" 2>/dev/null || echo "0")
+  if [ "${EXISTING}" -gt "0" ] && [ "${STATS_EXIST}" -gt "0" ]; then
+    echo "[SKIP] ${ET} — TC_META 및 TC_CONCEPT_STATS에 이미 등록됨" | tee -a "${LOG_FILE}"
     SKIPPED=$((SKIPPED+1))
     continue
   fi

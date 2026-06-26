@@ -885,11 +885,7 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 				"LEFT JOIN ( " +
 				"  SELECT '" + conceptId + "' AS CONCEPT_ID, " +
 				"    (SELECT COUNT(*) FROM TC WHERE PARENT_ID = '" + conceptId + "' AND VALID_FROM <= '" + et + "' AND VALID_TO > '" + et + "') AS CHILDREN_COUNT, " +
-				"    (WITH RECURSIVE dc AS (" +
-				"       SELECT CHILD_ID AS cid FROM TC WHERE PARENT_ID = '" + conceptId + "' AND VALID_FROM <= '" + et + "' AND VALID_TO > '" + et + "' " +
-				"       UNION ALL " +
-				"       SELECT t2.CHILD_ID FROM TC t2 JOIN dc ON t2.PARENT_ID = dc.cid WHERE t2.VALID_FROM <= '" + et + "' AND t2.VALID_TO > '" + et + "'" +
-				"     ) SELECT COUNT(*) FROM dc) AS DESCENDANT_COUNT " +
+				"    (SELECT COUNT(*) FROM TC WHERE PARENT_ID = '" + conceptId + "' AND VALID_FROM <= '" + et + "' AND VALID_TO > '" + et + "') AS DESCENDANT_COUNT " +
 				") AS T " +
 				"ON C.CONCEPT_ID = T.CONCEPT_ID ";
 				
@@ -983,136 +979,52 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 	 * @return
 	 */
 	private String getChildrenQuery(String conceptId, String effectiveTime) {
-		String qry;
-		String closureQry;
+		String et = effectiveTime;
+		String vcond = "VALID_FROM <= '" + et + "' AND VALID_TO > '" + et + "'";
 
-		closureQry = "SELECT DISTINCT t1.CHILD_ID AS CONCEPT_ID, " +
-					 "(SELECT COUNT(*) FROM TC t2 WHERE t2.PARENT_ID = t1.CHILD_ID AND t2.VALID_FROM <= '" + effectiveTime + "' AND t2.VALID_TO > '" + effectiveTime + "') AS CHILDREN_COUNT, " +
-					 "0 AS DESCENDANT_COUNT " +
-					 "FROM TC t1 WHERE t1.PARENT_ID = '" + conceptId + "' " +
-					 "AND t1.VALID_FROM <= '" + effectiveTime + "' AND t1.VALID_TO > '" + effectiveTime + "' ";
+		// CHILDREN_COUNT: 직접 자식 수 (빠름)
+		// DESCENDANT_COUNT: TC_CONCEPT_STATS에서 사전 계산된 자손 수 조회
+		String closureQry = "SELECT DISTINCT t1.CHILD_ID AS CONCEPT_ID, " +
+						 "(SELECT COUNT(*) FROM TC t2 WHERE t2.PARENT_ID = t1.CHILD_ID AND t2." + vcond + ") AS CHILDREN_COUNT, " +
+						 "COALESCE((SELECT s.DESCENDANT_COUNT FROM TC_CONCEPT_STATS s " +
+						 "          WHERE s.CONCEPT_ID = t1.CHILD_ID AND s.EFFECTIVE_TIME = '" + et + "'), " +
+						 " (SELECT COUNT(*) FROM TC t2 WHERE t2.PARENT_ID = t1.CHILD_ID AND t2." + vcond + ")) AS DESCENDANT_COUNT " +
+						 "FROM TC t1 WHERE t1.PARENT_ID = '" + conceptId + "' AND t1." + vcond;
 
-		//closureQry += "ORDER BY PATH ";
-
-		qry = "SELECT C.*, D.TERM, MODULE.TERM AS MODULE_NAME, DEF.TERM AS DEF_NAME, T.CHILDREN_COUNT, T.DESCENDANT_COUNT " +
+		String qry = "SELECT C.*, D.TERM, MODULE.TERM AS MODULE_NAME, DEF.TERM AS DEF_NAME, T.CHILDREN_COUNT, T.DESCENDANT_COUNT " +
 				"FROM ( " +
-				"  SELECT C1.* " +
-				"  FROM CONCEPT AS C1 " +
+				"  SELECT C1.* FROM CONCEPT AS C1 " +
 				"  INNER JOIN ( " +
 				"    SELECT IC.CONCEPT_ID, MAX(IC.EFFECTIVE_TIME) AS MAX_ETIME " +
 				"    FROM CONCEPT AS IC " +
-				"    INNER JOIN ( ";
-
-		qry += closureQry;
-
-		qry +=	"	) AS T " +
-				"	ON IC.CONCEPT_ID = T.CONCEPT_ID " +
-				"    WHERE IC.EFFECTIVE_TIME <= '" + effectiveTime + "' " +
+				"    INNER JOIN (" + closureQry + ") AS T ON IC.CONCEPT_ID = T.CONCEPT_ID " +
+				"    WHERE IC.EFFECTIVE_TIME <= '" + et + "' " +
 				"    GROUP BY IC.CONCEPT_ID " +
-				"  ) AS C2 " +
-				"  ON C1.CONCEPT_ID = C2.CONCEPT_ID " +
-				"  AND C1.EFFECTIVE_TIME = C2.MAX_ETIME " +
-				"  AND C1.ACTIVE = 1 " +
+				"  ) AS C2 ON C1.CONCEPT_ID = C2.CONCEPT_ID AND C1.EFFECTIVE_TIME = C2.MAX_ETIME AND C1.ACTIVE = 1 " +
 				") AS C " +
 				"INNER JOIN ( " +
-				"  SELECT D.CONCEPT_ID, D.TERM " +
-				"  FROM DESCRIPTION AS D " +
+				"  SELECT D.CONCEPT_ID, D.TERM FROM DESCRIPTION AS D " +
 				"  INNER JOIN ( " +
-				"	SELECT ID.DESCRIPTION_ID, MAX(ID.EFFECTIVE_TIME) AS MAX_ETIME " +
+				"    SELECT ID.DESCRIPTION_ID, MAX(ID.EFFECTIVE_TIME) AS MAX_ETIME " +
 				"    FROM DESCRIPTION AS ID " +
-				"    INNER JOIN ( ";
-
-		qry += closureQry;
-
-		qry +=	"    ) AS DD " +
-				"    ON ID.CONCEPT_ID = DD.CONCEPT_ID " +
-				"    WHERE ID.EFFECTIVE_TIME <= '" + effectiveTime + "' " +
+				"    INNER JOIN (" + closureQry + ") AS DD ON ID.CONCEPT_ID = DD.CONCEPT_ID " +
+				"    WHERE ID.EFFECTIVE_TIME <= '" + et + "' " +
 				"    AND ID.TYPE_ID = '" + SNOMEDCTUtils.DescriptionType.FullySpecifiedName + "' " +
 				"    GROUP BY ID.DESCRIPTION_ID " +
-				"  ) AS GD " +
-				"  ON D.DESCRIPTION_ID = GD.DESCRIPTION_ID " +
-				"  AND D.EFFECTIVE_TIME = GD.MAX_ETIME " +
-				"  AND D.ACTIVE = 1 " +
-				"  AND D.LANGUAGE_CODE = '" + LANG + "' " +
-				"  GROUP BY D.CONCEPT_ID, D.TERM" + // PostgreSQL: all SELECT columns must appear in GROUP BY
-				") AS D " +
-				"ON C.CONCEPT_ID = D.CONCEPT_ID " +
-				"LEFT JOIN ( ";
-		qry += closureQry;
-		qry +=  ") AS T " +
-				"ON C.CONCEPT_ID = T.CONCEPT_ID ";
+				"  ) AS GD ON D.DESCRIPTION_ID = GD.DESCRIPTION_ID AND D.EFFECTIVE_TIME = GD.MAX_ETIME " +
+				"  AND D.ACTIVE = 1 AND D.LANGUAGE_CODE = '" + LANG + "' " +
+				"  GROUP BY D.CONCEPT_ID, D.TERM " +
+				") AS D ON C.CONCEPT_ID = D.CONCEPT_ID " +
+				"LEFT JOIN (" + closureQry + ") AS T ON C.CONCEPT_ID = T.CONCEPT_ID ";
 
 		qry += getModuleJoinQuery(effectiveTime);
 		qry += getDefinitionStatusJoinQuery(effectiveTime);
-
 		return qry;
 	}
 
-	private String getChildrenQuery2(String conceptId, String effectiveTime) {
-		String qry;
-		String closureQry;
 
-		closureQry = "SELECT DISTINCT t1.CHILD_ID AS CONCEPT_ID, " +
-					 "(SELECT COUNT(*) FROM TC t2 WHERE t2.PARENT_ID = t1.CHILD_ID AND t2.VALID_FROM <= '" + effectiveTime + "' AND t2.VALID_TO > '" + effectiveTime + "') AS CHILDREN_COUNT, " +
-					 "0 AS DESCENDANT_COUNT " +
-					 "FROM TC t1 WHERE t1.PARENT_ID = '" + conceptId + "' " +
-					 "AND t1.VALID_FROM <= '" + effectiveTime + "' AND t1.VALID_TO > '" + effectiveTime + "' ";
-			 		
-		
-		//closureQry += "ORDER BY PATH ";
-		
-		qry = "SELECT C.*, D.TERM, MODULE.TERM AS MODULE_NAME, DEF.TERM AS DEF_NAME, T.CHILDREN_COUNT, T.DESCENDANT_COUNT " +
-				"FROM ( " +
-				"  SELECT C1.* " +
-				"  FROM CONCEPT AS C1 " +
-				"  INNER JOIN ( " +
-				"    SELECT IC.CONCEPT_ID, MAX(IC.EFFECTIVE_TIME) AS MAX_ETIME " +
-				"    FROM CONCEPT AS IC " +
-				"    INNER JOIN ( ";
-				
-		qry += closureQry;
-		
-		qry +=	"	) AS T " +
-				"	ON IC.CONCEPT_ID = T.CONCEPT_ID " +
-				"    WHERE IC.EFFECTIVE_TIME <= '" + effectiveTime + "' " +
-				"    GROUP BY IC.CONCEPT_ID " +
-				"  ) AS C2 " +
-				"  ON C1.CONCEPT_ID = C2.CONCEPT_ID " +
-				"  AND C1.EFFECTIVE_TIME = C2.MAX_ETIME " +
-				"  AND C1.ACTIVE = 1 " +
-				") AS C " +
-				"INNER JOIN ( " +
-				"  SELECT D.CONCEPT_ID, D.TERM " +
-				"  FROM DESCRIPTION AS D " +
-				"  INNER JOIN ( " +
-				"	SELECT ID.DESCRIPTION_ID, MAX(ID.EFFECTIVE_TIME) AS MAX_ETIME " +
-				"    FROM DESCRIPTION AS ID " +
-				"    INNER JOIN ( ";
-		
-		qry += closureQry;
-		
-		qry +=	"    ) AS DD " +
-				"    ON ID.CONCEPT_ID = DD.CONCEPT_ID " +
-				"    WHERE ID.EFFECTIVE_TIME <= '" + effectiveTime + "' " +
-				"    AND ID.TYPE_ID = '" + SNOMEDCTUtils.DescriptionType.FullySpecifiedName + "' " +
-				"    GROUP BY ID.DESCRIPTION_ID " +
-				"  ) AS GD " +
-				"  ON D.DESCRIPTION_ID = GD.DESCRIPTION_ID " +
-				"  AND D.EFFECTIVE_TIME = GD.MAX_ETIME " +
-				"  AND D.ACTIVE = 1 " +
-				"  AND D.LANGUAGE_CODE = '" + LANG + "' " +
-				"  GROUP BY D.CONCEPT_ID, D.TERM" + // PostgreSQL: all SELECT columns must appear in GROUP BY
-				") AS D " +
-				"ON C.CONCEPT_ID = D.CONCEPT_ID " +
-				"LEFT JOIN ( ";
-		qry += closureQry;
-		qry +=  ") AS T " +
-				"ON C.CONCEPT_ID = T.CONCEPT_ID ";
-				
-		qry += getModuleJoinQuery(effectiveTime);
-		qry += getDefinitionStatusJoinQuery(effectiveTime);
-		
-		return qry;
+	private String getChildrenQuery2(String conceptId, String effectiveTime) {
+		return getChildrenQuery(conceptId, effectiveTime);
 	}
 	
 	/**

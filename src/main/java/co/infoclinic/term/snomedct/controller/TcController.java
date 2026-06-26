@@ -117,6 +117,41 @@ public class TcController {
         return result;
     }
 
+    /**
+     * TC_CONCEPT_STATS에서 특정 개념의 자손 수 반환
+     * GET /tc/SNOMEDCT/descendantCount/{conceptId}?version=v20260601
+     */
+    @ApiOperation(value = "개념의 자손 수 조회 [GET]")
+    @RequestMapping(value = "/tc/SNOMEDCT/descendantCount/{conceptId}", method = RequestMethod.GET)
+    public long getDescendantCount(
+            @PathVariable String conceptId,
+            @RequestParam(value = "version", required = false, defaultValue = "") String version) {
+
+        // version: "v20260601" → effectiveTime: "20260601"
+        String et = version.toLowerCase().replaceFirst("^v", "");
+
+        String sql;
+        if (et.isEmpty()) {
+            sql = "SELECT descendant_count FROM term.tc_concept_stats " +
+                  "WHERE concept_id = ? ORDER BY effective_time DESC LIMIT 1";
+        } else {
+            sql = "SELECT descendant_count FROM term.tc_concept_stats " +
+                  "WHERE concept_id = ? AND effective_time <= ? ORDER BY effective_time DESC LIMIT 1";
+        }
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, conceptId);
+            if (!et.isEmpty()) ps.setString(2, et);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getLong(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     private String toSemanticTag(String semanticType) {
         if (semanticType == null) return "";
         switch (semanticType.toUpperCase()) {

@@ -84,14 +84,15 @@ export default function Parent(props) {
     if (expandingNodes[0]) {
       const childId = expandingNodes[0];
       setTimeout(() => {
+        const vq = props.version ? `?version=${props.version}` : '';
         axios
-          .get(`/parents/SNOMEDCT/${childId}`)
+          .get(`/parents/SNOMEDCT/${childId}${vq}`)
           .then(result =>
             setChildNodes(
               result.data
               .sort((a,b) => a.term > b.term?1:-1)
               .map( node => (
-                <Parent setFromId={props.setFromId} classes={{label:classes.treeItemLabel}} key={node.conceptId} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
+                <Parent setFromId={props.setFromId} version={props.version} classes={{label:classes.treeItemLabel}} key={node.conceptId} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
               ))
             )
           );
@@ -128,20 +129,21 @@ export default function Parent(props) {
     setChildNodes(null);
     if (props.firstId) {
       setTimeout(() => {
+        const vq = props.version ? `?version=${props.version}` : '';
         axios
-          .get(`/parents/SNOMEDCT/${props.firstId}`)
+          .get(`/parents/SNOMEDCT/${props.firstId}${vq}`)
           .then(result =>
             setChildNodes(
               result.data
               .sort((a,b) => a.term > b.term?1:-1)
               .map(node => (
-                <Parent setFromId={props.setFromId} classes={{label:classes.treeItemLabel}} key={node.conceptId} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
+                <Parent setFromId={props.setFromId} version={props.version} classes={{label:classes.treeItemLabel}} key={node.conceptId} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
               ))
             )
           );
       }, 50);
     }
-  },[props.firstId]); /* left Hierarchy에서 concept을 선택하면 refresh를 위해 pros.nodeId 추 */
+  },[props.firstId, props.version]); /* left Hierarchy에서 concept을 선택하면 refresh를 위해 pros.nodeId 추 */
 
 
   /*console.log("props.nodeId => " + props.nodeId + " , " + "firstId => " + firstId);

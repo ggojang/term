@@ -913,3 +913,15 @@ CREATE TABLE IF NOT EXISTS term.TC_META (
 -- INSERT INTO term.TC_META (EFFECTIVE_TIME, ROW_COUNT)
 -- SELECT EFFECTIVE_TIME, COUNT(*) FROM term.TC GROUP BY EFFECTIVE_TIME
 -- ON CONFLICT (EFFECTIVE_TIME) DO UPDATE SET ROW_COUNT = EXCLUDED.ROW_COUNT;
+
+-- =============================================================================
+-- TC_CONCEPT_STATS: 개념별 자손 수 캐시 테이블
+-- TC 배치 시 위상 정렬로 계산 후 저장, getChildrenQuery에서 빠른 조회에 활용
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS term.TC_CONCEPT_STATS (
+    CONCEPT_ID     VARCHAR(18) NOT NULL,
+    EFFECTIVE_TIME CHAR(8)     NOT NULL,
+    DESCENDANT_COUNT BIGINT    NOT NULL DEFAULT 0,
+    PRIMARY KEY (CONCEPT_ID, EFFECTIVE_TIME)
+);
+CREATE INDEX IF NOT EXISTS IDX_TCS_ET ON term.TC_CONCEPT_STATS (EFFECTIVE_TIME);

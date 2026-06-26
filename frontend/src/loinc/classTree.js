@@ -46,38 +46,36 @@ export default function ClassTree(props) {
   const [expanded, setExpanded] = useState([]);
 
   const handleChange = (event, nodes) => {
-    if (nodes.length !== 0) {
-      /*console.log("handleChange (nodes) => " + nodes + ", length : " + nodes.length);*/
-      setChildNodes(null);
-      const expandingNodes = nodes.filter(x => !expanded.includes(x));
-      setExpanded(nodes);
-      if (expandingNodes[0]) {
-        const childId = expandingNodes[0];
-        setTimeout(() => {
-          axios
-            .get(`/children/LOINC/${childId}`)
-            .then(result =>
-              setChildNodes(
-                result.data
-                .sort((a,b) => a.name > b.name?1:-1)
-                .map( (node, index) => (
-                  <ClassTree setLoincId={props.setLoincId} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.code} label={renderLabel(node)} count={node.desCnt}/>
-                ))
-              )
-            );
-        }, 50);
-      }
-    }
+    const expandingNodes = nodes.filter(x => !expanded.includes(x));
+    setExpanded(nodes);
+    // root(nodeId===undefined)는 useEffect로 로드, handleChange에서 교체하지 않음
+    if (props.nodeId === undefined) return;
+    // 이 노드(props.nodeId) 자신이 확장될 때만 자식 로드
+    if (!expandingNodes.includes(props.nodeId)) return;
+    setChildNodes(null);
+    setTimeout(() => {
+      axios
+        .get(`/children/LOINC/${props.nodeId}`)
+        .then(result =>
+          setChildNodes(
+            result.data
+            .sort((a,b) => a.prefName > b.prefName?1:-1)
+            .map( (node, index) => (
+              <ClassTree setLoincId={props.setLoincId} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.code} label={renderLabel(node)} count={node.chdCnt}/>
+            ))
+          )
+        );
+    }, 50);
   };
 
   const renderLabel = item => (
 
       <Grid container wrap="nowrap" style={{padding:"0", margin:"0"}}>
         <Grid item style={{padding:"0 0 0 0px", margin:"0"}}>
-        { (item.desCnt === 0) ? (
+        { (item.chdCnt === 0) ? (
             <Typography className={classes.label}>{item.prefName}</Typography>
           ) : (
-            <Typography className={classes.label}>{item.prefName} ({item.desCnt})</Typography>
+            <Typography className={classes.label}>{item.prefName} ({item.chdCnt})</Typography>
           )
         }
         </Grid>
@@ -94,7 +92,7 @@ export default function ClassTree(props) {
           setChildNodes(
             result.data
             .map((node,index) => (
-              <ClassTree setLoincId={props.setLoincId} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.code} label={renderLabel(node)} count={node.desCnt}/>
+              <ClassTree setLoincId={props.setLoincId} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.code} label={renderLabel(node)} count={node.chdCnt}/>
             ))
           )
         );

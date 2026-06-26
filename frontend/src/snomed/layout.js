@@ -105,7 +105,7 @@ export default function Snomed(props) {
             />
           </Grid>
           <Grid item className={clsx(classes.borderright)} md={3}>
-            <Right id={props.fromId} setFromId={props.setFromId} mrcmFromMain={props.mrcmFromMain} mrcmFromSearch={props.mrcmFromSearch}/>
+            <Right id={props.fromId} setFromId={props.setFromId} mrcmFromMain={props.mrcmFromMain} mrcmFromSearch={props.mrcmFromSearch} version={selectedVersion}/>
           </Grid>
       </Grid>
     </>

@@ -465,3 +465,130 @@ WHERE EFFECTIVE_TIME = '00000000';
 - SNOMED CT Browser 상단에 릴리즈 날짜 드롭다운 추가
 - GET /version/SNOMEDCT API 활용하여 목록 조회
 - 선택된 version을 `?version=vYYYYMMDD` 파라미터로 전달
+
+---
+
+## 2026-06-26: TC Direct IS-A Only + 재귀 CTE 전면 전환
+
+### 배경
+기존 TC 방식(path/children_count/descendant_count 저장)은 상위 계층 변경 시 자손 수백만 건 CLOSE+INSERT 연쇄 발생 → 릴리즈당 수십~수천 초 소요.
+
+### 변경 내용
+
+**TC 테이블 구조 단순화:**
+```sql
+-- 이전: CONCEPT_ID, TERM, PARENT_ID, CHILDREN_COUNT, DESCENDANT_COUNT, DEPTH, PATH, VALID_FROM, VALID_TO
+-- 이후: CHILD_ID, PARENT_ID, VALID_FROM, VALID_TO (직접 IS-A 관계만)
+```
+
+**적재 속도 개선:**
+| 릴리즈 | 이전 | 이후 |
+|---|---|---|
+| 첫 릴리즈(20020131) 374,303행 | 153초 | 4초 |
+| 증분(20020731) | 수백 초 | 1초 |
+| 96개 전체 백필 | 수시간 예상 | 2분 44초 |
+
+**행 수:**
+- 이전: 18M행/릴리즈
+- 이후: 최대 634,947행 (전체 릴리즈 공유)
+
+**계층 조회:** WITH RECURSIVE CTE로 실시간 계산
+
+**수정 파일:**
+- `TransitiveClosureLoader.java`: DFS 제거, IS-A diff만 처리
+- `TransitiveClosure.java`: 엔티티 단순화 (childId, parentId만)
+- `TransitiveClosureRepository.java`: 재귀 CTE 쿼리
+- `ConceptRepositoryImpl.java`: closureQry 전면 교체
+- `TransitiveClosureServiceImpl.java`: findByConceptId → 별도 count 쿼리
+- `schema_term_postgresql.sql`: TC 테이블 재정의
+- `build_tc_batch.sh`: 동일 (스크립트 변경 없이 동작)
+- `ExtensionImporter.sh`: 신규 (Extension/Refset 단독 적재)
+
+### 새 릴리즈 적재 방법
+```bash
+./build_tc_batch.sh 20261201  # 단일 날짜
+./build_tc_batch.sh           # 전체 (이미 있는 것 스킵)
+```
+
+### Extension 적재 방법
+```bash
+./ExtensionImporter.sh release_files/SnomedCT_KoreanEdition_PRODUCTION_20260601T120000Z.zip
+```
+
+---
+
+## 2026-06-26: TC_CONCEPT_STATS BFS 자손 수 계산 + UI 버그 수정
+
+### TC_CONCEPT_STATS BFS 재계산 (96개 릴리즈)
+
+**문제:** Kahn's 위상 정렬로 계산한 자손 수가 DAG(다중 부모 허용) 특성으로 인해 중복 집계.
+- 예: Body structure = 5,583,673 → 실제 43,899
+
+**수정:** `TransitiveClosureLoader.java` — BFS per concept, visited HashSet으로 유니크 자손 수 계산
+
+**재계산:** `build_tc_batch.sh`를 로컬에서 실행하여 96개 릴리즈 전체 TC_CONCEPT_STATS 갱신 완료
+- 20020131 ~ 20260601 (96개 릴리즈)
+- 릴리즈당 약 63만 건, 소요 약 40~80초/릴리즈
+
+---
+
+### SNOMED CT Browser — Release date 변경 시 트리 갱신 버그 수정
+
+**수정 파일:**
+- `frontend/src/snomed/layout.js`: `<Left>`, `<Right>`에 `version={selectedVersion}` 전달
+- `frontend/src/snomed/right.js`: `<Parent>`, `<Children>`에 `version={props.version}` 전달
+- `frontend/src/snomed/children.js`: useEffect dependency에 `props.version` 추가, API URL에 `?version=` 파라미터 추가, 자식 컴포넌트에 `version` 전달
+- `frontend/src/snomed/parent.js`: 동일
+- `frontend/src/snomed/hierarchy.js`: 동일
+
+---
+
+### SNOMED CT Browser — Clinical finding 미표시 버그 수정 (MUI TreeView 중첩 이벤트)
+
+**원인:** Material-UI v4 TreeView 중첩 시, 내부 TreeView의 node toggle 이벤트가 외부 TreeView의 `onNodeToggle`까지 전파 → `setChildNodes(null)` 후 expand 노드 자식으로 전체 교체 → root 자식 노드 소실
+
+**수정:** `handleChange`에서 root는 early return, non-root는 자기 nodeId expand 시에만 자식 로드
+- `frontend/src/snomed/hierarchy.js`
+- `frontend/src/snomed/children.js`
+- `frontend/src/loinc/classTree.js`
+- `frontend/src/loinc/lpTree.js`
+- `frontend/src/loinc/lgTree.js`
+
+---
+
+### SNOMED CT Browser — 루트 노드 descendant count 동적 표시
+
+**문제:** "SNOMED CT Concept (354,447)" 하드코딩 → release date 변경해도 미갱신
+
+**수정:**
+- `TcController.java`: `GET /tc/SNOMEDCT/descendantCount/{conceptId}?version=` 엔드포인트 추가 — TC_CONCEPT_STATS 조회
+- `frontend/src/snomed/hierarchy.js`: version 변경 시 API 호출하여 루트 카운트 동적 표시
+
+---
+
+### Mapping Support — score → 일련번호 변경 + 출력 개수 제한 해제
+
+**문제:** PostgreSQL 전환 후 score 미제공, 출력 개수 20개 제한
+
+**수정:**
+- `frontend/src/map/main.js`: "Scores" 컬럼 → "No."(index+1), score 정렬 제거
+- `MapSearchController.java`: default size 20 → 500, 최종 결과 size 잘림 제거
+
+---
+
+### LOINC Browser — Class/Parts/Group 탭 트리구조 수정
+
+**문제:** CLASS 탭 트리 미표시, count 잘못 표시, 최종 노드 LOINC code 미표시
+
+**원인:**
+1. `"class"` 키워드 미처리 → 빈 결과
+2. CLASS 중간 노드(LABORATORY, BLDBK 등) → hierarchy_lg 테이블(잘못된 테이블) 조회
+3. LG 코드 → hierarchy 테이블(잘못된 테이블) 조회
+4. `descendant_count` 컬럼이 DB에 잘못된 값(전 노드 동일한 큰 수) → `children_count`로 대체
+
+**수정:**
+- `HierarchyServiceImpl.java`:
+  - `"class"` → `hierRepo.findChildrenByCode("CLASS")` (hierarchy 테이블)
+  - LG 코드(`^LG[0-9]`) → `findChildrenInLGHierarchy()` (hierarchy_lg 테이블)
+  - 非LP/LG 코드 → `findChildrenByCode()` 먼저, fallback `findChildrenInLGHierarchy()`
+- `classTree.js`, `lpTree.js`, `lgTree.js`: `desCnt` → `chdCnt` (leaf 판단 및 숫자 표시)

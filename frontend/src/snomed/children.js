@@ -76,28 +76,27 @@ export default function Children(props) {
   */
 
   const handleChange = (event, nodes) => {
-    /*console.log("handleChange (nodes) => " + nodes);
-    setChildNodes(null);*/
     const expandingNodes = nodes.filter(x => !expanded.includes(x));
-    console.log("handleChange (expandingNodes)=> " + expandingNodes);
     setExpanded(nodes);
-    if (expandingNodes[0]) {
-      const childId = expandingNodes[0];
-      setTimeout(() => {
-        axios
-          .get(`/children/SNOMEDCT/${childId}`)
-          .then(result =>
-            setChildNodes(
-              result.data
-              .sort((a,b) => a.term > b.term?1:-1)
-              .map( (node, index) => (
-                <Children setFromId={props.setFromId} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
-              ))
-            )
-          );
-      }, 50);
-    }
-    /*console.log(childNodes);*/
+    // firstId(root)는 useEffect로 로드, handleChange에서 교체하지 않음
+    if (props.firstId) return;
+    // 이 노드(props.nodeId) 자신이 확장될 때만 자식 로드
+    if (!expandingNodes.includes(props.nodeId)) return;
+    setChildNodes(null);
+    setTimeout(() => {
+      const vq = props.version ? `?version=${props.version}` : '';
+      axios
+        .get(`/children/SNOMEDCT/${props.nodeId}${vq}`)
+        .then(result =>
+          setChildNodes(
+            result.data
+            .sort((a,b) => a.term > b.term?1:-1)
+            .map( (node, index) => (
+              <Children setFromId={props.setFromId} version={props.version} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
+            ))
+          )
+        );
+    }, 50);
   };
 
   const renderLabel = item => (
@@ -126,24 +125,23 @@ export default function Children(props) {
   useEffect(() => {
 
     if (props.firstId) {
-      /*console.log("firstId => " + props.firstId);*/
       setChildNodes(null);
-
         setTimeout(() => {
+          const vq = props.version ? `?version=${props.version}` : '';
           axios
-            .get(`/children/SNOMEDCT/${props.firstId}`)
+            .get(`/children/SNOMEDCT/${props.firstId}${vq}`)
             .then(result =>
               setChildNodes(
                 result.data
                 .sort((a,b) => a.term > b.term?1:-1)
                 .map( (node,index) => (
-                  <Children setFromId={props.setFromId} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
+                  <Children setFromId={props.setFromId} version={props.version} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
                 ))
               )
             );
         }, 50);
     }
-  },[props.firstId]); /* left Hierarchy에서 concept을 선택하면 refresh를 위해 pros.nodeId 추 */
+  },[props.firstId, props.version]); /* left Hierarchy에서 concept을 선택하면 refresh를 위해 pros.nodeId 추 */
 
 
   /*console.log("props.nodeId => " + props.nodeId + " , " + "firstId => " + firstId);

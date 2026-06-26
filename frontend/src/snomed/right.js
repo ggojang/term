@@ -225,7 +225,7 @@ export default function Right(props) {
                 overflow: "scroll",
                 border:'none',
                 backgroundColor: 'transparent'}}>
-                <Parent firstId={props.id} setFromId={props.setFromId} />
+                <Parent firstId={props.id} setFromId={props.setFromId} version={props.version} />
             </Container>
           </ExpansionPanelDetails>
         </ExpansionPanel>
@@ -240,7 +240,7 @@ export default function Right(props) {
                 padding: "0 0 0 0",
                 overflow: "scroll",
                 backgroundColor: 'transparent'}}>
-                <Children firstId={props.id} setFromId={props.setFromId} />
+                <Children firstId={props.id} setFromId={props.setFromId} version={props.version} />
             </Container>
           </ExpansionPanelDetails>
         </ExpansionPanel>

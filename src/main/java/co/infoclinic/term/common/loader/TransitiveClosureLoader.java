@@ -5,8 +5,13 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -101,6 +106,10 @@ public class TransitiveClosureLoader {
         updateTcMeta();
         conn.commit();
 
+        // 6. 자손 수 계산 및 TC_CONCEPT_STATS 저장
+        computeAndStoreDescendantCounts();
+        conn.commit();
+
         long elapsed = (System.currentTimeMillis() - start) / 1000;
         log.info("TC 완료 (effectiveTime=" + this.effectiveTime + "): "
                 + "INSERT=" + insertedRows + ", CLOSE=" + closedRows + ", 소요=" + elapsed + "초");
@@ -153,7 +162,8 @@ public class TransitiveClosureLoader {
 
     // ── 신규 IS-A → INSERT ───────────────────────────────────────────
     private void insertNewRows() throws Exception {
-        String sql = "INSERT INTO term.tc (child_id, parent_id, valid_from, valid_to) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO term.tc (child_id, parent_id, valid_from, valid_to) VALUES (?, ?, ?, ?) " +
+                     "ON CONFLICT (child_id, parent_id, valid_from) DO NOTHING";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             long pending = 0;
             for (String key : newIsaSet) {
@@ -223,6 +233,82 @@ public class TransitiveClosureLoader {
                 } else { throw e; }
             }
         }
+    }
+
+    // ── 자손 수 계산 (BFS, 유니크 자손 수) → TC_CONCEPT_STATS 저장 ──────
+    // SNOMED CT는 DAG(개념이 복수 부모 가능)이므로 위상 정렬 합산은
+    // 동일 자손을 중복 계산함. BFS로 방문한 유니크 자손 수를 계산.
+    private void computeAndStoreDescendantCounts() throws Exception {
+        log.info("  자손 수 계산 시작 (effectiveTime=" + effectiveTime + ")...");
+        long t0 = System.currentTimeMillis();
+
+        // 1. TC에서 parent → children 맵 로드
+        String sql = "SELECT parent_id, child_id FROM term.tc " +
+                     "WHERE valid_from <= '" + effectiveTime + "' AND valid_to > '" + effectiveTime + "'";
+        Map<String, List<String>> childrenMap = new HashMap<>();
+        Set<String> allNodes = new HashSet<>();
+
+        try (Statement s = conn.createStatement(); ResultSet rs = s.executeQuery(sql)) {
+            while (rs.next()) {
+                String parent = rs.getString(1);
+                String child  = rs.getString(2);
+                childrenMap.computeIfAbsent(parent, k -> new ArrayList<>()).add(child);
+                allNodes.add(parent);
+                allNodes.add(child);
+            }
+        }
+        log.info("  TC 로드 완료: " + allNodes.size() + "개 노드");
+
+        // 2. BFS per concept: 각 개념에서 하향 BFS로 유니크 자손 수 계산
+        //    DAG 특성상 위상정렬 합산은 다중 경로를 중복 계산하므로 BFS 사용
+        Map<String, Long> dc = new HashMap<>(allNodes.size() * 2);
+        int processed = 0;
+        for (String node : allNodes) {
+            List<String> directChildren = childrenMap.get(node);
+            if (directChildren == null || directChildren.isEmpty()) {
+                dc.put(node, 0L);
+            } else {
+                Set<String> visited = new HashSet<>();
+                Deque<String> bfsQ = new ArrayDeque<>();
+                for (String c : directChildren) {
+                    if (visited.add(c)) bfsQ.add(c);
+                }
+                while (!bfsQ.isEmpty()) {
+                    String cur = bfsQ.poll();
+                    List<String> chs = childrenMap.get(cur);
+                    if (chs != null) {
+                        for (String ch : chs) {
+                            if (visited.add(ch)) bfsQ.add(ch);
+                        }
+                    }
+                }
+                dc.put(node, (long) visited.size());
+            }
+            if (++processed % 50000 == 0) {
+                log.info("    BFS 진행: " + processed + "/" + allNodes.size() + "개...");
+            }
+        }
+
+        log.info("  자손 수 계산 완료: " + dc.size() + "개 개념, "
+                + (System.currentTimeMillis() - t0) + "ms");
+
+        // 3. TC_CONCEPT_STATS UPSERT
+        String upsert = "INSERT INTO term.tc_concept_stats (concept_id, effective_time, descendant_count) " +
+                        "VALUES (?, ?, ?) " +
+                        "ON CONFLICT (concept_id, effective_time) DO UPDATE SET descendant_count = EXCLUDED.descendant_count";
+        try (PreparedStatement ps = conn.prepareStatement(upsert)) {
+            long pending = 0;
+            for (Map.Entry<String, Long> e : dc.entrySet()) {
+                ps.setString(1, e.getKey());
+                ps.setString(2, effectiveTime);
+                ps.setLong(3, e.getValue());
+                ps.addBatch();
+                pending++;
+                if (pending % BATCH_SIZE == 0) { ps.executeBatch(); conn.commit(); }
+            }
+            if (pending % BATCH_SIZE != 0) ps.executeBatch();
+        }
+        log.info("  TC_CONCEPT_STATS 저장 완료: " + dc.size() + "건");
     }
 
     // ── TC_META 갱신 ─────────────────────────────────────────────────

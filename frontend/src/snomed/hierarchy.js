@@ -69,31 +69,30 @@ export default function Hierarchy(props) {
 
   const [childNodes, setChildNodes] = useState(null);
   const [expanded, setExpanded] = useState([]);
+  const [rootCount, setRootCount] = useState(null);
 
   const handleChange = (event, nodes) => {
-    if (nodes.length !== 0) {
-      /*console.log("handleChange (nodes) => " + nodes + ", length : " + nodes.length);*/
-      setChildNodes(null);
-      const expandingNodes = nodes.filter(x => !expanded.includes(x));
-      setExpanded(nodes);
-      if (expandingNodes[0]) {
-        const childId = expandingNodes[0];
-        setTimeout(() => {
-          const vq = props.version ? `?version=${props.version}` : '';
-          axios
-            .get(`/children/SNOMEDCT/${childId}${vq}`)
-            .then(result =>
-              setChildNodes(
-                result.data
-                .sort((a,b) => a.term > b.term?1:-1)
-                .map( (node, index) => (
-                  <Hierarchy setFromId={props.setFromId} version={props.version} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
-                ))
-              )
-            );
-        }, 50);
-      }
-    }
+    const expandingNodes = nodes.filter(x => !expanded.includes(x));
+    setExpanded(nodes);
+    // root(nodeId===undefined)는 useEffect로 로드, handleChange에서 교체하지 않음
+    if (props.nodeId === undefined) return;
+    // 이 노드(props.nodeId) 자신이 확장될 때만 자식 로드
+    if (!expandingNodes.includes(props.nodeId)) return;
+    setChildNodes(null);
+    setTimeout(() => {
+      const vq = props.version ? `?version=${props.version}` : '';
+      axios
+        .get(`/children/SNOMEDCT/${props.nodeId}${vq}`)
+        .then(result =>
+          setChildNodes(
+            result.data
+            .sort((a,b) => a.term > b.term?1:-1)
+            .map( (node, index) => (
+              <Hierarchy setFromId={props.setFromId} version={props.version} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
+            ))
+          )
+        );
+    }, 50);
   };
 
   const renderLabel = item => (
@@ -121,21 +120,26 @@ export default function Hierarchy(props) {
 
   useEffect(() => {
     if (props.nodeId === undefined) {
-    setTimeout(() => {
+      // root count 조회
       const vq = props.version ? `?version=${props.version}` : '';
-      axios
-        .get(`/children/SNOMEDCT/138875005${vq}`)
-        .then(result =>
-          setChildNodes(
-            result.data
-            .sort((a,b) => a.term > b.term?1:-1)
-            .map((node,index) => (
-              <Hierarchy setFromId={props.setFromId} version={props.version} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
-            ))
-          )
-        );
-    }, 50);
-  }
+      axios.get(`/tc/SNOMEDCT/descendantCount/138875005${vq}`)
+        .then(r => setRootCount(r.data))
+        .catch(() => setRootCount(null));
+
+      setTimeout(() => {
+        axios
+          .get(`/children/SNOMEDCT/138875005${vq}`)
+          .then(result =>
+            setChildNodes(
+              result.data
+              .sort((a,b) => a.term > b.term?1:-1)
+              .map((node,index) => (
+                <Hierarchy setFromId={props.setFromId} version={props.version} classes={{label:classes.treeItemLabel}} key={index} nodeId={node.conceptId} label={renderLabel(node)} count={node.descendantCount}/>
+              ))
+            )
+          );
+      }, 50);
+    }
   }, [props.nodeId, props.version]);
 
   return (
@@ -157,7 +161,7 @@ export default function Hierarchy(props) {
             label={
               <span>
                 <Typography display="inline" className={clsx(classes.alertWarning, classes.badge)}>&nbsp;&nbsp;</Typography>
-                <span>&nbsp;SNOMED CT Concept (354,447)</span>
+                <span>&nbsp;SNOMED CT Concept{rootCount !== null ? ` (${rootCount.toLocaleString()})` : ''}</span>
               </span>
             }
           >
