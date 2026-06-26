@@ -15,11 +15,17 @@ import co.infoclinic.term.snomedct.model.entity.Scheme;
 public interface SchemeRepository extends JpaRepository<Scheme, String> {
 
 	/**
-	 * 모든 릴리즈(International + Extension) version 내림차순 조회
+	 * TC가 적재된 릴리즈만 반환.
+	 * - International: TC_META에 정확히 일치하는 날짜가 있는 경우
+	 * - Extension/Refset: TC_META에 같은 날짜 이하인 항목이 있는 경우 (가장 가까운 International TC 공유)
 	 */
-	@Query(value = "SELECT * " +
-				   "FROM SCHEME " +
-				   "ORDER BY TO_DATE(SUBSTRING(VERSION, 2), 'YYYYMMDD') DESC", nativeQuery = true)
+	@Query(value = "SELECT s.* " +
+				   "FROM SCHEME s " +
+				   "WHERE EXISTS (" +
+				   "  SELECT 1 FROM TC_META m " +
+				   "  WHERE m.EFFECTIVE_TIME <= REPLACE(s.VERSION, 'v', '')" +
+				   ") " +
+				   "ORDER BY TO_DATE(SUBSTRING(s.VERSION, 2), 'YYYYMMDD') DESC", nativeQuery = true)
 	List<Scheme> findAllOrderByVersionDesc();
 
 

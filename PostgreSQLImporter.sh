@@ -120,15 +120,7 @@ fi
 echo "    International effectiveTime: ${INT_ET:-<auto>}"
 java -Xmx6g -cp "${CLASS_DIR}:${PG_JDBC_JAR}" \
     co.infoclinic.term.common.loader.TransitiveClosureLoader "${INT_ET}"
-echo "    ✓ TC 생성 완료 (effectiveTime=${INT_ET:-auto})"
-
-# TC_META 갱신 (findDistinctEffectiveTimes() 성능 최적화용)
-echo "    TC_META 갱신 중..."
-psql -h ${PG_HOST} -p ${PG_PORT} -U ${PG_USER} -d ${PG_DB} -c \
-    "INSERT INTO term.TC_META (EFFECTIVE_TIME, ROW_COUNT)
-     SELECT EFFECTIVE_TIME, COUNT(*) FROM term.TC GROUP BY EFFECTIVE_TIME
-     ON CONFLICT (EFFECTIVE_TIME) DO UPDATE SET ROW_COUNT = EXCLUDED.ROW_COUNT;"
-echo "    ✓ TC_META 갱신 완료"
+echo "    ✓ TC 생성 완료 (effectiveTime=${INT_ET:-auto}) — TC_META는 Loader가 자동 갱신"
 
 # International 릴리즈를 SCHEME 테이블에 등록/갱신
 if [ -n "${INT_ET}" ]; then

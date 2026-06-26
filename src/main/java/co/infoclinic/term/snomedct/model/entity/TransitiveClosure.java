@@ -10,7 +10,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Transitive Closure Entity
+ * Transitive Closure Entity — 직접 IS-A 관계 단위로 저장
+ * 계층 탐색(조상/자손)은 재귀 CTE로 실시간 계산
  */
 @Entity(name = "TC")
 @Data
@@ -22,35 +23,16 @@ public class TransitiveClosure {
 	@GeneratedValue
 	@Column(name = "SEQ")
 	private Long id;
-	
-	/** 자신 컨셉 아이디 */
+
 	@Column
-	private String conceptId;
-	
-	@Column
-	private String term;
-	
-	/** 부모 컨셉 아이디 */
+	private String childId;
+
 	@Column
 	private String parentId;
-	
-	/** 루트로부터의 경로 */
-	@Column
-	private String path;
-	
-	/** children 수  */
-	@Column
-	private int childrenCount;
-	
-	/** descendant 수  */
-	@Column
-	private int descendantCount;
-	
-	/** 루트로부터 현재 경로의 깊이 */
-	@Column
-	private int depth;
 
-	/** 릴리즈 기준 effectiveTime (예: "20241001") */
 	@Column
-	private String effectiveTime;
+	private String validFrom;
+
+	@Column
+	private String validTo;
 }

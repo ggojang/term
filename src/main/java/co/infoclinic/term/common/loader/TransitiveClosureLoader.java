@@ -13,30 +13,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * SNOMED CT IS-A 계층 Transitive Closure(TC) 테이블 적재기
+ * SNOMED CT Direct IS-A 관계 적재기 (Snowstorm 방식)
  *
- * 처리 흐름:
- *   PostgreSQL INFERRED_RELATIONSHIP (Full) → effectiveTime 기준 active IS-A 추출
- *   → 메모리 계층 계산 → TC 테이블 배치 INSERT (effectiveTime 태깅)
+ * TC 테이블에는 직접 IS-A 관계 (child_id, parent_id)만 저장.
+ * 계층 탐색(조상/자손)은 조회 시 재귀 CTE로 실시간 계산.
  *
- * TC 테이블 구조:
- *   각 행 = IS-A 관계의 직접 부모-자식 쌍 하나 (EFFECTIVE_TIME 컬럼으로 릴리즈 구분)
- *   PATH   : 루트(138875005)에서 PARENT_ID까지 '~' 구분 경로
- *   DEPTH  : 루트 기준 깊이 (루트=0, 루트 직계자녀=1)
+ * diff 키: (child_id, parent_id)
+ *   - 신규 IS-A → INSERT (valid_from=ET, valid_to='99991231')
+ *   - 제거 IS-A → CLOSE  (valid_to=ET)
+ *   - 유지 IS-A → no-op
  *
- * 릴리즈 추가 방식:
- *   - 기존 effectiveTime의 TC가 이미 있으면 DELETE 후 재적재
- *   - TRUNCATE 대신 effectiveTime 단위 DELETE → 멀티 릴리즈 공존 가능
- *
- * 메모리 사용:
- *   대용량 온톨로지(SNOMED CT 국제판 기준 ~350K 개념)에서
- *   codeDescendantCodesMap이 크게 증가할 수 있음.
- *   실행 시 -Xmx4g 이상 권장.
- *
- * SNOMED CT International Edition 릴리즈 주기:
- *   - 2002~2011 : 연 1회 (1월 31일)
- *   - 2012~현재 : 연 2회 (1월 31일, 7월 31일)
- *   실제 effectiveTime 목록은 INFERRED_RELATIONSHIP 테이블에서 조회 가능
+ * 행 수: ~70만 행 (기존 18M 행 대비 1/25)
+ * 적재 속도: 첫 릴리즈 ~2초, 증분 ~수초
  */
 public class TransitiveClosureLoader {
 
@@ -46,287 +34,209 @@ public class TransitiveClosureLoader {
     private static final String JDBC_USER     = "postgres";
     private static final String JDBC_PASSWORD = "julab123!";
 
-    /** SNOMED CT 최상위 루트 개념 ID */
-    private static final String ROOT_SCTID  = "138875005";
+    private static final String ISA_TYPE_ID   = "116680003";
+    private static final String VALID_TO_OPEN = "99991231";
 
-    /** IS-A 관계 TYPE_ID (116680003 = Is a) */
-    private static final String ISA_TYPE_ID = "116680003";
-
-    /** FSN(Fully Specified Name) TYPE_ID */
-    private static final String FSN_TYPE_ID = "900000000000003001";
-
-    /** 배치 INSERT 크기 */
     private static final int BATCH_SIZE = 5000;
 
-    // -------------------------------------------------------------------------
-    // 메모리 내 계층 구조
-    // -------------------------------------------------------------------------
+    // ── 적재 대상: effectiveTime 시점의 활성 IS-A 관계 ──────────────
+    // key: "child_id|parent_id"
+    private final Set<String> newIsaSet = new HashSet<>();
 
-    /** 부모 → 직접 자식 집합 */
-    private final Map<String, Set<String>> codeChildCodesMap = new HashMap<>();
+    // ── 현재 활성 TC 스냅샷 (CLOSE 대상 계산용) ─────────────────────
+    // key: "child_id|parent_id"
+    private final Set<String> activeTcSet = new HashSet<>();
 
-    /** 개념 ID → FSN 용어 */
-    private final Map<String, String> codeTermMap = new HashMap<>();
-
-    /**
-     * 개념 ID → 전이적 하위 개념(descendant) 집합
-     * addSubtypeCode()가 경로 상 모든 조상에 자손을 추가하여 구축
-     */
-    private final Map<String, Set<String>> codeDescendantCodesMap = new HashMap<>();
-
-    // -------------------------------------------------------------------------
-    // TC 적재 상태
-    // -------------------------------------------------------------------------
-    private Connection conn;
-    private PreparedStatement insertPs;
-    private String effectiveTime;
+    private Connection        conn;
+    private String            effectiveTime;
     private long insertedRows = 0;
+    private long closedRows   = 0;
 
     // =========================================================================
-    // 진입점
-    // =========================================================================
-
-    /**
-     * 단독 실행 진입점.
-     * args[0]: effectiveTime (예: 20241001). 생략 시 inferred_relationship의 최신 날짜 자동 사용.
-     */
     public static void main(String[] args) throws Exception {
         try (Connection conn = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD)) {
             conn.setAutoCommit(false);
-            try (Statement stmt = conn.createStatement()) {
-                stmt.execute("SET search_path TO term");
+            try (Statement s = conn.createStatement()) {
+                s.execute("SET search_path TO term");
             }
-            String et = args.length > 0 ? args[0] : null;
-            load(conn, et);
+            load(conn, args.length > 0 ? args[0] : null);
             conn.commit();
         }
         System.out.println("[INFO] TC 적재 완료.");
     }
 
-    /**
-     * 외부에서 호출하는 정적 진입점.
-     *
-     * @param conn          기존 DB 연결 (autoCommit=false 권장)
-     * @param effectiveTime 릴리즈 기준 날짜 (null 이면 inferred_relationship 최신 날짜 자동 조회)
-     */
     public static void load(Connection conn, String effectiveTime) throws Exception {
         new TransitiveClosureLoader().doLoad(conn, effectiveTime);
     }
 
     // =========================================================================
-    // 내부 처리
-    // =========================================================================
-
-    private void doLoad(Connection conn, String effectiveTimeParam) throws Exception {
+    private void doLoad(Connection conn, String etParam) throws Exception {
         this.conn = conn;
-        long startTime = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
 
-        // effectiveTime 결정
-        if (effectiveTimeParam != null && !effectiveTimeParam.isEmpty()) {
-            this.effectiveTime = effectiveTimeParam;
-        } else {
-            this.effectiveTime = resolveLatestEffectiveTime();
-        }
+        this.effectiveTime = (etParam != null && !etParam.isEmpty())
+                ? etParam : resolveLatestEffectiveTime();
         log.info("TC 생성 시작 (effectiveTime=" + this.effectiveTime + ")");
 
-        // 1. INFERRED_RELATIONSHIP에서 해당 시점 기준 IS-A 관계 로딩
-        loadIsaRelationships();
-        int totalRels = codeChildCodesMap.values().stream().mapToInt(Set::size).sum();
-        log.info("  IS-A 관계 로딩 완료: " + totalRels + "건, 개념 수=" + codeTermMap.size());
+        // 1. effectiveTime 시점 활성 IS-A 관계 로드
+        loadActiveIsaRelationships();
+        log.info("  IS-A 관계 로딩 완료: " + newIsaSet.size() + "건");
 
-        Set<String> rootChildren = codeChildCodesMap.get(ROOT_SCTID);
-        if (rootChildren == null || rootChildren.isEmpty()) {
-            log.warning("루트(" + ROOT_SCTID + ")의 자식을 찾을 수 없음. TC 생성 생략.");
-            return;
-        }
+        // 2. 현재 TC 활성 스냅샷 로드
+        boolean isEmpty = loadActiveTcSnapshot();
+        log.info("  현재 활성 TC: " + activeTcSet.size() + "건"
+                + (isEmpty ? " (초기 적재)" : " (증분 적재)"));
 
-        // 2. 동일 effectiveTime의 기존 TC 행 삭제 (TRUNCATE 대신 부분 삭제로 멀티 릴리즈 유지)
-        try (Statement stmt = conn.createStatement()) {
-            int deleted = stmt.executeUpdate(
-                "DELETE FROM term.tc WHERE effective_time = '" + this.effectiveTime + "'");
-            log.info("  기존 TC 삭제 완료 (effectiveTime=" + this.effectiveTime + ", " + deleted + "건)");
-        }
+        // 3. diff → INSERT
+        insertNewRows();
         conn.commit();
 
-        // 3. PreparedStatement 준비
-        insertPs = conn.prepareStatement(
-            "INSERT INTO term.tc " +
-            "(concept_id, term, parent_id, children_count, descendant_count, depth, path, effective_time) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-        );
-
-        // 4. 루트에서 DFS 탐색 → TC 행 생성 및 배치 INSERT
-        travelSubtypes();
-
-        // 마지막 배치 플러시
-        if (insertedRows % BATCH_SIZE != 0) {
-            insertPs.executeBatch();
+        // 4. CLOSE: 이번 릴리즈에서 사라진 IS-A 관계
+        if (!isEmpty) {
+            closeRemovedRows();
+            conn.commit();
         }
-        conn.commit();
-        insertPs.close();
 
-        long elapsed = (System.currentTimeMillis() - startTime) / 1000;
-        log.info("TC 생성 완료 (effectiveTime=" + this.effectiveTime + "): "
-                 + insertedRows + "건, 소요=" + elapsed + "초");
+        // 5. TC_META 갱신
+        updateTcMeta();
+        conn.commit();
+
+        long elapsed = (System.currentTimeMillis() - start) / 1000;
+        log.info("TC 완료 (effectiveTime=" + this.effectiveTime + "): "
+                + "INSERT=" + insertedRows + ", CLOSE=" + closedRows + ", 소요=" + elapsed + "초");
     }
 
-    // =========================================================================
-    // effectiveTime 자동 결정 (최신 릴리즈 날짜)
-    // =========================================================================
-
+    // ── effectiveTime 자동 결정 ──────────────────────────────────────
     private String resolveLatestEffectiveTime() throws Exception {
-        String sql = "SELECT MAX(effective_time) AS max_et FROM term.inferred_relationship";
-        try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        try (Statement s = conn.createStatement();
+             ResultSet rs = s.executeQuery(
+                 "SELECT MAX(effective_time) FROM term.inferred_relationship")) {
             if (rs.next()) {
-                String et = rs.getString("max_et");
-                if (et != null && !et.isEmpty()) {
-                    log.info("  effectiveTime 자동 결정: " + et);
-                    return et;
+                String et = rs.getString(1);
+                if (et != null && !et.isEmpty()) return et;
+            }
+        }
+        throw new IllegalStateException("inferred_relationship에서 effectiveTime 조회 실패");
+    }
+
+    // ── effectiveTime 시점의 활성 IS-A 관계 로드 ────────────────────
+    private void loadActiveIsaRelationships() throws Exception {
+        String sql =
+            "SELECT source_id, destination_id FROM (" +
+            "  SELECT DISTINCT ON (source_id, destination_id)" +
+            "    source_id, destination_id, active" +
+            "  FROM term.inferred_relationship" +
+            "  WHERE type_id='" + ISA_TYPE_ID + "'" +
+            "    AND effective_time<='" + this.effectiveTime + "'" +
+            "  ORDER BY source_id, destination_id, effective_time DESC" +
+            ") x WHERE active=1";
+
+        try (Statement s = conn.createStatement();
+             ResultSet rs = s.executeQuery(sql)) {
+            while (rs.next()) {
+                newIsaSet.add(rs.getString(1) + "|" + rs.getString(2));
+            }
+        }
+    }
+
+    // ── 현재 활성 TC 스냅샷 로드 ────────────────────────────────────
+    private boolean loadActiveTcSnapshot() throws Exception {
+        String sql = "SELECT child_id, parent_id FROM term.tc WHERE valid_to='" + VALID_TO_OPEN + "'";
+        try (Statement s = conn.createStatement();
+             ResultSet rs = s.executeQuery(sql)) {
+            while (rs.next()) {
+                activeTcSet.add(rs.getString(1) + "|" + rs.getString(2));
+            }
+        }
+        return activeTcSet.isEmpty();
+    }
+
+    // ── 신규 IS-A → INSERT ───────────────────────────────────────────
+    private void insertNewRows() throws Exception {
+        String sql = "INSERT INTO term.tc (child_id, parent_id, valid_from, valid_to) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            long pending = 0;
+            for (String key : newIsaSet) {
+                if (activeTcSet.contains(key)) continue; // 유지 → no-op
+                String[] p = key.split("\\|", 2);
+                ps.setString(1, p[0]);
+                ps.setString(2, p[1]);
+                ps.setString(3, effectiveTime);
+                ps.setString(4, VALID_TO_OPEN);
+                ps.addBatch();
+                insertedRows++;
+                pending++;
+                if (pending % BATCH_SIZE == 0) {
+                    ps.executeBatch();
+                    conn.commit();
+                    log.log(Level.INFO, "  TC INSERT 중: {0}건...", insertedRows);
                 }
             }
+            if (pending % BATCH_SIZE != 0) ps.executeBatch();
         }
-        throw new IllegalStateException("inferred_relationship에서 effectiveTime을 조회할 수 없음");
     }
 
-    // =========================================================================
-    // IS-A 관계 조회
-    // =========================================================================
+    // ── CLOSE: 사라진 IS-A 관계 (deadlock 재시도 포함) ───────────────
+    private void closeRemovedRows() throws Exception {
+        Set<String> removed = new HashSet<>(activeTcSet);
+        removed.removeAll(newIsaSet);
+        if (removed.isEmpty()) return;
+        log.info("  CLOSE 대상: " + removed.size() + "건...");
 
-    /**
-     * INFERRED_RELATIONSHIP에서 effectiveTime 기준 활성 IS-A 관계를 조회한다.
-     *
-     * DISTINCT ON (source_id, destination_id) + ORDER BY effective_time DESC
-     * → effectiveTime <= 지정값 중 가장 최신 행을 선택하여 active=1 필터
-     * → 해당 시점 기준 계층 상태 재현
-     */
-    private void loadIsaRelationships() throws Exception {
-        String isaSql =
-            "SELECT child_id, parent_id FROM (" +
-            "  SELECT DISTINCT ON (source_id, destination_id)" +
-            "    source_id AS child_id, destination_id AS parent_id, active" +
-            "  FROM term.inferred_relationship" +
-            "  WHERE type_id = '" + ISA_TYPE_ID + "'" +
-            "    AND effective_time <= '" + this.effectiveTime + "'" +
-            "  ORDER BY source_id, destination_id, effective_time DESC" +
-            ") latest WHERE active = 1";
-
-        String fsnSql =
-            "SELECT concept_id, term FROM (" +
-            "  SELECT DISTINCT ON (concept_id)" +
-            "    concept_id, term, active" +
-            "  FROM term.description" +
-            "  WHERE type_id = '" + FSN_TYPE_ID + "'" +
-            "    AND language_code = 'en'" +
-            "    AND effective_time <= '" + this.effectiveTime + "'" +
-            "  ORDER BY concept_id, effective_time DESC" +
-            ") latest WHERE active = 1";
-
-        log.info("  FSN 용어 로딩 중...");
-        Map<String, String> fsnMap = new HashMap<>();
-        try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(fsnSql)) {
-            while (rs.next()) {
-                fsnMap.put(rs.getString("concept_id"), rs.getString("term"));
-            }
+        try (Statement s = conn.createStatement()) {
+            s.execute("SET lock_timeout = '10s'");
         }
-        log.info("  FSN 용어 로딩 완료: " + fsnMap.size() + "건");
 
-        log.info("  IS-A 관계 쿼리 실행 중 (effectiveTime<=" + this.effectiveTime + ")...");
-        try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(isaSql)) {
-            while (rs.next()) {
-                String child  = rs.getString("child_id");
-                String parent = rs.getString("parent_id");
-                codeChildCodesMap.computeIfAbsent(parent, k -> new HashSet<>()).add(child);
-                codeTermMap.put(child, fsnMap.getOrDefault(child, ""));
+        String sql = "UPDATE term.tc SET valid_to=? WHERE child_id=? AND parent_id=? AND valid_to='" + VALID_TO_OPEN + "'";
+        String[] keys = removed.toArray(new String[0]);
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            long pending = 0;
+            for (String key : keys) {
+                String[] p = key.split("\\|", 2);
+                ps.setString(1, effectiveTime);
+                ps.setString(2, p[0]);
+                ps.setString(3, p[1]);
+                ps.addBatch();
+                closedRows++;
+                pending++;
+                if (pending % BATCH_SIZE == 0) {
+                    executeBatchWithRetry(ps, conn);
+                }
+            }
+            if (pending % BATCH_SIZE != 0) executeBatchWithRetry(ps, conn);
+        }
+    }
+
+    private void executeBatchWithRetry(PreparedStatement ps, Connection conn) throws Exception {
+        for (int retry = 0; retry < 3; retry++) {
+            try {
+                ps.executeBatch();
+                conn.commit();
+                return;
+            } catch (java.sql.BatchUpdateException e) {
+                if (e.getMessage().contains("deadlock") && retry < 2) {
+                    log.warning("  deadlock 재시도 " + (retry + 1) + "...");
+                    conn.rollback();
+                    Thread.sleep(500L * (retry + 1));
+                    ps.clearBatch();
+                } else { throw e; }
             }
         }
     }
 
-    // =========================================================================
-    // DFS 계층 탐색
-    // =========================================================================
-
-    private void travelSubtypes() throws Exception {
-        Set<String> rootChildren = codeChildCodesMap.get(ROOT_SCTID);
-
-        for (String code : rootChildren) {
-            addSubtypeCode(ROOT_SCTID, code);
-
-            Set<String> childCodes = codeChildCodesMap.get(code);
-            int childrenCount = 0;
-            if (childCodes != null && !childCodes.isEmpty()) {
-                childrenCount = childCodes.size();
-                travelSubtypes(code, ROOT_SCTID + "~" + code, childCodes, 1);
-            }
-
-            write(code, ROOT_SCTID, getTerm(code),
-                  childrenCount, getDescendantCount(code), 1, ROOT_SCTID);
+    // ── TC_META 갱신 ─────────────────────────────────────────────────
+    private void updateTcMeta() throws Exception {
+        String sql =
+            "INSERT INTO term.tc_meta (effective_time, row_count) " +
+            "SELECT ?, COUNT(*) FROM term.tc WHERE valid_from<=? AND valid_to>? " +
+            "ON CONFLICT (effective_time) DO UPDATE SET row_count=EXCLUDED.row_count";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, effectiveTime);
+            ps.setString(2, effectiveTime);
+            ps.setString(3, effectiveTime);
+            ps.executeUpdate();
         }
-
-        write(ROOT_SCTID, "",
-              "SNOMED CT Concept (SNOMED RT+CTV3)",
-              rootChildren.size(), getDescendantCount(ROOT_SCTID), 0, "");
-    }
-
-    private void travelSubtypes(String parentCode, String parentPath,
-                                 Set<String> codes, int depth) throws Exception {
-        for (String code : codes) {
-            addSubtypeCode(parentPath, code);
-
-            Set<String> childCodes = codeChildCodesMap.get(code);
-            int childrenCount = 0;
-            if (childCodes != null && !childCodes.isEmpty()) {
-                childrenCount = childCodes.size();
-                travelSubtypes(code, parentPath + "~" + code, childCodes, depth + 1);
-            }
-
-            write(code, parentCode, getTerm(code),
-                  childrenCount, getDescendantCount(code), depth + 1, parentPath);
-        }
-    }
-
-    private void addSubtypeCode(String parentPath, String code) {
-        for (String ancestor : parentPath.split("~")) {
-            codeDescendantCodesMap
-                .computeIfAbsent(ancestor, k -> new HashSet<>())
-                .add(code);
-        }
-    }
-
-    private String getTerm(String code) {
-        return codeTermMap.getOrDefault(code, "");
-    }
-
-    private int getDescendantCount(String code) {
-        Set<String> descendants = codeDescendantCodesMap.get(code);
-        return descendants == null ? 0 : descendants.size();
-    }
-
-    // =========================================================================
-    // TC 테이블 INSERT
-    // =========================================================================
-
-    private void write(String code, String parentCode, String term,
-                       int childrenCount, int descendantCount,
-                       int depth, String path) throws Exception {
-        insertPs.setString(1, code);           // CONCEPT_ID
-        insertPs.setString(2, term);           // TERM
-        insertPs.setString(3, parentCode);     // PARENT_ID
-        insertPs.setInt(4, childrenCount);     // CHILDREN_COUNT
-        insertPs.setInt(5, descendantCount);   // DESCENDANT_COUNT
-        insertPs.setInt(6, depth);             // DEPTH
-        insertPs.setString(7, path);           // PATH
-        insertPs.setString(8, effectiveTime);  // EFFECTIVE_TIME
-
-        insertPs.addBatch();
-        insertedRows++;
-
-        if (insertedRows % BATCH_SIZE == 0) {
-            insertPs.executeBatch();
-            conn.commit();
-            log.log(Level.INFO, "  TC 적재 중: {0}건...", insertedRows);
-        }
+        log.info("  TC_META 갱신 완료 (" + effectiveTime + ")");
     }
 }

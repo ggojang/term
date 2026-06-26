@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import co.infoclinic.term.common.utils.SNOMEDCTComponentTypeEnum;
-import co.infoclinic.term.snomedct.model.entity.TransitiveClosure;
 import co.infoclinic.term.snomedct.repository.TransitiveClosureRepository;
 import co.infoclinic.term.snomedct.service.TransitiveClosureService;
 
@@ -107,13 +106,8 @@ public class TransitiveClosureServiceImpl implements TransitiveClosureService {
 	public Map<String, Integer> getCountMapByConceptId(String conceptId, String effectiveTime) {
 		if (!SNOMEDCTComponentTypeEnum.isValidIdentifier(conceptId)) return new HashMap<>();
 		Map<String, Integer> countMap = new HashMap<>();
-		int childrenCount = 0;
-		int descendantCount = 0;
-		TransitiveClosure entity = tcRepo.findByConceptId(conceptId, effectiveTime);
-		if (entity != null) {
-			childrenCount = entity.getChildrenCount();
-			descendantCount = entity.getDescendantCount();
-		}
+		int childrenCount = tcRepo.findChildrenCountByConceptId(conceptId, effectiveTime);
+		int descendantCount = tcRepo.findDescendantCountByConceptId(conceptId, effectiveTime);
 		countMap.put("Children", childrenCount);
 		countMap.put("Descendant", descendantCount);
 		return countMap;
