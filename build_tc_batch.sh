@@ -17,14 +17,30 @@ PG_USER="postgres"
 PG_PASS="julab123!"
 export PGPASSWORD="${PG_PASS}"
 
-PSQL="/Library/PostgreSQL/18/bin/psql -h ${PG_HOST} -p ${PG_PORT} -U ${PG_USER} -d ${PG_DB}"
+# psql 경로 자동 감지 (로컬 Mac / 원격 Linux)
+if [ -f "/Library/PostgreSQL/18/bin/psql" ]; then
+  PSQL_BIN="/Library/PostgreSQL/18/bin/psql"
+elif [ -f "/home/infoclinic/bin/psql" ]; then
+  PSQL_BIN="/home/infoclinic/bin/psql"
+else
+  PSQL_BIN=$(which psql 2>/dev/null || echo "psql")
+fi
+PSQL="${PSQL_BIN} -h ${PG_HOST} -p ${PG_PORT} -U ${PG_USER} -d ${PG_DB}"
+
+# Java 경로 자동 감지
+if [ -d "$HOME/.sdkman/candidates/java/current" ]; then
+  source ~/.sdkman/bin/sdkman-init.sh 2>/dev/null || true
+  export JAVA_HOME="$HOME/.sdkman/candidates/java/current"
+elif [ -d "/usr/lib/jvm/java-17-oracle" ]; then
+  export JAVA_HOME="/usr/lib/jvm/java-17-oracle"
+fi
+export PATH="${JAVA_HOME}/bin:${PATH}"
+
 LOCATION="$(cd "$(dirname "$0")" && pwd)"
-PG_JDBC_JAR=$(find ~/.m2/repository/org/postgresql -name "postgresql-*.jar" | sort | tail -1)
+PG_JDBC_JAR=$(find ~/.m2/repository/org/postgresql -name "postgresql-*.jar" 2>/dev/null | sort | tail -1)
 CLASS_DIR="/tmp/term_loader_classes"
 LOADER_SRC="${LOCATION}/src/main/java/co/infoclinic/term/common/loader/TransitiveClosureLoader.java"
 LOG_FILE="${LOCATION}/tc_batch.log"
-
-source ~/.sdkman/bin/sdkman-init.sh 2>/dev/null || true
 
 mkdir -p "${CLASS_DIR}"
 
