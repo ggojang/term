@@ -13,10 +13,8 @@ Board ID: BBSMSTR_000000000676
   5) PostgreSQL hira_downloads 테이블에 이력 기록
   6) Slack 알림
 
-스케줄: cron 매주 월요일 09:00
+스케줄: cron 매월 1일 09:00
 """
-from __future__ import annotations
-
 import hashlib
 import logging
 import os
@@ -66,7 +64,7 @@ log = logging.getLogger(__name__)
 
 
 # ── HTTP 헬퍼 ─────────────────────────────────────────────────────────────────
-def _session() -> requests.Session:
+def _session():
     s = requests.Session()
     s.headers.update({
         "User-Agent": "Mozilla/5.0",
@@ -75,7 +73,7 @@ def _session() -> requests.Session:
     return s
 
 
-def parse_ssv(text: str) -> dict[str, list[dict]]:
+def parse_ssv(text):
     datasets: dict[str, list[dict]] = {}
     parts = text.split(RS)
     i = 0
@@ -97,7 +95,7 @@ def parse_ssv(text: str) -> dict[str, list[dict]]:
     return datasets
 
 
-def build_list_body(bbs_id: str, page: int = 1, per_page: int = 20) -> bytes:
+def build_list_body(bbs_id, page=1, per_page=20):
     first = (page - 1) * per_page
     last  = page * per_page
     return (
@@ -116,7 +114,7 @@ def build_list_body(bbs_id: str, page: int = 1, per_page: int = 20) -> bytes:
     ).encode("utf-8")
 
 
-def build_filelist_body(ntt_id: str, atch_file_id: str) -> bytes:
+def build_filelist_body(ntt_id, atch_file_id):
     return (
         f"SSV:utf-8{RS}JSESSIONID=null{RS}BIZINTERSESSION={RS}WMONID=5lnFrOSL_fb{RS}"
         f"browserType=Chrome{RS}osVersion=Mac OS 10.15.7{RS}"
@@ -153,7 +151,7 @@ def record_download(conn, *, category, file_type, post_no, title,
 
 
 # ── 게시글 목록 수집 ──────────────────────────────────────────────────────────
-def parse_post_date(row: dict) -> date | None:
+def parse_post_date(row):
     """frstregisterPntt (yyyyMMddHHmmssSSS) → date."""
     raw = row.get("frstregisterPntt", "")
     if raw and len(raw) >= 8:
@@ -164,12 +162,12 @@ def parse_post_date(row: dict) -> date | None:
     return None
 
 
-def fetch_latest_posts(sess: requests.Session) -> list[dict]:
+def fetch_latest_posts(sess):
     """
     카테고리별로 100KB 이상 엑셀파일이 있는 가장 최신 게시글 반환.
     제목 형식: [행위]/[약제]/[치료재료] 로 시작하는 글만 수집.
     """
-    found: dict[str, dict] = {}  # category → best post
+    found = {}  # category → best post
 
     for page in range(1, 10):
         body = build_list_body(BBS_ID, page=page, per_page=20)
@@ -232,7 +230,7 @@ def fetch_latest_posts(sess: requests.Session) -> list[dict]:
 
 
 # ── 첨부파일 목록 수집 ────────────────────────────────────────────────────────
-def fetch_file_list(sess: requests.Session, post: dict) -> list[dict]:
+def fetch_file_list(sess, post):
     body = build_filelist_body(post["ntt_id"], post["atch_file_id"])
     r = sess.post(
         f"{BASE_URL}/qya/bbs/selectComBbsFileList.ndo",
@@ -248,9 +246,7 @@ def fetch_file_list(sess: requests.Session, post: dict) -> list[dict]:
 
 
 # ── 파일 다운로드 ──────────────────────────────────────────────────────────────
-def download_file(sess: requests.Session, apnd_file_id: str,
-                  apnd_file_stg_pth: str, apnd_file_nm: str,
-                  save_path: Path) -> str:
+def download_file(sess, apnd_file_id, apnd_file_stg_pth, apnd_file_nm, save_path):
     """파일을 다운로드하고 SHA-256 해시를 반환."""
     virtual_path = apnd_file_stg_pth.rstrip("/") + "/" + apnd_file_id
     url = (
@@ -271,7 +267,7 @@ def download_file(sess: requests.Session, apnd_file_id: str,
 
 
 # ── Slack 알림 ────────────────────────────────────────────────────────────────
-def send_slack_load_done(new_files: list[dict]):
+def send_slack_load_done(new_files):
     if not SLACK_WEBHOOK_URL:
         return
     cats = ", ".join(f"[{f['category']}]" for f in new_files)
@@ -282,7 +278,7 @@ def send_slack_load_done(new_files: list[dict]):
         log.error("Slack 알림 실패: %s", e)
 
 
-def send_slack(new_files: list[dict]):
+def send_slack(new_files):
     if not SLACK_WEBHOOK_URL or not new_files:
         if not SLACK_WEBHOOK_URL:
             log.info("Slack webhook 미설정, 알림 생략")
@@ -300,13 +296,13 @@ def send_slack(new_files: list[dict]):
 
 
 # ── 메인 ──────────────────────────────────────────────────────────────────────
-def main() -> int:
+def main():
     log.info("=== HIRA 다운로드 시작 ===")
     DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
     conn = get_db()
     sess = _session()
-    all_new: list[dict] = []
+    all_new = []
 
     try:
         posts = fetch_latest_posts(sess)
