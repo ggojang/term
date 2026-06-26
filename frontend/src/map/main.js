@@ -18,6 +18,7 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Box from "@material-ui/core/Box";
+import LinearProgress from '@material-ui/core/LinearProgress';
 
 const StyledTableCell = withStyles((theme) => ({
   head: {
@@ -77,6 +78,7 @@ export default function Main(props) {
   const [value, setValue] = useState([]);
   const [val, setVal] = useState([]);
   const [tmp, setTmp] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (q.length > 2) {
@@ -85,6 +87,7 @@ export default function Main(props) {
       setVal([]);
       setValue([]);
       setValue2([]);
+      setLoading(true);
 
       const semanticTags = [];
       for (let seman in props.semanTag) {
@@ -144,6 +147,7 @@ export default function Main(props) {
       }
       setTimeout(function() {
         setVal(value);
+        setLoading(false);
       }, 1500);
     }
   }, [tmp]);
@@ -164,6 +168,7 @@ export default function Main(props) {
         }}
       />
     </FormControl>
+    {loading && <LinearProgress style={{ margin: '0 14px 4px', borderRadius: 2 }} />}
     <Container
       className={classes.container}
       style={{
