@@ -202,9 +202,9 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 		}
 		String et = effectiveTime;
 		String closureQry = "SELECT DISTINCT t1.CHILD_ID AS CONCEPT_ID, " +
-			"(SELECT COUNT(*) FROM TC t2 WHERE t2.PARENT_ID = t1.CHILD_ID AND t2.VALID_FROM <= '" + et + "' AND t2.VALID_TO > '" + et + "') AS CHILDREN_COUNT, " +
+			"(SELECT COUNT(*) FROM term.TC t2 WHERE t2.PARENT_ID = t1.CHILD_ID AND t2.VALID_FROM <= '" + et + "' AND t2.VALID_TO > '" + et + "') AS CHILDREN_COUNT, " +
 			"0 AS DESCENDANT_COUNT " +
-			"FROM TC t1 WHERE t1.VALID_FROM <= '" + et + "' AND t1.VALID_TO > '" + et + "' AND t1.CHILD_ID IN (" + sb + ")";
+			"FROM term.TC t1 WHERE t1.VALID_FROM <= '" + et + "' AND t1.VALID_TO > '" + et + "' AND t1.CHILD_ID IN (" + sb + ")";
 		String qry = getConceptListByClosureQry(closureQry, effectiveTime);
 		return getResultList(qry);
 	}
@@ -884,8 +884,8 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 				"ON C.CONCEPT_ID = D.CONCEPT_ID " +
 				"LEFT JOIN ( " +
 				"  SELECT '" + conceptId + "' AS CONCEPT_ID, " +
-				"    (SELECT COUNT(*) FROM TC WHERE PARENT_ID = '" + conceptId + "' AND VALID_FROM <= '" + et + "' AND VALID_TO > '" + et + "') AS CHILDREN_COUNT, " +
-				"    (SELECT COUNT(*) FROM TC WHERE PARENT_ID = '" + conceptId + "' AND VALID_FROM <= '" + et + "' AND VALID_TO > '" + et + "') AS DESCENDANT_COUNT " +
+				"    (SELECT COUNT(*) FROM term.TC WHERE PARENT_ID = '" + conceptId + "' AND VALID_FROM <= '" + et + "' AND VALID_TO > '" + et + "') AS CHILDREN_COUNT, " +
+				"    (SELECT COUNT(*) FROM term.TC WHERE PARENT_ID = '" + conceptId + "' AND VALID_FROM <= '" + et + "' AND VALID_TO > '" + et + "') AS DESCENDANT_COUNT " +
 				") AS T " +
 				"ON C.CONCEPT_ID = T.CONCEPT_ID ";
 				
@@ -908,9 +908,9 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 		String closureQry;
 		
 		closureQry = "SELECT DISTINCT t1.PARENT_ID AS CONCEPT_ID, " +
-					 "(SELECT COUNT(*) FROM TC t2 WHERE t2.PARENT_ID = t1.PARENT_ID AND t2.VALID_FROM <= '" + effectiveTime + "' AND t2.VALID_TO > '" + effectiveTime + "') AS CHILDREN_COUNT, " +
+					 "(SELECT COUNT(*) FROM term.TC t2 WHERE t2.PARENT_ID = t1.PARENT_ID AND t2.VALID_FROM <= '" + effectiveTime + "' AND t2.VALID_TO > '" + effectiveTime + "') AS CHILDREN_COUNT, " +
 					 "0 AS DESCENDANT_COUNT " +
-					 "FROM TC t1 " +
+					 "FROM term.TC t1 " +
 					 "WHERE t1.CHILD_ID = '" + conceptId + "' " +
 					 "AND t1.VALID_FROM <= '" + effectiveTime + "' AND t1.VALID_TO > '" + effectiveTime + "' ";
 		
@@ -985,11 +985,11 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 		// CHILDREN_COUNT: 직접 자식 수 (빠름)
 		// DESCENDANT_COUNT: TC_CONCEPT_STATS에서 사전 계산된 자손 수 조회
 		String closureQry = "SELECT DISTINCT t1.CHILD_ID AS CONCEPT_ID, " +
-						 "(SELECT COUNT(*) FROM TC t2 WHERE t2.PARENT_ID = t1.CHILD_ID AND t2." + vcond + ") AS CHILDREN_COUNT, " +
-						 "COALESCE((SELECT s.DESCENDANT_COUNT FROM TC_CONCEPT_STATS s " +
+						 "(SELECT COUNT(*) FROM term.TC t2 WHERE t2.PARENT_ID = t1.CHILD_ID AND t2." + vcond + ") AS CHILDREN_COUNT, " +
+						 "COALESCE((SELECT s.DESCENDANT_COUNT FROM term.TC_CONCEPT_STATS s " +
 						 "          WHERE s.CONCEPT_ID = t1.CHILD_ID AND s.EFFECTIVE_TIME = '" + et + "'), " +
-						 " (SELECT COUNT(*) FROM TC t2 WHERE t2.PARENT_ID = t1.CHILD_ID AND t2." + vcond + ")) AS DESCENDANT_COUNT " +
-						 "FROM TC t1 WHERE t1.PARENT_ID = '" + conceptId + "' AND t1." + vcond;
+						 " (SELECT COUNT(*) FROM term.TC t2 WHERE t2.PARENT_ID = t1.CHILD_ID AND t2." + vcond + ")) AS DESCENDANT_COUNT " +
+						 "FROM term.TC t1 WHERE t1.PARENT_ID = '" + conceptId + "' AND t1." + vcond;
 
 		String qry = "SELECT C.*, D.TERM, MODULE.TERM AS MODULE_NAME, DEF.TERM AS DEF_NAME, T.CHILDREN_COUNT, T.DESCENDANT_COUNT " +
 				"FROM ( " +
@@ -1052,9 +1052,9 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 
 		String qry =
 			"WITH RECURSIVE desc_cte(concept_id) AS ( " +
-			"  SELECT CHILD_ID FROM TC WHERE PARENT_ID IN (" + inClause + ") AND " + vcond + " " +
+			"  SELECT CHILD_ID FROM term.TC WHERE PARENT_ID IN (" + inClause + ") AND " + vcond + " " +
 			"  UNION ALL " +
-			"  SELECT tc.CHILD_ID FROM TC tc JOIN desc_cte d ON tc.PARENT_ID = d.concept_id WHERE tc." + vcond +
+			"  SELECT tc.CHILD_ID FROM term.TC tc JOIN desc_cte d ON tc.PARENT_ID = d.concept_id WHERE tc." + vcond +
 			") " +
 			"SELECT C.*, D.TERM, MODULE.TERM AS MODULE_NAME, DEF.TERM AS DEF_NAME, T.CHILDREN_COUNT, T.DESCENDANT_COUNT " +
 			"FROM ( " +
@@ -1077,7 +1077,7 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 			") D ON C.CONCEPT_ID = D.CONCEPT_ID " +
 			"LEFT JOIN ( " +
 			"  SELECT dc.concept_id AS CONCEPT_ID, " +
-			"    (SELECT COUNT(*) FROM TC t2 WHERE t2.PARENT_ID = dc.concept_id AND t2." + vcond + ") AS CHILDREN_COUNT, " +
+			"    (SELECT COUNT(*) FROM term.TC t2 WHERE t2.PARENT_ID = dc.concept_id AND t2." + vcond + ") AS CHILDREN_COUNT, " +
 			"    0 AS DESCENDANT_COUNT FROM desc_cte dc " +
 			") T ON C.CONCEPT_ID = T.CONCEPT_ID ";
 
@@ -1104,9 +1104,9 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 
 		String qry =
 			"WITH RECURSIVE desc_cte(concept_id) AS ( " +
-			"  SELECT CHILD_ID FROM TC WHERE PARENT_ID IN (" + inClause + ") AND " + vcond + " " +
+			"  SELECT CHILD_ID FROM term.TC WHERE PARENT_ID IN (" + inClause + ") AND " + vcond + " " +
 			"  UNION ALL " +
-			"  SELECT tc.CHILD_ID FROM TC tc JOIN desc_cte d ON tc.PARENT_ID = d.concept_id WHERE tc." + vcond +
+			"  SELECT tc.CHILD_ID FROM term.TC tc JOIN desc_cte d ON tc.PARENT_ID = d.concept_id WHERE tc." + vcond +
 			") " +
 			"SELECT C.*, D.TERM, MODULE.TERM AS MODULE_NAME, DEF.TERM AS DEF_NAME, T.CHILDREN_COUNT, T.DESCENDANT_COUNT " +
 			"FROM ( " +
@@ -1129,7 +1129,7 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 			") D ON C.CONCEPT_ID = D.CONCEPT_ID " +
 			"LEFT JOIN ( " +
 			"  SELECT dc.concept_id AS CONCEPT_ID, " +
-			"    (SELECT COUNT(*) FROM TC t2 WHERE t2.PARENT_ID = dc.concept_id AND t2." + vcond + ") AS CHILDREN_COUNT, " +
+			"    (SELECT COUNT(*) FROM term.TC t2 WHERE t2.PARENT_ID = dc.concept_id AND t2." + vcond + ") AS CHILDREN_COUNT, " +
 			"    0 AS DESCENDANT_COUNT FROM desc_cte dc " +
 			") T ON C.CONCEPT_ID = T.CONCEPT_ID ";
 		qry += getModuleJoinQuery(effectiveTime);
@@ -1216,9 +1216,9 @@ public class ConceptRepositoryImpl implements ConceptRepositoryCustom {
 				"ON C.CONCEPT_ID = D.CONCEPT_ID " +
 				"LEFT JOIN ( " +
 				"  SELECT DISTINCT t1.CHILD_ID AS CONCEPT_ID, " +
-				"    (SELECT COUNT(*) FROM TC t2 WHERE t2.PARENT_ID = t1.CHILD_ID AND t2.VALID_FROM <= '" + effectiveTime + "' AND t2.VALID_TO > '" + effectiveTime + "') AS CHILDREN_COUNT, " +
+				"    (SELECT COUNT(*) FROM term.TC t2 WHERE t2.PARENT_ID = t1.CHILD_ID AND t2.VALID_FROM <= '" + effectiveTime + "' AND t2.VALID_TO > '" + effectiveTime + "') AS CHILDREN_COUNT, " +
 				"    0 AS DESCENDANT_COUNT " +
-				"  FROM TC t1 " +
+				"  FROM term.TC t1 " +
 				"  WHERE t1.VALID_FROM <= '" + effectiveTime + "' AND t1.VALID_TO > '" + effectiveTime + "' " +
 				"  AND ( ";
 		qry += tcOrInClause;

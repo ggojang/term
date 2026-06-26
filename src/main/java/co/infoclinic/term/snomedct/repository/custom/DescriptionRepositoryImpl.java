@@ -44,7 +44,7 @@ public class DescriptionRepositoryImpl implements DescriptionRepositoryCustom {
 	 *   SELECT DSC.CONCEPT_ID, DSC.DESCRIPTION_ID, MAX(DSC.EFFECTIVE_TIME) AS MAX_EFFECTIVE_TIME
 	 *   FROM (
 	 *     SELECT CONCEPT_ID
-	 *     FROM TC 
+	 *     FROM term.TC 
 	 *     WHERE 
 	 *     PATH LIKE '138875005~105590001~115669006~33463005~32457005~87612001%'
 	 *     OR PATH LIKE '138875005~105590001~115668003~256906008~87612001%'
@@ -86,7 +86,7 @@ public class DescriptionRepositoryImpl implements DescriptionRepositoryCustom {
 				" SELECT DSC.CONCEPT_ID, DSC.DESCRIPTION_ID, MAX(DSC.EFFECTIVE_TIME) AS MAX_EFFECTIVE_TIME " +
 				" FROM ( " +
 				" SELECT CONCEPT_ID " +
-				" FROM TC " +
+				" FROM term.TC " +
 				" WHERE " + getPathLikeStmt(paths.get(0));
 		
 		for (int i = 1; i < pathsSize; i++) {

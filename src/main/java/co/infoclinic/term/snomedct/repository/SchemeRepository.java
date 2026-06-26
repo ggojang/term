@@ -20,9 +20,9 @@ public interface SchemeRepository extends JpaRepository<Scheme, String> {
 	 * - Extension/Refset: TC_META에 같은 날짜 이하인 항목이 있는 경우 (가장 가까운 International TC 공유)
 	 */
 	@Query(value = "SELECT s.* " +
-				   "FROM SCHEME s " +
+				   "FROM term.SCHEME s " +
 				   "WHERE EXISTS (" +
-				   "  SELECT 1 FROM TC_META m " +
+				   "  SELECT 1 FROM term.TC_META m " +
 				   "  WHERE m.EFFECTIVE_TIME <= REPLACE(s.VERSION, 'v', '')" +
 				   ") " +
 				   "ORDER BY TO_DATE(SUBSTRING(s.VERSION, 2), 'YYYYMMDD') DESC", nativeQuery = true)
@@ -33,7 +33,7 @@ public interface SchemeRepository extends JpaRepository<Scheme, String> {
 	 * International Edition 최신 Scheme (EXTENSION_NAME IS NULL)
 	 */
 	@Query(value = "SELECT * " +
-				   "FROM SCHEME " +
+				   "FROM term.SCHEME " +
 				   "WHERE EXTENSION_NAME IS NULL " +
 				   "ORDER BY TO_DATE(SUBSTRING(VERSION, 2), 'YYYYMMDD') DESC " +
 				   "LIMIT 1", nativeQuery = true)
@@ -44,7 +44,7 @@ public interface SchemeRepository extends JpaRepository<Scheme, String> {
 	 * version으로 Scheme 조회
 	 */
 	@Query(value = "SELECT * " +
-				   "FROM SCHEME " +
+				   "FROM term.SCHEME " +
 				   "WHERE VERSION = ?1", nativeQuery = true)
 	Scheme findByVersion(String version);
 }
