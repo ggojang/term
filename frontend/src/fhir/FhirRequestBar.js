@@ -120,7 +120,7 @@ const S = {
     borderRadius: 5, padding: '3px 5px', gap: 1,
   },
   preview: {
-    marginTop: 5, color: '#1e3a5f', fontSize: '0.67em',
+    marginTop: 5, color: '#94a3b8', fontSize: '0.67em',
     fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis',
     whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4,
   },
