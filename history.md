@@ -592,3 +592,38 @@ WHERE EFFECTIVE_TIME = '00000000';
   - LG 코드(`^LG[0-9]`) → `findChildrenInLGHierarchy()` (hierarchy_lg 테이블)
   - 非LP/LG 코드 → `findChildrenByCode()` 먼저, fallback `findChildrenInLGHierarchy()`
 - `classTree.js`, `lpTree.js`, `lgTree.js`: `desCnt` → `chdCnt` (leaf 판단 및 숫자 표시)
+
+---
+
+## 2026-06-27: FHIR Access Log 기능 (interceptor + API + Activity 패널)
+
+### 구현 내용
+
+**DB:** `fhir.access_log` 테이블 (id BIGSERIAL, ts, method, path, query, client_ip, user_agent, status, duration_ms)
+- DDL은 `fhir/create_fhir_schema.sql`에 포함
+
+**백엔드:**
+- `FhirAccessLogInterceptor.java`: `/fhir/**` 요청마다 afterCompletion에서 JdbcTemplate으로 INSERT
+- `FhirAccessLogController.java`:
+  - `GET /fhir/$access-log?page=&size=&method=&path=&ip=&from=&to=` — 페이징·필터 조회
+  - `GET /fhir/$access-log/stats` — 오늘 총계, 메서드별, IP Top 10, 리소스별, 시간대별 통계
+
+**프론트엔드:**
+- `ActivityPanel.js`: 필터 바 + 로그 테이블 + 통계 요약 (admin 전용)
+- `layout.js`: 상단에 Terminology / Activity Tabs 추가, admin 로그인 시에만 Activity 탭 노출
+
+### 원격 서버 적용 시 추가 SQL (최초 1회)
+```sql
+CREATE TABLE IF NOT EXISTS fhir.access_log (
+    id          BIGSERIAL PRIMARY KEY,
+    ts          TIMESTAMP NOT NULL DEFAULT now(),
+    method      VARCHAR(10),
+    path        VARCHAR(500),
+    query       VARCHAR(1000),
+    client_ip   VARCHAR(50),
+    user_agent  VARCHAR(300),
+    status      INT,
+    duration_ms INT
+);
+CREATE INDEX IF NOT EXISTS idx_fhir_access_log_ts ON fhir.access_log(ts DESC);
+```
