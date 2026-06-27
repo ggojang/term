@@ -96,12 +96,14 @@ export default function FhirLayout() {
           ))}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Tabs value={mainTab} onChange={(_, v) => setMainTab(v)}
-            style={{ minHeight: 0 }}
-            TabIndicatorProps={{ style: { background: '#60a5fa', height: 2 } }}>
-            <Tab label="Terminology" style={{ color: mainTab === 0 ? '#e2e8f0' : '#94a3b8', minHeight: 0, padding: '0 12px', fontSize: '0.75em' }} />
-            {isAdmin && <Tab label="Activity" style={{ color: mainTab === 1 ? '#e2e8f0' : '#94a3b8', minHeight: 0, padding: '0 12px', fontSize: '0.75em' }} />}
-          </Tabs>
+          {isAdmin && (
+            <Tabs value={mainTab} onChange={(_, v) => setMainTab(v)}
+              style={{ minHeight: 0 }}
+              TabIndicatorProps={{ style: { background: '#60a5fa', height: 2 } }}>
+              <Tab label="Terminology" style={{ color: mainTab === 0 ? '#e2e8f0' : '#94a3b8', minHeight: 0, padding: '0 12px', fontSize: '0.75em' }} />
+              <Tab label="Activity" style={{ color: mainTab === 1 ? '#e2e8f0' : '#94a3b8', minHeight: 0, padding: '0 12px', fontSize: '0.75em' }} />
+            </Tabs>
+          )}
           {isAdmin
             ? <>
                 <Chip className={classes.adminChip} label="Admin" size="small" />

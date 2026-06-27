@@ -221,7 +221,7 @@ export default function App() {
                   <Tab className={clsx(classes.label, classes.tab3)} label="LOINC Browser" {...a11yProps(3)} />
                   <Tab className={clsx(classes.label, classes.tab3)} label="KCD-9 Browser" {...a11yProps(4)} />
                   <Tab className={clsx(classes.label, classes.tab3)} label="HIRA Browser" {...a11yProps(5)} />
-                  <Tab className={clsx(classes.label, classes.tab2)} label="FHIR Terminology" {...a11yProps(6)} />
+                  <Tab className={clsx(classes.label, classes.tab2)} label="FHIR TERM CLIENT" {...a11yProps(6)} />
                 </Tabs>
               </Grid>
               <Grid item md={2}>
