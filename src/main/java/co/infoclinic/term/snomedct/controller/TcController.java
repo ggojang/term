@@ -156,27 +156,53 @@ public class TcController {
 
     /**
      * GET /tc/SNOMEDCT/semanticTags
-     * search_index 테이블에서 distinct semantic_tag 목록을 알파벳 순으로 반환.
-     * 릴리즈가 추가될 때마다 search_index가 갱신되므로 항상 최신 목록 반영.
+     * 1순위: search_index.semantic_tag (이미 추출된 컬럼, 빠름)
+     * 2순위: description 테이블 FSN에서 정규식으로 추출 (search_index 미적재 환경 대응)
      */
     @ApiOperation(value = "SNOMED CT Semantic Tag 전체 목록 조회")
     @RequestMapping(value = "/tc/SNOMEDCT/semanticTags", method = RequestMethod.GET,
                     produces = "application/json")
     public List<Map<String, Object>> getSemanticTags() {
         List<Map<String, Object>> result = new ArrayList<>();
-        String sql = "SELECT semantic_tag, COUNT(*) AS cnt " +
-                     "FROM term.search_index " +
-                     "WHERE semantic_tag IS NOT NULL AND semantic_tag <> '' " +
-                     "GROUP BY semantic_tag ORDER BY semantic_tag";
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                Map<String, Object> m = new LinkedHashMap<>();
-                m.put("name",  rs.getString("semantic_tag"));
-                m.put("count", rs.getLong("cnt"));
-                result.add(m);
+        try (Connection conn = dataSource.getConnection()) {
+
+            // 1순위: search_index
+            String sql1 = "SELECT semantic_tag, COUNT(*) AS cnt " +
+                          "FROM term.search_index " +
+                          "WHERE semantic_tag IS NOT NULL AND semantic_tag <> '' " +
+                          "GROUP BY semantic_tag ORDER BY semantic_tag";
+            try (PreparedStatement ps = conn.prepareStatement(sql1);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("name",  rs.getString("semantic_tag"));
+                    m.put("count", rs.getLong("cnt"));
+                    result.add(m);
+                }
             }
+
+            // 2순위: description 테이블 FSN에서 추출
+            if (result.isEmpty()) {
+                String sql2 = "SELECT SUBSTRING(term FROM '\\(([^)]+)\\)$') AS tag, COUNT(*) AS cnt " +
+                              "FROM term.description " +
+                              "WHERE type_id = '900000000000003001' AND active = 1 " +
+                              "  AND term ~ '\\([^)]+\\)$' " +
+                              "GROUP BY tag HAVING SUBSTRING(term FROM '\\(([^)]+)\\)$') IS NOT NULL " +
+                              "ORDER BY tag";
+                try (PreparedStatement ps = conn.prepareStatement(sql2);
+                     ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        String tag = rs.getString("tag");
+                        if (tag != null && !tag.isEmpty()) {
+                            Map<String, Object> m = new LinkedHashMap<>();
+                            m.put("name",  tag);
+                            m.put("count", rs.getLong("cnt"));
+                            result.add(m);
+                        }
+                    }
+                }
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
