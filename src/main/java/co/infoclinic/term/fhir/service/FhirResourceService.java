@@ -27,12 +27,28 @@ public class FhirResourceService {
         Resource resource = (Resource) parser.parseResource(json);
 
         String id = resource.getIdElement().getIdPart();
+
+        String url, version, name, title, status, content;
+
+        // id가 없을 때 URL로 기존 row를 먼저 조회해 id를 재사용 (중복 방지)
         if (id == null || id.isEmpty()) {
-            id = UUID.randomUUID().toString();
+            String candidateUrl = null;
+            if (resource instanceof org.hl7.fhir.r4.model.MetadataResource) {
+                candidateUrl = ((org.hl7.fhir.r4.model.MetadataResource) resource).getUrl();
+            }
+            if (candidateUrl != null && !candidateUrl.isEmpty()) {
+                Optional<String> existing = repo.findContentByResourceTypeAndUrl(resourceType, candidateUrl);
+                if (existing.isPresent()) {
+                    Resource existingRes = (Resource) parser.parseResource(existing.get());
+                    id = existingRes.getIdElement().getIdPart();
+                }
+            }
+            if (id == null || id.isEmpty()) {
+                id = UUID.randomUUID().toString();
+            }
             resource.setId(id);
         }
 
-        String url, version, name, title, status, content;
         content = parser.encodeResourceToString(resource);
 
         if (resource instanceof org.hl7.fhir.r4.model.NamingSystem) {
