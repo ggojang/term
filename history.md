@@ -676,3 +676,12 @@ CREATE TABLE IF NOT EXISTS term.snomed_semantic_tag (
     PRIMARY KEY (tag)
 );
 ```
+
+---
+
+## 2026-06-27: IG 패키지 버전 뱃지 표시 개선
+
+**FhirTree.js:**
+- `igVersion` 스타일: 파란 배경(`#60a5fa`) + 짙은 텍스트(`#1e2d40`) 뱃지 형태로 변경
+- 버전 앞에 `v` prefix 추가 (예: `2.0.0` → `v2.0.0`)
+- commit: `ad92acf`
