@@ -16,6 +16,28 @@ const RESOURCE_OPERATIONS = {
   NamingSystem: ['$preferred-id'],
 };
 
+const RESOURCE_TYPES = ['CodeSystem', 'ValueSet', 'ConceptMap', 'NamingSystem'];
+
+/**
+ * 현재 segments 기준으로 다음에 추가 가능한 선택지 반환
+ * [{label, value, type}]  type: 'op' | 'id' | 'resource'
+ */
+function getNextOptions(segments) {
+  if (!segments || segments.length === 0) {
+    return RESOURCE_TYPES.map(r => ({ label: r, value: r, type: 'resource' }));
+  }
+  if (segments.some(isOp)) return []; // operation 이미 있으면 더 없음
+
+  const rt = segments[0];
+  const ops = RESOURCE_OPERATIONS[rt] || [];
+  const hasId = segments.length >= 2 && !isOp(segments[1]);
+
+  const options = [];
+  if (!hasId) options.push({ label: '/{id}', value: '__id__', type: 'id' });
+  ops.forEach(op => options.push({ label: op, value: op, type: 'op' }));
+  return options;
+}
+
 // 세그먼트가 operation인지 판단
 const isOp = (s) => typeof s === 'string' && s.startsWith('$');
 
@@ -125,14 +147,14 @@ export default function FhirRequestBar({ request, onRequestChange, onResult }) {
     const next = segments.map((s, idx) => idx === i ? v : s);
     update({ segments: next });
   };
-  const addIdSeg = () => {
-    if (!hasOp(segments)) update({ segments: [...segments, ''] });
-  };
-  const addOpSeg = () => {
-    if (!hasOp(segments)) {
-      const rt = getResourceType(segments);
-      const firstOp = rt && RESOURCE_OPERATIONS[rt] ? RESOURCE_OPERATIONS[rt][0] : '$';
-      update({ segments: [...segments, firstOp] });
+  const handleNextSelect = (e) => {
+    const val = e.target.value;
+    if (!val) return;
+    e.target.value = ''; // reset select
+    if (val === '__id__') {
+      update({ segments: [...segments, ''] });
+    } else {
+      update({ segments: [...segments, val] });
     }
   };
   const removeSeg = (i) => {
@@ -172,6 +194,7 @@ export default function FhirRequestBar({ request, onRequestChange, onResult }) {
   const resourceType = getResourceType(segments);
   const opOptions = resourceType ? RESOURCE_OPERATIONS[resourceType] : [];
   const alreadyHasOp = hasOp(segments);
+  const nextOptions = getNextOptions(segments);
 
   return (
     <div style={S.root}>
@@ -252,21 +275,41 @@ export default function FhirRequestBar({ request, onRequestChange, onResult }) {
           </React.Fragment>
         ))}
 
-        {/* ③ 세그먼트 추가 버튼들 */}
-        {!alreadyHasOp && (
+        {/* ③ Next-step dropdown — 현재 path 뒤에 추가 가능한 선택지 */}
+        {nextOptions.length > 0 && (
           <>
-            <Tooltip title="id 세그먼트 추가 (/{id})">
-              <IconButton size="small" style={{ color: '#374151', padding: 2 }} onClick={addIdSeg}>
-                <span style={{ fontSize: '0.7em', fontFamily: 'monospace', lineHeight: 1 }}>/id</span>
-              </IconButton>
-            </Tooltip>
-            {opOptions.length > 0 && (
-              <Tooltip title="operation 추가">
-                <IconButton size="small" style={{ color: '#374151', padding: 2 }} onClick={addOpSeg}>
-                  <span style={{ fontSize: '0.7em', fontFamily: 'monospace', lineHeight: 1, color: '#4ade80' }}>/$op</span>
-                </IconButton>
-              </Tooltip>
-            )}
+            <span style={{ ...S.sep, color: '#1e3a5f' }}>/</span>
+            <select
+              defaultValue=""
+              onChange={handleNextSelect}
+              style={{
+                background: '#0a1220',
+                border: '1px dashed #1e3a5f',
+                borderRadius: 5,
+                color: '#4b5563',
+                fontSize: '0.75em',
+                padding: '3px 22px 3px 7px',
+                outline: 'none',
+                cursor: 'pointer',
+                appearance: 'none', WebkitAppearance: 'none',
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%234b5563'/%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat', backgroundPosition: 'right 5px center',
+              }}
+            >
+              <option value="" disabled style={{ background: '#0a1220' }}>+ 추가</option>
+              {nextOptions.map(opt => (
+                <option
+                  key={opt.value}
+                  value={opt.value}
+                  style={{
+                    background: '#0a1220',
+                    color: opt.type === 'op' ? '#4ade80' : opt.type === 'id' ? '#fbbf24' : '#e2e8f0',
+                  }}
+                >
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </>
         )}
 
