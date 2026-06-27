@@ -195,21 +195,28 @@ public class TcController {
                 // fallback: description 테이블 Snapshot 방식 (DISTINCT ON으로 최신 행만)
                 // Full 릴리즈 테이블은 이력이 누적되므로 단순 active=1 필터로는
                 // 과거 active=1 행이 포함됨 → DISTINCT ON으로 최신 상태를 먼저 확정
-                // DISTINCT ON: Full 릴리즈 테이블에서 최신 행(Snapshot)만 추출
-                // HAVING count >= 5: 진짜 semantic tag는 수백~수만 건,
-                //   CTV3 레거시 active FSN 노이즈는 1~2건이므로 최솟값으로 필터
+                // description(Snapshot) + concept(Snapshot) JOIN:
+                // 노이즈 FSN의 개념은 현재 concept.active=0이므로 JOIN으로 제거.
+                // count 필터 없이 유효한 semantic tag 전체 반영.
                 String sql2 =
                     "SELECT tag, COUNT(*) AS cnt FROM (" +
-                    "  SELECT DISTINCT ON (description_id) active," +
-                    "    SUBSTRING(term FROM '\\(([^)]+)\\)$') AS tag " +
-                    "  FROM term.description " +
-                    "  WHERE module_id = '900000000000207008' " +
-                    "    AND type_id   = '900000000000003001' " +
-                    "    AND term ~ '\\([^)]+\\)$' " +
-                    "  ORDER BY description_id, effective_time DESC" +
+                    "  SELECT DISTINCT ON (d.description_id)" +
+                    "    SUBSTRING(d.term FROM '\\(([^)]+)\\)$') AS tag," +
+                    "    d.active AS desc_active, c_latest.active AS concept_active " +
+                    "  FROM term.description d" +
+                    "  JOIN (" +
+                    "    SELECT DISTINCT ON (concept_id) concept_id, active" +
+                    "    FROM term.concept" +
+                    "    ORDER BY concept_id, effective_time DESC" +
+                    "  ) c_latest ON c_latest.concept_id = d.concept_id" +
+                    "  WHERE d.module_id = '900000000000207008'" +
+                    "    AND d.type_id   = '900000000000003001'" +
+                    "    AND d.term ~ '\\([^)]+\\)$'" +
+                    "  ORDER BY d.description_id, d.effective_time DESC" +
                     ") latest " +
-                    "WHERE active = 1 AND tag IS NOT NULL AND tag <> '' " +
-                    "GROUP BY tag HAVING COUNT(*) >= 5 ORDER BY tag";
+                    "WHERE desc_active = 1 AND concept_active = 1 " +
+                    "  AND tag IS NOT NULL AND tag <> '' " +
+                    "GROUP BY tag ORDER BY tag";
                 try (PreparedStatement ps = conn.prepareStatement(sql2);
                      ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {

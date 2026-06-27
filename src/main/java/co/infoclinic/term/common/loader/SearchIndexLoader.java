@@ -453,7 +453,14 @@ public class SearchIndexLoader {
         Map<String, String>   etMap    = new HashMap<>();
 
         for (Map.Entry<String, String[]> e : intlFsnMap.entrySet()) {
+            String conceptId = e.getKey();
             String[] val = e.getValue();   // [fsn, effective_time]
+
+            // concept 현재 active 여부 교차 검증 (CTV3 레거시 noise 제거)
+            // conceptMap: concept_id → [effective_time, active, definition_status_id]
+            String[] concept = conceptMap.get(conceptId);
+            if (concept == null || !"1".equals(concept[1])) continue;
+
             String tag = extractSemanticTag(val[0]);
             if (tag.isEmpty()) continue;
 
@@ -462,9 +469,6 @@ public class SearchIndexLoader {
             String et = val[1];
             etMap.merge(tag, et, (a, b) -> a.compareTo(b) >= 0 ? a : b);
         }
-
-        // 레거시 CTV3 active FSN 노이즈 제거: 진짜 semantic tag는 5건 이상
-        countMap.entrySet().removeIf(e -> e.getValue()[0] < 5);
 
         if (countMap.isEmpty()) {
             log.warning("  International FSN에서 semantic tag를 추출하지 못했습니다.");
