@@ -167,9 +167,12 @@ public class TcController {
         try (Connection conn = dataSource.getConnection()) {
 
             // 1순위: search_index
+            // & 포함·대문자 시작·공백 시작 등 KCD-9 오염값 제외, 표준 semantic tag만 추출
             String sql1 = "SELECT semantic_tag, COUNT(*) AS cnt " +
                           "FROM term.search_index " +
                           "WHERE semantic_tag IS NOT NULL AND semantic_tag <> '' " +
+                          "  AND semantic_tag NOT LIKE '%&%' " +
+                          "  AND semantic_tag ~ '^[a-z]' " +
                           "GROUP BY semantic_tag ORDER BY semantic_tag";
             try (PreparedStatement ps = conn.prepareStatement(sql1);
                  ResultSet rs = ps.executeQuery()) {
@@ -183,12 +186,15 @@ public class TcController {
 
             // 2순위: description 테이블 FSN에서 추출
             if (result.isEmpty()) {
-                String sql2 = "SELECT SUBSTRING(term FROM '\\(([^)]+)\\)$') AS tag, COUNT(*) AS cnt " +
-                              "FROM term.description " +
-                              "WHERE type_id = '900000000000003001' AND active = 1 " +
-                              "  AND term ~ '\\([^)]+\\)$' " +
-                              "GROUP BY tag HAVING SUBSTRING(term FROM '\\(([^)]+)\\)$') IS NOT NULL " +
-                              "ORDER BY tag";
+                String sql2 = "SELECT tag, COUNT(*) AS cnt FROM (" +
+                              "  SELECT SUBSTRING(term FROM '\\(([^)]+)\\)$') AS tag " +
+                              "  FROM term.description " +
+                              "  WHERE type_id = '900000000000003001' AND active = 1 " +
+                              "    AND term ~ '\\([^)]+\\)$'" +
+                              ") sub " +
+                              "WHERE tag IS NOT NULL AND tag <> '' " +
+                              "  AND tag NOT LIKE '%&%' AND tag ~ '^[a-z]' " +
+                              "GROUP BY tag ORDER BY tag";
                 try (PreparedStatement ps = conn.prepareStatement(sql2);
                      ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
