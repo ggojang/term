@@ -154,21 +154,28 @@ public class TcController {
         return 0;
     }
 
+    /** 서버 재시작 전까지 semantic tag 결과 캐시 */
+    private static volatile List<Map<String, Object>> semanticTagCache = null;
+
     /**
      * GET /tc/SNOMEDCT/semanticTags
-     * 1순위: snomed_semantic_tag 테이블 (SearchIndexLoader 적재 시 자동 갱신)
-     * 2순위: description 테이블 FSN — International 모듈 + active Snapshot 기준
-     *        (snomed_semantic_tag 미존재 환경, 로컬 개발 등)
+     * 1순위: 메모리 캐시 (서버 재시작 전까지 유지 — 즉시 반환)
+     * 2순위: snomed_semantic_tag 테이블 (SearchIndexLoader 적재 시 자동 갱신)
+     * 3순위: description + concept Snapshot JOIN (테이블 없는 초기 환경)
+     *        → 조회 후 snomed_semantic_tag 테이블에 자동 저장해 다음 기동부터 빠르게
      */
     @ApiOperation(value = "SNOMED CT Semantic Tag 전체 목록 조회")
     @RequestMapping(value = "/tc/SNOMEDCT/semanticTags", method = RequestMethod.GET,
                     produces = "application/json")
     public List<Map<String, Object>> getSemanticTags() {
+        if (semanticTagCache != null) return semanticTagCache;
+
         List<Map<String, Object>> result = new ArrayList<>();
+        boolean fromFallback = false;
+
         try (Connection conn = dataSource.getConnection()) {
 
-            // 1순위: snomed_semantic_tag 테이블 (SearchIndexLoader 적재 시 자동 갱신)
-            // 테이블 자체가 없는 환경(로컬 개발 등)은 바로 2순위로 넘어감
+            // 1순위: snomed_semantic_tag 테이블
             boolean tagTableExists = false;
             try (PreparedStatement chk = conn.prepareStatement(
                     "SELECT 1 FROM information_schema.tables " +
@@ -189,16 +196,10 @@ public class TcController {
                 }
             }
 
-            // 2순위: description 테이블 FSN (International 모듈 + active Snapshot)
-            // snomed_semantic_tag가 없거나 비어있는 로컬/초기 환경 대응
+            // 2순위: description + concept Snapshot JOIN (테이블 없거나 비어있을 때)
             if (result.isEmpty()) {
-                // fallback: description 테이블 Snapshot 방식 (DISTINCT ON으로 최신 행만)
-                // Full 릴리즈 테이블은 이력이 누적되므로 단순 active=1 필터로는
-                // 과거 active=1 행이 포함됨 → DISTINCT ON으로 최신 상태를 먼저 확정
-                // description(Snapshot) + concept(Snapshot) JOIN:
-                // 노이즈 FSN의 개념은 현재 concept.active=0이므로 JOIN으로 제거.
-                // count 필터 없이 유효한 semantic tag 전체 반영.
-                String sql2 =
+                fromFallback = true;
+                String sql =
                     "SELECT tag, COUNT(*) AS cnt FROM (" +
                     "  SELECT DISTINCT ON (d.description_id)" +
                     "    SUBSTRING(d.term FROM '\\(([^)]+)\\)$') AS tag," +
@@ -217,7 +218,7 @@ public class TcController {
                     "WHERE desc_active = 1 AND concept_active = 1 " +
                     "  AND tag IS NOT NULL AND tag <> '' " +
                     "GROUP BY tag ORDER BY tag";
-                try (PreparedStatement ps = conn.prepareStatement(sql2);
+                try (PreparedStatement ps = conn.prepareStatement(sql);
                      ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         String tag = rs.getString("tag");
@@ -229,11 +230,37 @@ public class TcController {
                         }
                     }
                 }
+
+                // fallback 결과를 snomed_semantic_tag 테이블에 저장 → 다음 기동부터 빠르게
+                if (!result.isEmpty() && tagTableExists) {
+                    try {
+                        conn.setAutoCommit(false);
+                        try (PreparedStatement del = conn.prepareStatement(
+                                "TRUNCATE TABLE term.snomed_semantic_tag")) {
+                            del.execute();
+                        }
+                        try (PreparedStatement ins = conn.prepareStatement(
+                                "INSERT INTO term.snomed_semantic_tag " +
+                                "(tag, concept_count, effective_time) VALUES (?, ?, '')")) {
+                            for (Map<String, Object> m : result) {
+                                ins.setString(1, (String) m.get("name"));
+                                ins.setLong  (2, ((Number) m.get("count")).longValue());
+                                ins.addBatch();
+                            }
+                            ins.executeBatch();
+                        }
+                        conn.commit();
+                        conn.setAutoCommit(true);
+                    } catch (Exception ex) {
+                        try { conn.rollback(); conn.setAutoCommit(true); } catch (Exception ignored) {}
+                    }
+                }
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+        if (!result.isEmpty()) semanticTagCache = result;
         return result;
     }
 
