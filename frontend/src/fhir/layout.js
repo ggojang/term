@@ -7,11 +7,14 @@ import NavigateNextIcon from '@material-ui/icons/NavigateNext';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 
+import Tab from '@material-ui/core/Tab';
+import Tabs from '@material-ui/core/Tabs';
 import FhirTree from './FhirTree';
 import ResourceList from './ResourceList';
 import ResourceDetail from './ResourceDetail';
 import ResourceEditor from './ResourceEditor';
 import LoginDialog from './LoginDialog';
+import ActivityPanel from './ActivityPanel';
 
 const useStyles = makeStyles(() => ({
   root: { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)', background: '#f3f4f6' },
@@ -48,6 +51,7 @@ export default function FhirLayout() {
   const [isNew, setIsNew]               = useState(false);
   const [isAdmin, setIsAdmin]           = useState(false);
   const [loginOpen, setLoginOpen]       = useState(false);
+  const [mainTab, setMainTab]           = useState(0); // 0=Terminology, 1=Activity
 
   const isEditing = editData !== null || isNew;
 
@@ -92,12 +96,18 @@ export default function FhirLayout() {
           ))}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Tabs value={mainTab} onChange={(_, v) => setMainTab(v)}
+            style={{ minHeight: 0 }}
+            TabIndicatorProps={{ style: { background: '#60a5fa', height: 2 } }}>
+            <Tab label="Terminology" style={{ color: mainTab === 0 ? '#e2e8f0' : '#94a3b8', minHeight: 0, padding: '0 12px', fontSize: '0.75em' }} />
+            {isAdmin && <Tab label="Activity" style={{ color: mainTab === 1 ? '#e2e8f0' : '#94a3b8', minHeight: 0, padding: '0 12px', fontSize: '0.75em' }} />}
+          </Tabs>
           {isAdmin
             ? <>
                 <Chip className={classes.adminChip} label="Admin" size="small" />
                 <Button className={classes.loginBtn} variant="outlined" size="small"
                   startIcon={<ExitToAppIcon style={{ fontSize: 14 }} />}
-                  onClick={() => setIsAdmin(false)}>로그아웃</Button>
+                  onClick={() => { setIsAdmin(false); setMainTab(0); }}>로그아웃</Button>
               </>
             : <Button className={classes.loginBtn} variant="outlined" size="small"
                 startIcon={<LockOutlinedIcon style={{ fontSize: 14 }} />}
@@ -106,7 +116,13 @@ export default function FhirLayout() {
         </div>
       </div>
 
-      <div className={classes.body}>
+      {isAdmin && mainTab === 1 ? (
+        <div style={{ flex: 1, overflow: 'hidden' }}>
+          <ActivityPanel />
+        </div>
+      ) : null}
+
+      <div className={classes.body} style={{ display: isAdmin && mainTab === 1 ? 'none' : 'flex' }}>
         <FhirTree
           selected={selectedType}
           selectedIg={selectedIg}

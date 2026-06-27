@@ -41,3 +41,17 @@ CREATE TABLE IF NOT EXISTS fhir.package (
 -- 리소스가 속한 IG 추적 (NULL = 직접 등록)
 ALTER TABLE fhir.resource ADD COLUMN IF NOT EXISTS ig_id VARCHAR(200) REFERENCES fhir.package(id);
 CREATE INDEX IF NOT EXISTS idx_fhir_resource_ig ON fhir.resource(ig_id);
+
+-- 클라이언트 접근 및 작업 이력
+CREATE TABLE IF NOT EXISTS fhir.access_log (
+    id          BIGSERIAL PRIMARY KEY,
+    ts          TIMESTAMP NOT NULL DEFAULT now(),
+    method      VARCHAR(10),
+    path        VARCHAR(500),
+    query       VARCHAR(1000),
+    client_ip   VARCHAR(50),
+    user_agent  VARCHAR(300),
+    status      INT,
+    duration_ms INT
+);
+CREATE INDEX IF NOT EXISTS idx_fhir_access_log_ts ON fhir.access_log(ts DESC);
