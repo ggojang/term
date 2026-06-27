@@ -98,15 +98,19 @@ export default function FhirLayout() {
   const [fhirResult, setFhirResult]   = useState(null); // { data, url, error } | null
 
   // 리소스 선택 시 RequestBar 자동 채우기
+  // selectedId가 새 값으로 설정될 때만 bar/result 초기화 (null이 되는 경우는 run 후 상태이므로 건드리지 않음)
   useEffect(() => {
     if (selectedId) {
       setFhirRequest(prev => ({ ...prev, segments: [selectedType, selectedId], params: [] }));
       setFhirResult(null);
-    } else if (selectedType) {
-      setFhirRequest(prev => ({ ...prev, segments: [selectedType], params: [] }));
-      setFhirResult(null);
     }
-  }, [selectedType, selectedId]); // eslint-disable-line
+  }, [selectedId]); // eslint-disable-line
+
+  // 리소스 타입 변경 시 초기화
+  useEffect(() => {
+    setFhirRequest(prev => ({ ...prev, segments: [selectedType], params: [] }));
+    setFhirResult(null);
+  }, [selectedType]); // eslint-disable-line
 
   const isEditing = editData !== null || isNew;
 
@@ -207,7 +211,7 @@ export default function FhirLayout() {
               <FhirRequestBar
                 request={fhirRequest}
                 onRequestChange={setFhirRequest}
-                onResult={(r) => { setFhirResult(r); if (r) setSelectedId(null); }}
+                onResult={(r) => { setFhirResult(r); }}
               />
             )}
 
