@@ -723,7 +723,7 @@ export default function Main(props) {
         </Grid>
         <Grid item className={classes.gridBorder} md={12} >
           <Box pt={2} pb={0} px={1}>
-            <Typography className="section-label">Post-coordinated expression</Typography>
+            <Typography className="section-label">Compositional Grammar</Typography>
           </Box>
           <Divider className={classes.divider}/>
           <br />
