@@ -54,7 +54,10 @@ const useStyles = makeStyles(() => ({
   },
   igActive: { background: '#1e3a5f !important' },
   igLabel: { color: '#d1d5db', fontSize: '0.78em', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  igVersion: { color: '#6b7280', fontSize: '0.68em', marginLeft: 4 },
+  igVersion: {
+    color: '#1e2d40', background: '#60a5fa', fontSize: '0.62em', fontWeight: 700,
+    padding: '1px 5px', borderRadius: 4, marginLeft: 6, flexShrink: 0, whiteSpace: 'nowrap',
+  },
   igSubItem: {
     display: 'flex', alignItems: 'center',
     padding: '6px 16px 6px 28px', cursor: 'pointer',
@@ -184,7 +187,7 @@ export default function FhirTree({ selected, selectedIg, onSelect, onSelectIg, i
               ? <ExpandMoreIcon style={{ fontSize: 14, color: '#6b7280', marginRight: 6 }} />
               : <ChevronRightIcon style={{ fontSize: 14, color: '#6b7280', marginRight: 6 }} />}
             <Typography className={classes.igLabel} title={pkg.id}>{pkg.name}</Typography>
-            <span className={classes.igVersion}>{pkg.version}</span>
+            <span className={classes.igVersion}>v{pkg.version}</span>
           </div>
 
           {expandedIg === pkg.id && RESOURCE_TYPES.map(({ type, icon, color }) => {
