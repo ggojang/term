@@ -679,6 +679,27 @@ CREATE TABLE IF NOT EXISTS term.snomed_semantic_tag (
 
 ---
 
+## 2026-06-27: Activity 탭 요청/응답 body 조회 + FHIR 요청 UI 개선
+
+**핵심 변경:**
+- `FhirAccessLogFilter` (신규): `OncePerRequestFilter` 기반 필터. `ContentCachingRequestWrapper`/`ContentCachingResponseWrapper`로 request/response body를 캡처해 `fhir.access_log` 테이블에 저장. 24시간 보존, 100MB 상한, 50건마다 비동기 정리.
+- `web.xml`: `DelegatingFilterProxy`로 `fhirAccessLogFilter` 등록 (`/fhir/*` 패턴)
+- `mvc.xml`: `FhirAccessLogInterceptor` 제거 (필터로 대체)
+- `FhirAccessLogController`: `?id={id}` 파라미터 추가 → 단건 상세 조회 (requestBody, responseBody 포함)
+- `ActivityPanel.js`: 행 클릭 시 하단 패널에서 요청/응답 body를 JSON 컬러 하이라이트로 표시. 탭(요청 Body / 응답 Body), Copy 버튼, Close 버튼.
+- `FhirRequestBar.js`: HTTP 메서드 선택(GET/POST/PUT/DELETE), 헤더 편집 패널(Admin 전용), body 입력 textarea(POST/PUT 시) 추가
+- `FhirProxyController.java`: POST/PUT/DELETE 지원, 301 리다이렉트 최대 5회 자동 추적
+- `run.sh`: 서버 시작 전 프론트엔드 빌드 자동화
+
+**원인 및 해결 (runtime classloading 문제):**
+- 서버 프로세스 여러 개 중 오래된 PID(63474, 6:02PM 기동)가 8088을 점유하고 있었음
+- 새로 컴파일한 클래스가 반영되지 않은 것은 서버가 재시작되지 않았기 때문
+- 모든 프로세스 kill 후 재시작으로 해결
+
+- commit: `6412e18`
+
+---
+
 ## 2026-06-27: IG 패키지 버전 뱃지 표시 개선
 
 **FhirTree.js:**
