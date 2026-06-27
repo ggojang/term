@@ -54,7 +54,10 @@ public class FhirProxyController {
                 String body = reader.lines().collect(Collectors.joining("\n"));
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
-                return ResponseEntity.status(isError ? status : HttpStatus.OK).headers(headers).body(body);
+                if (isError) {
+                    return ResponseEntity.status(status).headers(headers).body(body);
+                }
+                return ResponseEntity.ok().headers(headers).body(body);
             }
         } catch (Exception e) {
             String msg = "{\"error\":\"proxy-error\",\"message\":" + jsonEscape(e.getMessage()) + "}";
