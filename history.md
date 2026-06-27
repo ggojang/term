@@ -627,3 +627,52 @@ CREATE TABLE IF NOT EXISTS fhir.access_log (
 );
 CREATE INDEX IF NOT EXISTS idx_fhir_access_log_ts ON fhir.access_log(ts DESC);
 ```
+
+---
+
+## 2026-06-27: SNOMED CT Semantic Tag 별도 적재 + UI/API 개선
+
+### 배경
+- `search_index.semantic_tag`는 KCD-9 Korean extension FSN의 임상명이 오염되는 문제 존재
+- Mapping Support에서 semantic tag 목록 로딩이 느리거나 0건 반환되는 문제
+
+### 구현 내용
+
+**DB:** `term.snomed_semantic_tag` 테이블 추가 (`schema_term_postgresql.sql`)
+- 컬럼: tag, concept_count, effective_time, loaded_at
+
+**SearchIndexLoader.java:**
+- `INTL_MODULE_ID = '900000000000207008'` 상수 추가
+- description 로딩 시 `module_id` 컬럼 추가 읽기
+- `intlFsnMap`: International 모듈 FSN만 별도 추적
+- `saveSemanticTags()`: SEARCH_INDEX 적재 완료 후 자동 호출
+  - `conceptMap`과 교차 검증(concept.active=1)으로 레거시 CTV3 noise 제거
+  - `snomed_semantic_tag` 테이블에 TRUNCATE 후 재적재
+
+**TcController.java — `GET /tc/SNOMEDCT/semanticTags`:**
+- 1순위: 메모리 캐시 (서버 재시작 전까지 즉시 반환)
+- 2순위: `snomed_semantic_tag` 테이블 (SearchIndexLoader 적재 시 자동 갱신)
+- 3순위: `description` + `concept` 테이블 Snapshot JOIN fallback
+  - `DISTINCT ON (description_id) ORDER BY effective_time DESC`로 Full 릴리즈 → Snapshot 동작
+  - `concept.active=1` JOIN으로 inactive concept FSN 제거 (count 필터 불필요)
+  - fallback 성공 시 `snomed_semantic_tag` 테이블에 자동 저장 → 다음 기동 빠름
+- 결과: 기존 whitelist 60개 하드코딩 제거, 릴리즈마다 자동 갱신
+
+**FhirAccessLogInterceptor / FhirAccessLogController:**
+- `JdbcTemplate` → `DataSource` + `Connection` 직접 사용 (Spring 4.2에 JdbcTemplate 빈 없음)
+
+### 성능
+- 첫 조회: fallback DB 쿼리 ~1-2초 (1회만)
+- 이후: 메모리 캐시로 즉시 반환 (~20ms)
+- 다음 서버 재시작: snomed_semantic_tag 테이블 조회로 빠르게 응답
+
+### 원격 서버 적용 시 추가 SQL (최초 1회)
+```sql
+CREATE TABLE IF NOT EXISTS term.snomed_semantic_tag (
+    tag            VARCHAR(100) NOT NULL,
+    concept_count  INTEGER      NOT NULL DEFAULT 0,
+    effective_time VARCHAR(8)   NOT NULL,
+    loaded_at      TIMESTAMP    NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (tag)
+);
+```
