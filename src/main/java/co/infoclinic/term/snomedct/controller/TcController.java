@@ -156,8 +156,9 @@ public class TcController {
 
     /**
      * GET /tc/SNOMEDCT/semanticTags
-     * 1순위: search_index.semantic_tag (이미 추출된 컬럼, 빠름)
-     * 2순위: description 테이블 FSN에서 정규식으로 추출 (search_index 미적재 환경 대응)
+     * 1순위: snomed_semantic_tag 테이블 (SearchIndexLoader 적재 시 자동 갱신)
+     * 2순위: description 테이블 FSN — International 모듈 + active Snapshot 기준
+     *        (snomed_semantic_tag 미존재 환경, 로컬 개발 등)
      */
     @ApiOperation(value = "SNOMED CT Semantic Tag 전체 목록 조회")
     @RequestMapping(value = "/tc/SNOMEDCT/semanticTags", method = RequestMethod.GET,
@@ -166,71 +167,32 @@ public class TcController {
         List<Map<String, Object>> result = new ArrayList<>();
         try (Connection conn = dataSource.getConnection()) {
 
-            // 1순위: search_index
-            // SNOMED CT International 공식 semantic tag 화이트리스트 기반 조회
-            // (KCD-9 확장코드의 임상명이 오염되어 패턴 필터 대신 whitelist 사용)
-            String sql1 = "SELECT semantic_tag, COUNT(*) AS cnt " +
-                          "FROM term.search_index " +
-                          "WHERE semantic_tag IN (" +
-                          " 'administrative concept','assessment scale','attribute'," +
-                          " 'basic dose form','body structure'," +
-                          " 'cell','cell structure','clinical drug','context-dependent category'," +
-                          " 'core metadata concept','disposition','dose form'," +
-                          " 'environment','environment / location','ethnic group','event'," +
-                          " 'finding','foundation metadata concept','geographic location'," +
-                          " 'inactive concept','intended site','life style','link assertion'," +
-                          " 'linkage concept','medicinal product','medicinal product form'," +
-                          " 'metadata','morphologic abnormality','namespace concept'," +
-                          " 'navigational concept','observable entity','occupation','organism'," +
-                          " 'OWL metadata concept','person','physical force','physical object'," +
-                          " 'product','product name','qualifier value','racial group'," +
-                          " 'record artifact','release characteristic','religion/philosophy'," +
-                          " 'role','situation','SNOMED RT+CTV3','social concept'," +
-                          " 'special concept','specimen','staging scale','state of matter'," +
-                          " 'substance','supplier','transformation','tumor staging'," +
-                          " 'unit of presentation','virtual clinical drug','procedure'," +
-                          " 'disorder','regime/therapy'" +
-                          ") " +
-                          "GROUP BY semantic_tag ORDER BY semantic_tag";
+            // 1순위: snomed_semantic_tag 테이블 (SearchIndexLoader가 자동 유지)
+            String sql1 = "SELECT tag, concept_count FROM term.snomed_semantic_tag " +
+                          "ORDER BY tag";
             try (PreparedStatement ps = conn.prepareStatement(sql1);
                  ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> m = new LinkedHashMap<>();
-                    m.put("name",  rs.getString("semantic_tag"));
-                    m.put("count", rs.getLong("cnt"));
+                    m.put("name",  rs.getString("tag"));
+                    m.put("count", rs.getLong("concept_count"));
                     result.add(m);
                 }
             }
 
-            // 2순위: description 테이블 FSN에서 추출
+            // 2순위: description 테이블 FSN (International 모듈 + active Snapshot)
+            // snomed_semantic_tag가 없는 로컬/초기 환경 대응
             if (result.isEmpty()) {
-                String sql2 = "SELECT tag, COUNT(*) AS cnt FROM (" +
-                              "  SELECT SUBSTRING(term FROM '\\(([^)]+)\\)$') AS tag " +
-                              "  FROM term.description " +
-                              "  WHERE type_id = '900000000000003001' AND active = 1 " +
-                              "    AND term ~ '\\([^)]+\\)$'" +
-                              ") sub " +
-                              "WHERE tag IN (" +
-                              " 'administrative concept','assessment scale','attribute'," +
-                              " 'basic dose form','body structure'," +
-                              " 'cell','cell structure','clinical drug','context-dependent category'," +
-                              " 'core metadata concept','disposition','dose form'," +
-                              " 'environment','environment / location','ethnic group','event'," +
-                              " 'finding','foundation metadata concept','geographic location'," +
-                              " 'inactive concept','intended site','life style','link assertion'," +
-                              " 'linkage concept','medicinal product','medicinal product form'," +
-                              " 'metadata','morphologic abnormality','namespace concept'," +
-                              " 'navigational concept','observable entity','occupation','organism'," +
-                              " 'OWL metadata concept','person','physical force','physical object'," +
-                              " 'product','product name','qualifier value','racial group'," +
-                              " 'record artifact','release characteristic','religion/philosophy'," +
-                              " 'role','situation','SNOMED RT+CTV3','social concept'," +
-                              " 'special concept','specimen','staging scale','state of matter'," +
-                              " 'substance','supplier','transformation','tumor staging'," +
-                              " 'unit of presentation','virtual clinical drug','procedure'," +
-                              " 'disorder','regime/therapy'" +
-                              ") " +
-                              "GROUP BY tag ORDER BY tag";
+                String sql2 =
+                    "SELECT SUBSTRING(term FROM '\\(([^)]+)\\)$') AS tag, COUNT(*) AS cnt " +
+                    "FROM term.description " +
+                    "WHERE module_id = '900000000000207008' " +
+                    "  AND type_id   = '900000000000003001' " +
+                    "  AND active    = 1 " +
+                    "  AND term ~ '\\([^)]+\\)$' " +
+                    "GROUP BY tag " +
+                    "HAVING SUBSTRING(term FROM '\\(([^)]+)\\)$') IS NOT NULL " +
+                    "ORDER BY tag";
                 try (PreparedStatement ps = conn.prepareStatement(sql2);
                      ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {

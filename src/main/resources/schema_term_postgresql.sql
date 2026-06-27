@@ -458,6 +458,18 @@ CREATE INDEX IDX_SRCH_TERM_TRGM ON SEARCH_INDEX USING gin (TERM gin_trgm_ops);
 -- 전문 검색: tsvector GIN (to_tsvector @@ plainto_tsquery)
 CREATE INDEX IDX_SRCH_TERM_FTS  ON SEARCH_INDEX USING gin (to_tsvector('english', TERM));
 
+-- SNOMED CT International 모듈(900000000000207008) Snapshot FSN에서
+-- 추출한 semantic tag 목록. SearchIndexLoader 적재 시 자동 갱신.
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS SNOMED_SEMANTIC_TAG;
+CREATE TABLE SNOMED_SEMANTIC_TAG (
+    TAG            VARCHAR(100)  NOT NULL,
+    CONCEPT_COUNT  INTEGER       NOT NULL DEFAULT 0,
+    EFFECTIVE_TIME VARCHAR(8)    NOT NULL,
+    LOADED_AT      TIMESTAMP     NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (TAG)
+);
+
 -- 적재된 SNOMED CT 배포판 메타데이터 저장 테이블
 -- AUTHORITY: 배포 기관 (예: SNOMED International)
 -- DATE: 배포 기준일 (YYYYMMDD)

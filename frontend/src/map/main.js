@@ -19,7 +19,25 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import SearchIcon from '@material-ui/icons/Search';
 import TuneIcon from '@material-ui/icons/Tune';
 
-// ── Preset 정의 (이름만, 실제 태그 목록은 API에서 로드) ───────────────────────
+// ── SNOMED CT 공식 semantic tag 기본 목록 (API 미응답 시 fallback) ────────────
+const DEFAULT_TAGS = [
+  'administrative concept','assessment scale','attribute','basic dose form',
+  'body structure','cell','cell structure','clinical drug','context-dependent category',
+  'core metadata concept','disorder','disposition','dose form','environment',
+  'environment / location','ethnic group','event','finding',
+  'foundation metadata concept','geographic location','inactive concept',
+  'intended site','life style','link assertion','linkage concept',
+  'medicinal product','medicinal product form','metadata','morphologic abnormality',
+  'namespace concept','navigational concept','observable entity','occupation',
+  'organism','OWL metadata concept','person','physical force','physical object',
+  'procedure','product','product name','qualifier value','racial group',
+  'record artifact','regime/therapy','release characteristic','religion/philosophy',
+  'role','situation','SNOMED RT+CTV3','social concept','special concept',
+  'specimen','staging scale','state of matter','substance','supplier',
+  'transformation','tumor staging','unit of presentation','virtual clinical drug',
+];
+
+// ── Preset 정의 ───────────────────────────────────────────────────────────────
 const PRESET_NAMES = {
   diagnosis: new Set(['finding','disorder','event','situation']),
   procedure: new Set(['procedure','regime/therapy','situation']),
@@ -115,9 +133,13 @@ export default function Main() {
   useEffect(() => {
     axios.get('/tc/SNOMEDCT/semanticTags').then(res => {
       const tags = (res.data || []).map(t => t.name).filter(Boolean);
-      setAllTags(tags);
-      setCheckState(makeState(tags, PRESET_NAMES.diagnosis));
-    }).catch(() => {});
+      const list = tags.length > 0 ? tags : DEFAULT_TAGS;
+      setAllTags(list);
+      setCheckState(makeState(list, PRESET_NAMES.diagnosis));
+    }).catch(() => {
+      setAllTags(DEFAULT_TAGS);
+      setCheckState(makeState(DEFAULT_TAGS, PRESET_NAMES.diagnosis));
+    });
   }, []);
 
   // 필터 상태

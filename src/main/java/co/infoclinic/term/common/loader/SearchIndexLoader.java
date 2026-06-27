@@ -63,6 +63,8 @@ public class SearchIndexLoader {
     private static final String DEF_TYPE_ID   = "900000000000550004";
     private static final String PRIMITIVE_ID  = "900000000000074008";
     private static final String US_REFSET_ID  = "900000000000509007";
+    /** SNOMED CT International Edition 모듈 ID */
+    private static final String INTL_MODULE_ID = "900000000000207008";
 
     private static final int BATCH_SIZE = 5000;
 
@@ -73,6 +75,10 @@ public class SearchIndexLoader {
 
     /** concept_id → FSN term */
     private final Map<String, String>   fsnMap          = new HashMap<>();
+
+    /** International 모듈 FSN만: concept_id → [fsn_term, effective_time]
+     *  semantic tag 집계에만 사용 (KCD-9 등 extension 오염 방지) */
+    private final Map<String, String[]> intlFsnMap      = new HashMap<>();
 
     /** description_id → [concept_id, effective_time, active, type_id, term, lang] */
     private final Map<String, String[]> descMap         = new HashMap<>();
@@ -156,6 +162,10 @@ public class SearchIndexLoader {
         conn.commit();
         insertPs.close();
 
+        // 5. International FSN에서 semantic tag 집계 → snomed_semantic_tag 테이블 갱신
+        saveSemanticTags();
+        conn.commit();
+
         long elapsed = (System.currentTimeMillis() - start) / 1000;
         log.info("SEARCH_INDEX 생성 완료: " + insertedRows + "건, 소요시간=" + elapsed + "초");
     }
@@ -190,7 +200,7 @@ public class SearchIndexLoader {
         // 영문 description 중 최신 상태 행만 (DISTINCT ON)
         String sql =
             "SELECT DISTINCT ON (description_id) " +
-            "  description_id, concept_id, effective_time, active, type_id, term, language_code " +
+            "  description_id, concept_id, effective_time, active, type_id, term, language_code, module_id " +
             "FROM term.description " +
             "WHERE language_code = 'en' " +
             "ORDER BY description_id, effective_time DESC";
@@ -203,16 +213,21 @@ public class SearchIndexLoader {
                 String typeId    = rs.getString(5);
                 String term      = rs.getString(6);
                 String lang      = rs.getString(7);
+                String moduleId  = rs.getString(8);
 
                 descMap.put(descId, new String[]{conceptId, et, active, typeId, term, lang});
 
                 // FSN 맵: 활성 FSN만
                 if (FSN_TYPE_ID.equals(typeId) && "1".equals(active)) {
                     fsnMap.put(conceptId, term);
+                    // International 모듈 FSN만 별도 추적 (semantic tag 집계용)
+                    if (INTL_MODULE_ID.equals(moduleId)) {
+                        intlFsnMap.put(conceptId, new String[]{term, et});
+                    }
                 }
             }
         }
-        log.info("  설명 맵: " + descMap.size() + "건, FSN: " + fsnMap.size() + "건");
+        log.info("  설명 맵: " + descMap.size() + "건, FSN: " + fsnMap.size() + "건, International FSN: " + intlFsnMap.size() + "건");
     }
 
     // =========================================================================
@@ -418,6 +433,61 @@ public class SearchIndexLoader {
     // =========================================================================
     // 유틸
     // =========================================================================
+
+    // =========================================================================
+    // Semantic Tag 집계 및 저장
+    // =========================================================================
+
+    /**
+     * intlFsnMap(International 모듈 Snapshot FSN)에서 semantic tag를 집계하여
+     * term.snomed_semantic_tag 테이블에 UPSERT한다.
+     *
+     * International 모듈(900000000000207008)만 사용하므로 KCD-9 등
+     * 국가 extension FSN이 포함하는 임상 괄호 표현이 오염되지 않는다.
+     */
+    private void saveSemanticTags() throws Exception {
+        log.info("  Semantic tag 집계 중 (International FSN " + intlFsnMap.size() + "건)...");
+
+        // tag → [count, max_effective_time]
+        Map<String, long[]>   countMap = new HashMap<>();
+        Map<String, String>   etMap    = new HashMap<>();
+
+        for (Map.Entry<String, String[]> e : intlFsnMap.entrySet()) {
+            String[] val = e.getValue();   // [fsn, effective_time]
+            String tag = extractSemanticTag(val[0]);
+            if (tag.isEmpty()) continue;
+
+            long[] cnt = countMap.computeIfAbsent(tag, k -> new long[]{0});
+            cnt[0]++;
+            String et = val[1];
+            etMap.merge(tag, et, (a, b) -> a.compareTo(b) >= 0 ? a : b);
+        }
+
+        if (countMap.isEmpty()) {
+            log.warning("  International FSN에서 semantic tag를 추출하지 못했습니다.");
+            return;
+        }
+
+        // 기존 데이터 삭제 후 재적재
+        try (Statement s = conn.createStatement()) {
+            s.execute("TRUNCATE TABLE term.snomed_semantic_tag");
+        }
+
+        String upsertSql =
+            "INSERT INTO term.snomed_semantic_tag (tag, concept_count, effective_time, loaded_at) " +
+            "VALUES (?, ?, ?, NOW())";
+        try (PreparedStatement ps = conn.prepareStatement(upsertSql)) {
+            for (Map.Entry<String, long[]> e : countMap.entrySet()) {
+                String tag = e.getKey();
+                ps.setString(1, tag);
+                ps.setLong  (2, e.getValue()[0]);
+                ps.setString(3, etMap.getOrDefault(tag, ""));
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+        log.info("  Semantic tag 저장 완료: " + countMap.size() + "종");
+    }
 
     /**
      * FSN에서 Semantic Tag 추출.
