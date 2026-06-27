@@ -175,7 +175,14 @@ export default function FhirRequestBar({ request, onRequestChange, onResult }) {
   const handleRun = () => {
     setLoading(true);
     onResult(null);
-    axios.get(fullUrl)
+
+    // base URL이 현재 origin과 다르면 CORS 우회를 위해 서버 사이드 프록시 사용
+    const isCrossOrigin = !base.startsWith(window.location.origin);
+    const requestUrl = isCrossOrigin
+      ? `/fhir/$proxy?url=${encodeURIComponent(fullUrl)}`
+      : fullUrl;
+
+    axios.get(requestUrl)
       .then(res => {
         const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
         onResult({ data, url: fullUrl, error: null });
