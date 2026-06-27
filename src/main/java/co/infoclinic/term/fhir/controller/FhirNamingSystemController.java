@@ -38,8 +38,11 @@ public class FhirNamingSystemController {
     @ApiOperation(value = "NamingSystem 목록 검색/생성 [GET]")
     @RequestMapping(value = FhirApi.NAMING_SYSTEM, method = RequestMethod.GET,
             produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
-    public String search(@RequestParam(required = false) String name) {
-        List<FhirResource> results = svc.search(RESOURCE_TYPE, name);
+    public String search(@RequestParam(required = false) String name,
+                         @RequestParam(required = false) String ig) {
+        List<FhirResource> results = (ig != null && !ig.isEmpty())
+            ? svc.searchByIg(RESOURCE_TYPE, ig, name)
+            : svc.search(RESOURCE_TYPE, name);
         return buildBundle(results);
     }
 

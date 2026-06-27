@@ -61,7 +61,7 @@ function StatusChip({ status }) {
   );
 }
 
-export default function ResourceList({ resourceType, isAdmin, onSelect, onNew }) {
+export default function ResourceList({ resourceType, igId, isAdmin, onSelect, onNew }) {
   const classes = useStyles();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -69,7 +69,10 @@ export default function ResourceList({ resourceType, isAdmin, onSelect, onNew })
 
   const load = (q) => {
     setLoading(true);
-    const params = q ? `?name=${encodeURIComponent(q)}` : '';
+    const p = new URLSearchParams();
+    if (q) p.set('name', q);
+    if (igId) p.set('ig', igId);
+    const params = p.toString() ? '?' + p.toString() : '';
     axios.get(`/fhir/${resourceType}${params}`)
       .then(res => {
         const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
@@ -80,7 +83,7 @@ export default function ResourceList({ resourceType, isAdmin, onSelect, onNew })
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { setSearch(''); load(''); }, [resourceType]); // eslint-disable-line
+  useEffect(() => { setSearch(''); load(''); }, [resourceType, igId]); // eslint-disable-line
 
   // 검색어 입력 후 500ms debounce로 백엔드 호출
   useEffect(() => {

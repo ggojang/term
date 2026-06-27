@@ -18,11 +18,18 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import co.infoclinic.term.fhir.model.entity.FhirPackage;
+import co.infoclinic.term.fhir.repository.FhirPackageRepository;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -41,8 +48,13 @@ public class FhirPackageController {
 
     private static final Set<String> TERMINOLOGY_TYPES = new HashSet<>(Arrays.asList("CodeSystem", "ValueSet", "ConceptMap", "NamingSystem"));
 
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
     @Autowired
     private FhirResourceService resourceSvc;
+
+    @Autowired
+    private FhirPackageRepository packageRepo;
 
     @ApiOperation(value = "IG 패키지 설치 (tgz 업로드) [POST]")
     @RequestMapping(value = FhirApi.INSTALL_PACKAGE, method = RequestMethod.POST,
@@ -56,6 +68,49 @@ public class FhirPackageController {
 
         IParser parser = FhirResourceService.FHIR_CTX.newJsonParser();
 
+        // 1차 패스: package.json 파싱으로 IG 메타 추출
+        String igId = null;
+        String igName = null;
+        String igVersion = null;
+        String igDesc = null;
+
+        try (InputStream raw = file.getInputStream();
+             BufferedInputStream buf = new BufferedInputStream(raw);
+             GzipCompressorInputStream gz = new GzipCompressorInputStream(buf);
+             TarArchiveInputStream tar = new TarArchiveInputStream(gz)) {
+
+            TarArchiveEntry entry;
+            while ((entry = tar.getNextTarEntry()) != null) {
+                if (entry.isDirectory()) continue;
+                String entryName = entry.getName();
+                if (entryName.equals("package/package.json") || entryName.equals("package.json")) {
+                    byte[] bytes = readEntry(tar);
+                    try {
+                        JsonNode node = MAPPER.readTree(bytes);
+                        igName    = node.path("name").asText(null);
+                        igVersion = node.path("version").asText(null);
+                        igDesc    = node.path("description").asText(null);
+                        if (igName != null) {
+                            igId = igName + "#" + (igVersion != null ? igVersion : "unknown");
+                        }
+                    } catch (Exception e) {
+                        log.warn("package.json parse failed: {}", e.getMessage());
+                    }
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("First-pass failed: {}", e.getMessage());
+        }
+
+        // IG 메타 저장
+        if (igId != null) {
+            FhirPackage pkg = new FhirPackage(igId, igName, igVersion, igDesc, LocalDateTime.now());
+            packageRepo.save(pkg);
+            log.info("Package registered: {}", igId);
+        }
+
+        // 2차 패스: 리소스 추출 및 저장
         try (InputStream raw = file.getInputStream();
              BufferedInputStream buf = new BufferedInputStream(raw);
              GzipCompressorInputStream gz = new GzipCompressorInputStream(buf);
@@ -67,21 +122,21 @@ public class FhirPackageController {
 
                 String name = entry.getName();
                 if (!name.endsWith(".json")) continue;
-                // package.json / package/package.json 제외
                 if (name.endsWith("package.json") || name.contains(".index.json")) continue;
 
                 byte[] bytes = readEntry(tar);
                 String json = new String(bytes, StandardCharsets.UTF_8);
 
                 try {
-                    // resourceType 필드로 빠른 판별
                     String resourceType = extractResourceType(json);
                     if (resourceType == null || !TERMINOLOGY_TYPES.contains(resourceType)) {
                         skipped.add(name + " (" + resourceType + ")");
                         continue;
                     }
 
-                    String id = resourceSvc.save(resourceType, json);
+                    String id = (igId != null)
+                        ? resourceSvc.saveWithIg(resourceType, json, igId)
+                        : resourceSvc.save(resourceType, json);
                     saved.add(resourceType + "/" + id + " ← " + name);
                     log.info("Installed {} from {}", resourceType + "/" + id, name);
 
@@ -97,9 +152,35 @@ public class FhirPackageController {
         }
 
         return buildOutcome(true,
-                "Installed " + saved.size() + " resource(s). Skipped " + skipped.size() + ".",
+                "Installed " + saved.size() + " resource(s) [" + (igId != null ? igId : "no package.json") + "]. Skipped " + skipped.size() + ".",
                 saved, skipped, errors);
     }
+
+    /** 설치된 IG 패키지 목록 */
+    @ApiOperation(value = "설치된 IG 패키지 목록 [GET]")
+    @RequestMapping(value = "/fhir/Package", method = RequestMethod.GET,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Map<String, Object>> listPackages() {
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Object[] row : packageRepo.findAllSummary()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id",          str(row[0]));
+            m.put("name",        str(row[1]));
+            m.put("version",     str(row[2]));
+            m.put("description", str(row[3]));
+            m.put("installedAt", str(row[4]));
+            // 리소스 타입별 건수
+            Map<String, Long> counts = new LinkedHashMap<>();
+            for (Object[] cnt : packageRepo.countByResourceType(str(row[0]))) {
+                counts.put(str(cnt[0]), ((Number) cnt[1]).longValue());
+            }
+            m.put("counts", counts);
+            result.add(m);
+        }
+        return result;
+    }
+
+    private String str(Object o) { return o == null ? null : o.toString(); }
 
     /**
      * JSON 단일 리소스 업로드 (Bundle 또는 단건)

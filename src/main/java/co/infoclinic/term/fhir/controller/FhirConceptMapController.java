@@ -37,8 +37,11 @@ public class FhirConceptMapController {
     @ApiOperation(value = "ConceptMap 목록 검색/생성 [GET]")
     @RequestMapping(value = FhirApi.CONCEPT_MAP, method = RequestMethod.GET, produces = {FHIR_JSON, MediaType.APPLICATION_JSON_VALUE})
     public String search(@RequestParam(required = false) String name,
-                         @RequestParam(required = false) String url) {
-        List<FhirResource> results = svc.search(name, url);
+                         @RequestParam(required = false) String url,
+                         @RequestParam(required = false) String ig) {
+        List<FhirResource> results = (ig != null && !ig.isEmpty())
+            ? svc.searchByIg(ig, name)
+            : svc.search(name, url);
         return buildBundle(results);
     }
 

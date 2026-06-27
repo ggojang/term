@@ -75,6 +75,38 @@ public class FhirResourceService {
         return id;
     }
 
+    /** IG 패키지 설치 시 ig_id를 함께 저장 */
+    public String saveWithIg(String resourceType, String json, String igId) {
+        IParser parser = FHIR_CTX.newJsonParser();
+        Resource resource = (Resource) parser.parseResource(json);
+
+        String id = resource.getIdElement().getIdPart();
+        if (id == null || id.isEmpty()) {
+            id = UUID.randomUUID().toString();
+            resource.setId(id);
+        }
+
+        String url, version, name, title, status;
+        String content = parser.encodeResourceToString(resource);
+
+        if (resource instanceof org.hl7.fhir.r4.model.NamingSystem) {
+            org.hl7.fhir.r4.model.NamingSystem ns = (org.hl7.fhir.r4.model.NamingSystem) resource;
+            url = ns.getUniqueId().stream()
+                    .filter(u -> u.getType() == org.hl7.fhir.r4.model.NamingSystem.NamingSystemIdentifierType.URI)
+                    .map(org.hl7.fhir.r4.model.NamingSystem.NamingSystemUniqueIdComponent::getValue)
+                    .findFirst().orElse(null);
+            version = null; name = ns.getName(); title = ns.hasTitle() ? ns.getTitle() : null;
+            status = ns.getStatus() != null ? ns.getStatus().toCode() : null;
+        } else {
+            org.hl7.fhir.r4.model.MetadataResource meta = (org.hl7.fhir.r4.model.MetadataResource) resource;
+            url = meta.getUrl(); version = meta.getVersion(); name = meta.getName();
+            title = meta.getTitle(); status = meta.getStatus() != null ? meta.getStatus().toCode() : null;
+        }
+
+        repo.upsertWithIg(resourceType, id, url, version, name, title, status, igId, content);
+        return id;
+    }
+
     public Optional<String> findById(String resourceType, String id) {
         return repo.findContentByResourceTypeAndId(resourceType, id);
     }
@@ -116,10 +148,21 @@ public class FhirResourceService {
                 .collect(Collectors.toList());
     }
 
+    public List<FhirResource> searchByIg(String resourceType, String igId, String name) {
+        List<Object[]> rows = (name != null && !name.isEmpty())
+            ? repo.searchSummaryByResourceTypeAndIg(resourceType, igId, "%" + name + "%")
+            : repo.findSummaryByResourceTypeAndIg(resourceType, igId);
+        return toFhirResourceList(rows);
+    }
+
     public List<FhirResource> search(String resourceType, String name) {
         List<Object[]> rows = (name != null && !name.isEmpty())
             ? repo.searchSummaryByResourceType(resourceType, "%" + name + "%")
             : repo.findSummaryByResourceType(resourceType);
+        return toFhirResourceList(rows);
+    }
+
+    private List<FhirResource> toFhirResourceList(List<Object[]> rows) {
         return rows.stream()
                 .map(row -> {
                     FhirResource r = new FhirResource();

@@ -88,6 +88,10 @@ public class FhirCodeSystemService {
         return resourceSvc.search("CodeSystem", name);
     }
 
+    public List<FhirResource> searchByIg(String igId, String name) {
+        return resourceSvc.searchByIg("CodeSystem", igId, name);
+    }
+
     public void delete(String id) {
         resourceSvc.delete("CodeSystem", id);
     }

@@ -43,6 +43,10 @@ public class FhirConceptMapService {
         return resourceSvc.search("ConceptMap", name);
     }
 
+    public List<FhirResource> searchByIg(String igId, String name) {
+        return resourceSvc.searchByIg("ConceptMap", igId, name);
+    }
+
     public void delete(String id) {
         resourceSvc.delete("ConceptMap", id);
     }

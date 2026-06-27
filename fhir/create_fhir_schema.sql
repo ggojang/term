@@ -28,3 +28,16 @@ CREATE INDEX IF NOT EXISTS idx_fhir_resource_name
 
 CREATE INDEX IF NOT EXISTS idx_fhir_resource_status
     ON fhir.resource (resource_type, status);
+
+-- IG 패키지 목록
+CREATE TABLE IF NOT EXISTS fhir.package (
+    id           VARCHAR(200) PRIMARY KEY,          -- {name}#{version}
+    name         VARCHAR(200) NOT NULL,
+    version      VARCHAR(50),
+    description  TEXT,
+    installed_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- 리소스가 속한 IG 추적 (NULL = 직접 등록)
+ALTER TABLE fhir.resource ADD COLUMN IF NOT EXISTS ig_id VARCHAR(200) REFERENCES fhir.package(id);
+CREATE INDEX IF NOT EXISTS idx_fhir_resource_ig ON fhir.resource(ig_id);

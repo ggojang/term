@@ -1,0 +1,21 @@
+생성된 파일 목록입니다:
+
+hira_downloader/
+├── hira_download.py   ← 메인 스크립트
+├── setup.sh           ← 설치 + cron 등록
+└── create_table.sql   ← DB 테이블 DDL
+release_files/hira_incoming/  ← 다운로드 저장 폴더
+사용 방법
+1. 초기 설치 (playwright + Chromium 설치 + cron 등록)
+
+cd ~/github/term/hira_downloader
+./setup.sh
+2. DB 테이블 생성
+
+psql -U postgres -d term -f hira_downloader/create_table.sql
+3. Slack webhook 설정
+
+export HIRA_SLACK_WEBHOOK="https://hooks.slack.com/services/..."
+4. 수동 테스트
+
+HIRA_SLACK_WEBHOOK="..." python3 hira_downloader/hira_download.py

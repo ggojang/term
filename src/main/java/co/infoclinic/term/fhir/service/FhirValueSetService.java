@@ -62,6 +62,10 @@ public class FhirValueSetService {
         return resourceSvc.search("ValueSet", name);
     }
 
+    public List<FhirResource> searchByIg(String igId, String name) {
+        return resourceSvc.searchByIg("ValueSet", igId, name);
+    }
+
     public void delete(String id) {
         resourceSvc.delete("ValueSet", id);
     }
