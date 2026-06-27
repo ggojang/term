@@ -1,241 +1,318 @@
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { withStyles, makeStyles } from '@material-ui/core/styles';
-import Grid from "@material-ui/core/Grid";
-import Divider from "@material-ui/core/Divider";
-import Typography from '@material-ui/core/Typography';
-import TextField from '@material-ui/core/TextField';
-import InputLabel from "@material-ui/core/InputLabel";
-import Container from '@material-ui/core/Container';
-import FormControl from '@material-ui/core/FormControl';
-import FormLabel from '@material-ui/core/FormLabel';
-import FormGroup from '@material-ui/core/FormGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
+import { makeStyles, withStyles } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import Box from "@material-ui/core/Box";
 import LinearProgress from '@material-ui/core/LinearProgress';
+import Button from '@material-ui/core/Button';
+import Chip from '@material-ui/core/Chip';
+import Popover from '@material-ui/core/Popover';
+import Checkbox from '@material-ui/core/Checkbox';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Typography from '@material-ui/core/Typography';
+import TextField from '@material-ui/core/TextField';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import SearchIcon from '@material-ui/icons/Search';
+import TuneIcon from '@material-ui/icons/Tune';
 
-const StyledTableCell = withStyles((theme) => ({
+// ── 전체 semantic tag 목록 ────────────────────────────────────────────────────
+const ALL_TAGS = [
+  'finding','disorder','procedure','event','regime/therapy','situation',
+  'administrative concept','assessment scale','attribute','basic dose form',
+  'body structure','cell','cell structure','clinical drug','context-dependent category',
+  'core metadata concept','disposition','dose form','environment','ethnic group',
+  'foundation metadata concept','geographic location','inactive concept',
+  'intended site','life style','link assertion','linkage concept',
+  'medicinal product form','medicinal product','metadata','morphologic abnormality',
+  'namespace concept','navigational concept','observable entity','occupation',
+  'organism','OWL metadata concept','person','physical force','physical object',
+  'product name','product','qualifier value','racial group','record artifact',
+  'release characteristic','religion/philosophy','role','SNOMED RT+CTV3',
+  'social concept','special concept','specimen','staging scale','state of matter',
+  'substance','supplier','transformation','tumor staging','unit of presentation',
+  'virtual clinical drug',
+];
+
+const PRESETS = {
+  diagnosis: new Set(['finding','disorder','event','situation']),
+  procedure: new Set(['procedure','regime/therapy','situation']),
+  all:       new Set(ALL_TAGS),
+  none:      new Set(),
+};
+
+function makeState(active) {
+  return ALL_TAGS.map(name => ({ name, state: active.has(name) }));
+}
+
+// ── 스타일 ───────────────────────────────────────────────────────────────────
+const StyledTableCell = withStyles(() => ({
   head: {
-    backgroundColor: "#1e2d40",
+    backgroundColor: '#1e2d40',
     color: '#94a3b8',
     fontWeight: 700,
     fontSize: '0.75em',
+    padding: '8px 12px',
   },
-  body: {
-    fontSize: 12,
-  },
+  body: { fontSize: 12, padding: '6px 12px' },
 }))(TableCell);
 
-const useStyles = makeStyles((theme) => ({
-  container: {
-    '-ms-overflow-style': 'none',
-    scrollbarWidth: 'none',
-    '&::-webkit-scrollbar': {
-        display: 'none',
+const useStyles = makeStyles(() => ({
+  root: { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)' },
+
+  // ── 상단 필터 바 ──
+  filterBar: {
+    background: '#162030',
+    borderBottom: '1px solid #0f1923',
+    padding: '8px 16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 6,
+    flexShrink: 0,
+  },
+  presetRow: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  presetLabel: { fontSize: '0.72em', color: '#60a5fa', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: 4 },
+  presetBtn: {
+    fontSize: '0.75em', padding: '3px 12px', minWidth: 0, textTransform: 'none',
+    borderRadius: 14, border: '1px solid #334155', color: '#94a3b8',
+    '&:hover': { borderColor: '#60a5fa', color: '#e2e8f0', background: '#1e2d40' },
+  },
+  presetBtnActive: {
+    fontSize: '0.75em', padding: '3px 12px', minWidth: 0, textTransform: 'none',
+    borderRadius: 14, color: '#1e2d40', background: '#60a5fa', border: '1px solid #60a5fa',
+    fontWeight: 700,
+    '&:hover': { background: '#93c5fd' },
+  },
+  filterBtn: {
+    fontSize: '0.75em', padding: '3px 10px', minWidth: 0, textTransform: 'none',
+    borderRadius: 14, border: '1px solid #334155', color: '#94a3b8', marginLeft: 'auto',
+    '&:hover': { borderColor: '#60a5fa', color: '#e2e8f0' },
+  },
+  searchRow: { display: 'flex', alignItems: 'center', gap: 8 },
+  searchInput: {
+    flex: 1,
+    '& .MuiOutlinedInput-root': {
+      background: '#1e2d40', borderRadius: 8,
+      '& fieldset': { borderColor: '#334155' },
+      '&:hover fieldset': { borderColor: '#60a5fa' },
+      '&.Mui-focused fieldset': { borderColor: '#60a5fa' },
     },
+    '& input': { color: '#e2e8f0', fontSize: '0.88em', padding: '8px 12px' },
+    '& .MuiInputAdornment-root svg': { color: '#64748b' },
   },
-  typography: {
-    padding: theme.spacing(1),
-    marginTop: '1ch',
-    marginBottom: '1ch',
+  chipRow: { display: 'flex', flexWrap: 'wrap', gap: 4, minHeight: 0 },
+  activeChip: {
+    height: 20, fontSize: '0.68em',
+    background: '#1e3a5f', color: '#93c5fd',
+    border: '1px solid #2563eb44',
+    '& .MuiChip-deleteIcon': { color: '#60a5fa', width: 14, height: 14 },
   },
-  label: {
-    fontSize: '0.8em',
-  },
-  inputlabel: {
-    minWidth: "10ch",
-    fontSize: '0.8em',
-    margin : "0 0 0 0",
-    padding: "12px 0 0 12px",
-  },
-  textfield: {
-    marginTop: theme.spacing(1),
-    width: "60rem",
-  },
-  tf: {
-    fontSize: "0.7em",
-  },
-  formControl: {
-    margin: theme.spacing(1),
-    alignItems : "center",
-    margin : "0 0 0 0",
-    padding: "12px 0 0 12px",
-  },
+
+  // ── Popover 체크박스 ──
+  popoverPaper: { padding: '12px 16px', maxWidth: 520, maxHeight: '70vh', overflow: 'auto', background: '#1e2d40' },
+  popoverTitle: { fontSize: '0.75em', color: '#60a5fa', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 },
+  checkGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0 8px' },
+  checkLabel: { fontSize: '0.72em', color: '#cbd5e1' },
+  checkBox: { color: '#334155', '&.Mui-checked': { color: '#60a5fa' }, padding: 3 },
+
+  // ── 결과 영역 ──
+  tableWrap: { flex: 1, overflow: 'auto', padding: '0 16px 16px' },
+  emptyMsg: { padding: '32px 0', color: '#94a3b8', fontSize: '0.82em', textAlign: 'center' },
 }));
 
 const BASE = '';
 
-export default function Main(props) {
-
+export default function Main() {
   const classes = useStyles();
 
+  // 필터 상태
+  const [checkState, setCheckState] = useState(makeState(PRESETS.diagnosis));
+  const [activePreset, setActivePreset] = useState('diagnosis');
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  // 검색 상태
   const [q, setQ] = useState('');
-  const [value2, setValue2] = useState([]);
-  const [value, setValue] = useState([]);
+  const [inputVal, setInputVal] = useState('');
   const [val, setVal] = useState([]);
-  const [tmp, setTmp] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const activeTags = checkState.filter(t => t.state);
+
+  // preset 선택
+  const applyPreset = (key) => {
+    setActivePreset(key);
+    setCheckState(makeState(PRESETS[key]));
+  };
+
+  // 개별 체크 변경
+  const handleCheck = (name) => {
+    setActivePreset(null);
+    setCheckState(prev => prev.map(t => t.name === name ? { ...t, state: !t.state } : t));
+  };
+
+  // 태그 칩 ×
+  const removeTag = (name) => {
+    setActivePreset(null);
+    setCheckState(prev => prev.map(t => t.name === name ? { ...t, state: false } : t));
+  };
+
+  // 검색 실행
   useEffect(() => {
-    if (q.length > 2) {
+    if (!q || q.length < 2) { setVal([]); return; }
+    setLoading(true);
+    setVal([]);
+    const semanticTags = activeTags.map(t => t.name);
+    axios.post(`${BASE}/map/SNOMEDCT/search`, {
+      q: q.replace(/(^\s*)|(\s*$)/gi, '').replace(/\s+/g, ' ').replace(/\s*-\s*/gi, ' '),
+      semanticTags,
+    }).then(res => {
+      const hits = (res.data && res.data.hits) ? res.data.hits : [];
+      const rows = hits.map(h => ({ conceptId: h.conceptId, fsn: h.fsn, term: h.term }));
+      // postexpr 병렬 조회
+      return Promise.all(rows.map(r =>
+        axios.get(`${BASE}/postexpr/SNOMEDCT/${r.conceptId}`)
+          .then(r2 => r2.data)
+          .catch(() => null)
+      )).then(exprs => rows.map((r, i) => ({ ...r, expr: exprs[i] })));
+    }).then(rows => {
+      setVal(rows.filter(r => r.fsn !== r.term));
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [q, checkState]);
 
-      setTmp([]);
-      setVal([]);
-      setValue([]);
-      setValue2([]);
-      setLoading(true);
-
-      const semanticTags = [];
-      for (let seman in props.semanTag) {
-        if (props.semanTag[seman].state) {
-          semanticTags.push(props.semanTag[seman].name);
-        }
-      }
-
-      axios
-        .post(`${BASE}/map/SNOMEDCT/search`, {
-          q: q.replace(/(^\s*)|(\s*$)/gi, "").replace(/\s+/g, ' ').replace(/\s*-\s*/gi,' '),
-          semanticTags: semanticTags,
-        })
-        .then(response => {
-          const hits = (response.data && response.data.hits) ? response.data.hits : [];
-          const value3 = hits.map(h => [h.score, h.conceptId, h.fsn, h.term, null, 'ok']);
-          setValue2(value3);
-        });
-    }
-  }, [q, props.semanTag]);
-
-  useEffect(() => {
-    if (value2 && value2.length > 0) {
-      let i_count2 = 0;
-      let tmp2 = [];
-      let promises = [];
-      for (var j in value2) {
-        let ch;
-        if ((value2[j][2] != value2[j][3]) && (value2[j][5] != "dup")) {
-          ch = value2[j][1];
-          value[i_count2] = value2[j];
-          i_count2++;
-          promises.push(
-           axios
-           .get(`${BASE}/postexpr/SNOMEDCT/${value2[j][1]}`)
-           .then(response => {
-             tmp2.push([ch, response.data]);
-           })
-          )
-        }
-      }
-
-      // backend returns results in priority order (stop > synonym > edge)
-
-      Promise.all(promises).then(() => setTmp(tmp2));
-    }
-  }, [value2]);
-
-  useEffect(() => {
-    if (tmp) {
-      for (var l in value) {
-        for (var m in tmp) {
-          if (value[l][1] == tmp[m][0]) {
-            value[l][4] = tmp[m][1];
-          }
-        }
-      }
-      setTimeout(function() {
-        setVal(value);
-        setLoading(false);
-      }, 1500);
-    }
-  }, [tmp]);
-
-  const handleQueryKeyUp = (event) => {
-    if (window.event.keyCode === 13) {
-      setQ(event.target.value);
-    }
+  const handleKeyUp = (e) => {
+    if (e.key === 'Enter') setQ(e.target.value);
   };
 
   return (
-    <>
-    <FormControl className={classes.formControl}>
-      <TextField className={classes.textfield} id="query" type="search" onKeyUp={handleQueryKeyUp}
-        InputProps={{
-          classes: { input: classes.tf },
-          placeholder: 'At least 2 characters',
-        }}
-      />
-    </FormControl>
-    {loading && <LinearProgress style={{ margin: '0 14px 4px', borderRadius: 2 }} />}
-    <Container
-      className={classes.container}
-      style={{
-        margin : "0 0 0 0",
-        padding: "12px 0 0 0",
-        height: "85vh",
-        overflow: "scroll"}}>
-    { val && val[0]
-      ? (
-        <Box p={1}>
-        <TableContainer align="center">
-          <Table stickyHeader aria-label="sticky table" size="small" aria-label="a small table">
-            <colgroup>
-              <col style={{width:'3%'}}/>
-              <col style={{width:'22%'}}/>
-              <col style={{width:'75%'}}/>
-            </colgroup>
-            <TableHead>
-              <TableRow >
-                <StyledTableCell className={classes.label}>
-                  <strong>No.</strong>
-                </StyledTableCell>
-                <StyledTableCell className={classes.label}>
-                  <strong>Mapped term</strong>
-                </StyledTableCell>
-                <StyledTableCell className={classes.label}>
-                  <strong>Fully Specified Name & Defining Relationship</strong>
-                </StyledTableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              { val.map((v, index) => (
-                <TableRow key={index}>
-                  <StyledTableCell className={classes.label}>
-                    {index + 1}
-                  </StyledTableCell>
-                  <StyledTableCell className={classes.label}>
-                    {v[3]}
-                  </StyledTableCell>
-                  <StyledTableCell className={classes.label}>
-                    {v[1]} | {v[2] }|
-                    <br/>
-                    {v[4]}
-                  </StyledTableCell>
+    <div className={classes.root}>
+      {/* ── 필터 바 ── */}
+      <div className={classes.filterBar}>
+        {/* Preset + Filter 버튼 */}
+        <div className={classes.presetRow}>
+          <span className={classes.presetLabel}>Semantic Tag</span>
+          {['diagnosis','procedure','all','none'].map(key => (
+            <Button key={key}
+              className={activePreset === key ? classes.presetBtnActive : classes.presetBtn}
+              onClick={() => applyPreset(key)}>
+              {key.charAt(0).toUpperCase() + key.slice(1)}
+            </Button>
+          ))}
+          <Button className={classes.filterBtn}
+            startIcon={<TuneIcon style={{ fontSize: 14 }} />}
+            onClick={e => setAnchorEl(e.currentTarget)}>
+            Filter ({activeTags.length})
+          </Button>
+        </div>
+
+        {/* 검색창 */}
+        <div className={classes.searchRow}>
+          <TextField
+            className={classes.searchInput}
+            variant="outlined"
+            placeholder="검색어 입력 후 Enter (2자 이상)"
+            value={inputVal}
+            onChange={e => setInputVal(e.target.value)}
+            onKeyUp={handleKeyUp}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </div>
+
+        {/* 활성 태그 칩 */}
+        {activeTags.length > 0 && activeTags.length < 20 && (
+          <div className={classes.chipRow}>
+            {activeTags.map(t => (
+              <Chip key={t.name} label={t.name} size="small"
+                className={classes.activeChip}
+                onDelete={() => removeTag(t.name)} />
+            ))}
+          </div>
+        )}
+        {activeTags.length >= 20 && (
+          <div style={{ fontSize: '0.72em', color: '#64748b' }}>
+            {activeTags.length}개 태그 선택됨
+          </div>
+        )}
+      </div>
+
+      {loading && <LinearProgress style={{ flexShrink: 0 }} />}
+
+      {/* ── 결과 테이블 ── */}
+      <div className={classes.tableWrap}>
+        {val.length > 0 ? (
+          <TableContainer>
+            <Table stickyHeader size="small">
+              <colgroup>
+                <col style={{ width: '3%' }} />
+                <col style={{ width: '25%' }} />
+                <col style={{ width: '72%' }} />
+              </colgroup>
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell>No.</StyledTableCell>
+                  <StyledTableCell>Mapped term</StyledTableCell>
+                  <StyledTableCell>Fully Specified Name &amp; Defining Relationship</StyledTableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        </Box>
-      ):(
-        <>
-        { !q &&
-          <>
-          <Typography style={{margin: "0 0 0 12px"}} variant="body2">[Usage] Check "Semantic Tag" -> Type "strings" which you want to map [and Enter] -> The matching terms of SNOMED CT will be displayed</Typography>
-          <br />
-          <Typography style={{margin: "0 0 0 12px"}} variant="body2">[Note 1] Available browser : Chrome, Safari</Typography>
-          <br />
-          <Typography style={{margin: "0 0 0 12px"}} variant="body2">[Note 2 to Chrome User] if you got  a CORS error, you need to install Chrome extension ("Allow-Control-Allow-Origin:*") at <a href="https://chrome.google.com/webstore/category/extensions">https://chrome.google.com/webstore/category/extensions</a></Typography>
-          </>
-        }
-        </>
-      )
-    }
-    </Container>
-    </>
+              </TableHead>
+              <TableBody>
+                {val.map((v, i) => (
+                  <TableRow key={i} hover>
+                    <StyledTableCell>{i + 1}</StyledTableCell>
+                    <StyledTableCell>{v.term}</StyledTableCell>
+                    <StyledTableCell>
+                      <span style={{ color: '#475569' }}>{v.conceptId}</span>
+                      {' | '}
+                      <span>{v.fsn}</span>
+                      {v.expr && <><br /><span style={{ color: '#64748b', fontSize: '0.9em' }}>{v.expr}</span></>}
+                    </StyledTableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : !loading && q ? (
+          <div className={classes.emptyMsg}>검색 결과가 없습니다.</div>
+        ) : !loading && (
+          <div className={classes.emptyMsg}>
+            Semantic Tag를 선택하고 검색어를 입력한 뒤 Enter를 누르세요.
+          </div>
+        )}
+      </div>
+
+      {/* ── Semantic Tag Popover ── */}
+      <Popover
+        open={Boolean(anchorEl)}
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{ className: classes.popoverPaper }}>
+        <div className={classes.popoverTitle}>
+          Semantic Tags — {activeTags.length} / {ALL_TAGS.length} selected
+        </div>
+        <div className={classes.checkGrid}>
+          {checkState.map(t => (
+            <FormControlLabel key={t.name}
+              control={
+                <Checkbox size="small" checked={t.state}
+                  onChange={() => handleCheck(t.name)}
+                  className={classes.checkBox} />
+              }
+              label={<span className={classes.checkLabel}>{t.name}</span>}
+              style={{ margin: 0 }}
+            />
+          ))}
+        </div>
+      </Popover>
+    </div>
   );
 }
