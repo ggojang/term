@@ -23,7 +23,10 @@ cd "$(dirname "$0")"
 # 프론트엔드 빌드
 echo "[run.sh] Building frontend..."
 cd frontend
-export NODE_OPTIONS=--openssl-legacy-provider
+NODE_MAJOR=$(node -e "process.stdout.write(process.version.split('.')[0].replace('v',''))" 2>/dev/null || echo "0")
+if [ "$NODE_MAJOR" -ge 17 ] 2>/dev/null; then
+  export NODE_OPTIONS=--openssl-legacy-provider
+fi
 npm run build
 if [ $? -ne 0 ]; then
   echo "[run.sh] Frontend build failed. Aborting."
