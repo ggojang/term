@@ -22,8 +22,8 @@ const CAT_LABELS = { 행위: '행위', 약제: '약제', 치료재료: '치료�
 const CATS = ['행위', '약제', '치료재료'];
 
 const useStyles = makeStyles(() => ({
-  tab: { minWidth: 0, fontSize: '0.82em', padding: '4px 8px', minHeight: 36, flex: 1 },
-  tabs: { minHeight: 36, borderBottom: '1px solid #e0e0e0' },
+  tab: { minWidth: 0, fontSize: '0.82em', padding: '4px 8px', minHeight: 36, flex: 1, color: '#94a3b8', '&.Mui-selected': { color: '#e2e8f0' } },
+  tabs: { minHeight: 36, backgroundColor: '#1e2d40', borderBottom: '1px solid #0f1923' },
   treeLabel: { fontSize: '0.88em', lineHeight: '1.6' },
   searchBox: { padding: '8px 8px 4px' },
   resultItem: {
@@ -171,8 +171,7 @@ export default function HiraLeft({ category, setCategory, selectedCode, onSelect
         value={CATS.indexOf(category)}
         onChange={(_, v) => setCategory(CATS[v])}
         className={classes.tabs}
-        indicatorColor="primary"
-        textColor="primary"
+        TabIndicatorProps={{ style: { backgroundColor: '#60a5fa', height: 2 } }}
         variant="fullWidth"
       >
         {CATS.map((c) => (

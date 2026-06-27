@@ -25,22 +25,24 @@ const useStyles = makeStyles((theme) => ({
   },
   versionBar: {
     padding: '4px 12px',
-    backgroundColor: '#f5f7fa',
-    borderBottom: '1px solid #e4e7ec',
+    backgroundColor: '#162030',
+    borderBottom: '1px solid #0f1923',
     display: 'flex',
     alignItems: 'center',
     gap: 8,
   },
   versionLabel: {
     fontSize: '0.75em',
-    color: '#667085',
+    color: '#60a5fa',
     fontWeight: 600,
     textTransform: 'uppercase',
     letterSpacing: '0.04em',
   },
   versionSelect: {
     fontSize: '0.8em',
-    '& .MuiSelect-root': { paddingTop: 4, paddingBottom: 4 },
+    color: '#cbd5e1',
+    '& .MuiSelect-root': { paddingTop: 4, paddingBottom: 4, color: '#cbd5e1' },
+    '& .MuiSvgIcon-root': { color: '#64748b' },
   },
 }));
 

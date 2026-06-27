@@ -58,10 +58,13 @@ const useStyles = makeStyles(() => ({
     fontSize: '0.82em',
     padding: '4px 12px',
     minHeight: 36,
+    color: '#94a3b8',
+    '&.Mui-selected': { color: '#e2e8f0' },
   },
   tabs: {
     minHeight: 36,
-    borderBottom: '1px solid #e0e0e0',
+    backgroundColor: '#1e2d40',
+    borderBottom: '1px solid #0f1923',
   },
 }));
 
@@ -221,8 +224,7 @@ export default function Left({ setSelectedCode }) {
         value={tab}
         onChange={(e, v) => setTab(v)}
         className={classes.tabs}
-        indicatorColor="primary"
-        textColor="primary"
+        TabIndicatorProps={{ style: { backgroundColor: '#60a5fa', height: 2 } }}
       >
         <Tab label="KCD-9" className={classes.tab} />
         <Tab label="신생물의 형태분류" className={classes.tab} />

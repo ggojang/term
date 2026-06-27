@@ -75,7 +75,7 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   appbar : {
-    backgroundColor : '#1b2733',
+    backgroundColor : '#1e2d40',
     padding: '0 4px',
   },
   toolbarRoot: {
@@ -96,17 +96,23 @@ const useStyles = makeStyles((theme) => ({
   tab1: {
     minHeight : '2vh',
     minWidth: '80px',
-    opacity: 0.5,
+    color: '#94a3b8',
+    opacity: 1,
+    '&.Mui-selected': { color: '#e2e8f0' },
   },
   tab2: {
     minHeight : '2vh',
     minWidth: '80px',
-    opacity: 0.5,
+    color: '#94a3b8',
+    opacity: 1,
+    '&.Mui-selected': { color: '#e2e8f0' },
   },
   tab3: {
     minHeight : '2vh',
     minWidth: '80px',
-    opacity: 0.5,
+    color: '#94a3b8',
+    opacity: 1,
+    '&.Mui-selected': { color: '#e2e8f0' },
   },
   link: {
     textDecoration: "none",
@@ -176,7 +182,7 @@ export default function Left(props) {
     <MuiThemeProvider theme={forTabs}>
     <Grid container>
       <Grid item md={12}>
-        <Toolbar className={classes.toolbar} classes={{root: classes.toolbarRoot}} style={{ backgroundColor: "#ffffff", padding: "0 0 0 0"}}>
+        <Toolbar className={classes.toolbar} classes={{root: classes.toolbarRoot}} style={{ backgroundColor: "#1e2d40", padding: "0 0 0 0"}}>
           <Tabs
             value={value}
             onChange={handleChange}
@@ -225,7 +231,7 @@ export default function Left(props) {
               </div>
             ) : (
               <>
-                <div style={{ fontSize: 11, color: '#98a2b3', padding: '4px 12px 8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <div style={{ fontSize: 11, color: '#60a5fa', padding: '4px 12px 8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   {bookmarks.length} bookmark{bookmarks.length !== 1 ? 's' : ''}
                 </div>
                 {bookmarks.map((bm, i) => (

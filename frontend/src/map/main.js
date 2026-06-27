@@ -22,8 +22,10 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 
 const StyledTableCell = withStyles((theme) => ({
   head: {
-    backgroundColor: "#f9f9f9",
-    color: theme.palette.common.black,
+    backgroundColor: "#1e2d40",
+    color: '#94a3b8',
+    fontWeight: 700,
+    fontSize: '0.75em',
   },
   body: {
     fontSize: 12,

@@ -53,7 +53,7 @@ function a11yProps(index) {
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    backgroundColor: '#f7f8fa',
+    backgroundColor: '#f0f4f8',
     width: '100vw',
     position: 'relative',
     minHeight: '100vh',

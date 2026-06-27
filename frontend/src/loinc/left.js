@@ -69,7 +69,7 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   appbar : {
-    backgroundColor : '#2e3e4e',
+    backgroundColor : '#1e2d40',
     padding: '4px',
   },
   toolbarRoot: {
@@ -90,7 +90,9 @@ const useStyles = makeStyles((theme) => ({
   tab1: {
     minHeight : '2vh',
     minWidth: '10px',
-    opacity: 0.5,
+    color: '#94a3b8',
+    opacity: 1,
+    '&.Mui-selected': { color: '#e2e8f0' },
   },
   link: {
     textDecoration: "none",
@@ -120,7 +122,7 @@ export default function Left(props) {
     <MuiThemeProvider theme={forTabs}>
     <Grid container>
       <Grid item md={12}>
-        <Toolbar className={classes.toolbar} classes={{root: classes.toolbarRoot}} style={{ backgroundColor: "#ffffff", padding: "0 0 0 0"}}>
+        <Toolbar className={classes.toolbar} classes={{root: classes.toolbarRoot}} style={{ backgroundColor: "#1e2d40", padding: "0 0 0 0"}}>
           <Tabs
             value={value}
             onChange={handleChange}
