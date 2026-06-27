@@ -126,17 +126,32 @@ const S = {
   },
 };
 
+const METHOD_COLORS = {
+  GET:    '#60a5fa',
+  POST:   '#34d399',
+  PUT:    '#f59e0b',
+  DELETE: '#f87171',
+};
+
 /**
  * FhirRequestBar
  * Props:
  *   request: { base: string, segments: string[], params: [{key, value}] }
  *   onRequestChange: (req) => void
  *   onResult: ({ data, url, error } | null) => void
+ *   isAdmin: boolean
  */
-export default function FhirRequestBar({ request, onRequestChange, onResult }) {
+export default function FhirRequestBar({ request, onRequestChange, onResult, isAdmin }) {
   const [loading, setLoading] = useState(false);
   const [baseFocused, setBaseFocused] = useState(false);
   const [segFocused, setSegFocused] = useState({});
+  const [method, setMethod] = useState('GET');
+  const [body, setBody] = useState('');
+  const [bodyOpen, setBodyOpen] = useState(false);
+  const [headersOpen, setHeadersOpen] = useState(false);
+  const [reqHeaders, setReqHeaders] = useState([
+    { key: 'Accept', value: 'application/fhir+json' },
+  ]);
 
   const { base, segments, params } = request;
 
@@ -176,25 +191,38 @@ export default function FhirRequestBar({ request, onRequestChange, onResult }) {
     setLoading(true);
     onResult(null);
 
-    // base URL이 현재 origin과 다르면 CORS 우회를 위해 서버 사이드 프록시 사용
     const isCrossOrigin = !base.startsWith(window.location.origin);
-    const requestUrl = isCrossOrigin
-      ? `/fhir/$proxy?url=${encodeURIComponent(fullUrl)}`
-      : fullUrl;
+    const hasBody = (method === 'POST' || method === 'PUT') && body.trim();
+    // 유효한 헤더만 객체로 변환
+    const customHeaders = reqHeaders
+      .filter(h => h.key.trim())
+      .reduce((acc, h) => { acc[h.key.trim()] = h.value; return acc; }, {});
 
-    axios.get(requestUrl)
+    let axiosCall;
+    if (isCrossOrigin) {
+      const proxyUrl = `/fhir/$proxy?url=${encodeURIComponent(fullUrl)}&method=${method}`
+        + `&headers=${encodeURIComponent(JSON.stringify(customHeaders))}`;
+      axiosCall = axios.post(proxyUrl, hasBody ? body : null, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } else {
+      const axiosCfg = { headers: customHeaders };
+      if (method === 'GET')         axiosCall = axios.get(fullUrl, axiosCfg);
+      else if (method === 'DELETE') axiosCall = axios.delete(fullUrl, axiosCfg);
+      else axiosCall = axios[method.toLowerCase()](fullUrl, hasBody ? body : undefined, axiosCfg);
+    }
+
+    axiosCall
       .then(res => {
         let data = res.data;
         if (typeof data === 'string') {
           try { data = JSON.parse(data); } catch (_) {}
         }
-        // 프록시가 오류 응답을 200으로 감싼 경우
-        if (data && data.__error__) {
-          const body = (data.__body__ || '').replace(/\\n/g, '\n').replace(/\\r/g, '');
-          onResult({ data: null, url: fullUrl, error: `HTTP ${data.__status__}\n\n${body.slice(0, 3000)}` });
-        } else if (data && data.__raw__) {
-          const body = data.__raw__.replace(/\\n/g, '\n').replace(/\\r/g, '');
-          onResult({ data: null, url: fullUrl, error: `원격 서버 HTML 응답 (${data.__contentType__ || ''})\n\n${body.slice(0, 3000)}` });
+        if (data && data.__proxy_error__) {
+          const b  = (data.__body__ || '').slice(0, 3000);
+          const ct = data.__contentType__ || '';
+          const st = data.__status__ || 0;
+          onResult({ data: null, url: fullUrl, error: `HTTP ${st}${ct ? '  (' + ct + ')' : ''}\n\n${b}` });
         } else {
           onResult({ data, url: fullUrl, error: null });
         }
@@ -212,14 +240,53 @@ export default function FhirRequestBar({ request, onRequestChange, onResult }) {
   const alreadyHasOp = hasOp(segments);
   const nextOptions = getNextOptions(segments);
 
+  const methodColor = METHOD_COLORS[method] || '#60a5fa';
+  const showBody = isAdmin && (method === 'POST' || method === 'PUT');
+
   return (
     <div style={S.root}>
       {/* URL 조립 줄 */}
       <div style={S.row}>
 
-        {/* ① Base URL */}
+        {/* ① Method select (admin만) */}
+        {isAdmin && (
+          <select
+            value={method}
+            onChange={e => {
+              const m = e.target.value;
+              setMethod(m);
+              setBodyOpen(false);
+              const needsCt = m === 'POST' || m === 'PUT';
+              setReqHeaders(prev => {
+                const hasCt = prev.some(h => h.key.toLowerCase() === 'content-type');
+                if (needsCt && !hasCt) return [...prev, { key: 'Content-Type', value: 'application/fhir+json' }];
+                if (!needsCt) return prev.filter(h => h.key.toLowerCase() !== 'content-type');
+                return prev;
+              });
+            }}
+            style={{
+              background: '#0a1220',
+              border: `1px solid ${methodColor}44`,
+              borderRadius: 5,
+              color: methodColor,
+              fontSize: '0.75em',
+              fontWeight: 700,
+              padding: '4px 6px',
+              outline: 'none',
+              cursor: 'pointer',
+              fontFamily: 'monospace',
+              flexShrink: 0,
+            }}
+          >
+            {Object.keys(METHOD_COLORS).map(m => (
+              <option key={m} value={m} style={{ background: '#0a1220', color: METHOD_COLORS[m] }}>{m}</option>
+            ))}
+          </select>
+        )}
+
+        {/* ② Base URL */}
         <input
-          style={{ ...S.baseInput(baseFocused), width: Math.max(base.length * 7.2, 180) }}
+          style={{ ...S.baseInput(baseFocused), width: Math.max(base.length * 7.8 + 20, 180) }}
           value={base}
           onChange={e => update({ base: e.target.value })}
           onFocus={() => setBaseFocused(true)}
@@ -399,7 +466,91 @@ export default function FhirRequestBar({ request, onRequestChange, onResult }) {
         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {fullUrl}
         </span>
+        {isAdmin && (
+          <span
+            onClick={() => setHeadersOpen(o => !o)}
+            style={{ cursor: 'pointer', color: headersOpen ? '#a78bfa' : '#64748b', fontSize: '0.9em', flexShrink: 0, marginLeft: 8 }}
+          >
+            {headersOpen ? '▲ headers' : '▼ headers'}
+          </span>
+        )}
+        {showBody && (
+          <span
+            onClick={() => setBodyOpen(o => !o)}
+            style={{ cursor: 'pointer', color: bodyOpen ? '#f59e0b' : '#64748b', fontSize: '0.9em', flexShrink: 0, marginLeft: 6 }}
+          >
+            {bodyOpen ? '▲ body' : '▼ body'}
+          </span>
+        )}
       </div>
+
+      {/* Headers 편집 (admin) */}
+      {isAdmin && headersOpen && (
+        <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {reqHeaders.map((h, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <input
+                value={h.key}
+                onChange={e => setReqHeaders(prev => prev.map((x, idx) => idx === i ? { ...x, key: e.target.value } : x))}
+                placeholder="Header-Name"
+                spellCheck={false}
+                style={{
+                  background: '#0a1220', border: '1px solid #1e3050', borderRadius: 4,
+                  color: '#a78bfa', fontSize: '0.73em', fontFamily: 'monospace',
+                  padding: '3px 6px', outline: 'none', width: 180,
+                }}
+              />
+              <span style={{ color: '#374151', fontSize: '0.8em' }}>:</span>
+              <input
+                value={h.value}
+                onChange={e => setReqHeaders(prev => prev.map((x, idx) => idx === i ? { ...x, value: e.target.value } : x))}
+                placeholder="value"
+                spellCheck={false}
+                style={{
+                  background: '#0a1220', border: '1px solid #1e3050', borderRadius: 4,
+                  color: '#e2e8f0', fontSize: '0.73em', fontFamily: 'monospace',
+                  padding: '3px 6px', outline: 'none', flex: 1,
+                }}
+              />
+              <IconButton size="small" style={{ color: '#374151', padding: 1 }}
+                onClick={() => setReqHeaders(prev => prev.filter((_, idx) => idx !== i))}>
+                <CloseIcon style={{ fontSize: 11 }} />
+              </IconButton>
+            </div>
+          ))}
+          <div>
+            <span
+              onClick={() => setReqHeaders(prev => [...prev, { key: '', value: '' }])}
+              style={{ cursor: 'pointer', color: '#374151', fontSize: '0.7em', fontFamily: 'monospace' }}
+            >+ 헤더 추가</span>
+          </div>
+        </div>
+      )}
+
+      {/* Request Body (POST/PUT, admin) */}
+      {showBody && bodyOpen && (
+        <textarea
+          value={body}
+          onChange={e => setBody(e.target.value)}
+          placeholder={'{\n  "resourceType": "...",\n  ...\n}'}
+          spellCheck={false}
+          rows={8}
+          style={{
+            marginTop: 6,
+            width: '100%',
+            boxSizing: 'border-box',
+            background: '#0a1220',
+            border: '1px solid #1e3050',
+            borderRadius: 5,
+            color: '#e2e8f0',
+            fontSize: '0.76em',
+            fontFamily: "'JetBrains Mono','Fira Code','Consolas',monospace",
+            padding: '8px 10px',
+            outline: 'none',
+            resize: 'vertical',
+          }}
+        />
+      )}
 
       {loading && <LinearProgress style={{ marginTop: 4, borderRadius: 2 }} />}
     </div>

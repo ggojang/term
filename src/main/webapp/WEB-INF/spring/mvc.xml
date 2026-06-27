@@ -187,10 +187,7 @@
 			<mvc:mapping path="/**/" />
 			<bean id="loggerInterceptor" class="co.infoclinic.term.common.logger.LoggerInterceptor" />
 		</mvc:interceptor>
-		<mvc:interceptor>
-			<mvc:mapping path="/fhir/**" />
-			<bean class="co.infoclinic.term.fhir.interceptor.FhirAccessLogInterceptor" />
-		</mvc:interceptor>
+		<!-- FhirAccessLogInterceptor 제거 → FhirAccessLogFilter(web.xml)로 대체 -->
 	</mvc:interceptors>
 	
 	<!-- Websocket Config -->

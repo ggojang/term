@@ -28,12 +28,40 @@ public class FhirAccessLogController {
             produces = "application/json")
     public Map<String, Object> getAccessLog(
             @RequestParam(defaultValue = "1")   int    page,
-            @RequestParam(defaultValue = "50")  int    size,
+            @RequestParam(defaultValue = "77")  int    size,
             @RequestParam(required = false)     String method,
             @RequestParam(required = false)     String path,
             @RequestParam(required = false)     String ip,
             @RequestParam(required = false)     String from,
-            @RequestParam(required = false)     String to) {
+            @RequestParam(required = false)     String to,
+            @RequestParam(value = "id", required = false) Long id) {
+
+        // 단건 상세 조회 (request_body + response_body 포함)
+        if (id != null) {
+            Map<String, Object> result = new LinkedHashMap<>();
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(
+                     "SELECT id, ts, method, path, query, client_ip, user_agent, status, duration_ms, " +
+                     "request_body, response_body FROM fhir.access_log WHERE id = ?")) {
+                ps.setLong(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        result.put("id",          rs.getLong("id"));
+                        result.put("ts",          rs.getString("ts"));
+                        result.put("method",      rs.getString("method"));
+                        result.put("path",        rs.getString("path"));
+                        result.put("query",       rs.getString("query"));
+                        result.put("clientIp",    rs.getString("client_ip"));
+                        result.put("userAgent",   rs.getString("user_agent"));
+                        result.put("status",      rs.getInt("status"));
+                        result.put("durationMs",  rs.getInt("duration_ms"));
+                        result.put("requestBody", rs.getString("request_body"));
+                        result.put("responseBody",rs.getString("response_body"));
+                    }
+                }
+            } catch (Exception e) { e.printStackTrace(); }
+            return result;
+        }
 
         List<Object> params = new ArrayList<>();
         StringBuilder where = new StringBuilder(" WHERE 1=1");

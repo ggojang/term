@@ -218,6 +218,7 @@ export default function FhirLayout() {
                 request={fhirRequest}
                 onRequestChange={setFhirRequest}
                 onResult={(r) => { setFhirResult(r); }}
+                isAdmin={isAdmin}
               />
             )}
 

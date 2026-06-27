@@ -18,4 +18,18 @@ export MAVEN_OPTS="\
   --add-opens java.base/java.nio=ALL-UNNAMED \
   --add-opens java.base/sun.nio.ch=ALL-UNNAMED"
 
-cd "$(dirname "$0")" && mvn tomcat7:run -P run "$@"
+cd "$(dirname "$0")"
+
+# 프론트엔드 빌드
+echo "[run.sh] Building frontend..."
+cd frontend
+export NODE_OPTIONS=--openssl-legacy-provider
+npm run build
+if [ $? -ne 0 ]; then
+  echo "[run.sh] Frontend build failed. Aborting."
+  exit 1
+fi
+cd ..
+
+echo "[run.sh] Starting Spring server..."
+mvn tomcat7:run -P run "$@"
