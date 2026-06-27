@@ -706,3 +706,26 @@ CREATE TABLE IF NOT EXISTS term.snomed_semantic_tag (
 - `igVersion` 스타일: 파란 배경(`#60a5fa`) + 짙은 텍스트(`#1e2d40`) 뱃지 형태로 변경
 - 버전 앞에 `v` prefix 추가 (예: `2.0.0` → `v2.0.0`)
 - commit: `ad92acf`
+
+---
+
+## 2026-06-27: FHIR 리소스 delete 500 오류 수정
+
+**원인**: `FhirResourceRepository.findByResourceTypeAndId`로 Entity 전체 로드 시 Hibernate 4.x가 `LocalDateTime` 컬럼(`created_at`, `updated_at`)을 Java 직렬화 객체로 역직렬화하려다 `StreamCorruptedException` 발생.
+
+**수정**:
+- `FhirResourceRepository`: `deleteByResourceTypeAndId` (native DELETE), `countByResourceTypeAndId` (native COUNT) 추가
+- `FhirResourceService.delete` / `exists`: Entity 로드 없이 native query 직접 실행으로 변경
+- CodeSystem / ValueSet / ConceptMap delete 모두 동일 경로라 일괄 해결
+- commit: `bb29a82`
+
+---
+
+## 2026-06-27: Activity 탭 — 500 에러 시 응답 body 누락 수정
+
+**원인**: 500 에러 발생 시 Spring이 `NestedServletException`을 던지면 `chain.doFilter()`가 예외로 종료. Tomcat이 에러 HTML을 직접 response stream에 쓰므로 `ContentCachingResponseWrapper` 버퍼에는 아무것도 없어 `response_body`가 null이었음.
+
+**수정** (`FhirAccessLogFilter`):
+- `catch (Throwable t)`로 예외를 잡아 `[EXCEPTION] 클래스명: 메시지` 형식으로 `response_body`에 저장
+- `finally` 블록 이후 예외를 재던져 Tomcat 에러 처리는 정상 계속
+- commit: `8d7bd3d`
