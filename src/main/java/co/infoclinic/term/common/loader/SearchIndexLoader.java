@@ -463,6 +463,9 @@ public class SearchIndexLoader {
             etMap.merge(tag, et, (a, b) -> a.compareTo(b) >= 0 ? a : b);
         }
 
+        // 레거시 CTV3 active FSN 노이즈 제거: 진짜 semantic tag는 5건 이상
+        countMap.entrySet().removeIf(e -> e.getValue()[0] < 5);
+
         if (countMap.isEmpty()) {
             log.warning("  International FSN에서 semantic tag를 추출하지 못했습니다.");
             return;

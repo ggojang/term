@@ -167,32 +167,49 @@ public class TcController {
         List<Map<String, Object>> result = new ArrayList<>();
         try (Connection conn = dataSource.getConnection()) {
 
-            // 1순위: snomed_semantic_tag 테이블 (SearchIndexLoader가 자동 유지)
-            String sql1 = "SELECT tag, concept_count FROM term.snomed_semantic_tag " +
-                          "ORDER BY tag";
-            try (PreparedStatement ps = conn.prepareStatement(sql1);
-                 ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Map<String, Object> m = new LinkedHashMap<>();
-                    m.put("name",  rs.getString("tag"));
-                    m.put("count", rs.getLong("concept_count"));
-                    result.add(m);
+            // 1순위: snomed_semantic_tag 테이블 (SearchIndexLoader 적재 시 자동 갱신)
+            // 테이블 자체가 없는 환경(로컬 개발 등)은 바로 2순위로 넘어감
+            boolean tagTableExists = false;
+            try (PreparedStatement chk = conn.prepareStatement(
+                    "SELECT 1 FROM information_schema.tables " +
+                    "WHERE table_schema='term' AND table_name='snomed_semantic_tag'");
+                 ResultSet rs = chk.executeQuery()) {
+                tagTableExists = rs.next();
+            }
+            if (tagTableExists) {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "SELECT tag, concept_count FROM term.snomed_semantic_tag ORDER BY tag");
+                     ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Map<String, Object> m = new LinkedHashMap<>();
+                        m.put("name",  rs.getString("tag"));
+                        m.put("count", rs.getLong("concept_count"));
+                        result.add(m);
+                    }
                 }
             }
 
             // 2순위: description 테이블 FSN (International 모듈 + active Snapshot)
-            // snomed_semantic_tag가 없는 로컬/초기 환경 대응
+            // snomed_semantic_tag가 없거나 비어있는 로컬/초기 환경 대응
             if (result.isEmpty()) {
+                // fallback: description 테이블 Snapshot 방식 (DISTINCT ON으로 최신 행만)
+                // Full 릴리즈 테이블은 이력이 누적되므로 단순 active=1 필터로는
+                // 과거 active=1 행이 포함됨 → DISTINCT ON으로 최신 상태를 먼저 확정
+                // DISTINCT ON: Full 릴리즈 테이블에서 최신 행(Snapshot)만 추출
+                // HAVING count >= 5: 진짜 semantic tag는 수백~수만 건,
+                //   CTV3 레거시 active FSN 노이즈는 1~2건이므로 최솟값으로 필터
                 String sql2 =
-                    "SELECT SUBSTRING(term FROM '\\(([^)]+)\\)$') AS tag, COUNT(*) AS cnt " +
-                    "FROM term.description " +
-                    "WHERE module_id = '900000000000207008' " +
-                    "  AND type_id   = '900000000000003001' " +
-                    "  AND active    = 1 " +
-                    "  AND term ~ '\\([^)]+\\)$' " +
-                    "GROUP BY tag " +
-                    "HAVING SUBSTRING(term FROM '\\(([^)]+)\\)$') IS NOT NULL " +
-                    "ORDER BY tag";
+                    "SELECT tag, COUNT(*) AS cnt FROM (" +
+                    "  SELECT DISTINCT ON (description_id) active," +
+                    "    SUBSTRING(term FROM '\\(([^)]+)\\)$') AS tag " +
+                    "  FROM term.description " +
+                    "  WHERE module_id = '900000000000207008' " +
+                    "    AND type_id   = '900000000000003001' " +
+                    "    AND term ~ '\\([^)]+\\)$' " +
+                    "  ORDER BY description_id, effective_time DESC" +
+                    ") latest " +
+                    "WHERE active = 1 AND tag IS NOT NULL AND tag <> '' " +
+                    "GROUP BY tag HAVING COUNT(*) >= 5 ORDER BY tag";
                 try (PreparedStatement ps = conn.prepareStatement(sql2);
                      ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
