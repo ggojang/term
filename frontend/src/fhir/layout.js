@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
@@ -15,6 +15,7 @@ import ResourceDetail from './ResourceDetail';
 import ResourceEditor from './ResourceEditor';
 import LoginDialog from './LoginDialog';
 import ActivityPanel from './ActivityPanel';
+import FhirRequestBar from './FhirRequestBar';
 
 const useStyles = makeStyles(() => ({
   root: { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)', background: '#f3f4f6' },
@@ -41,6 +42,45 @@ const useStyles = makeStyles(() => ({
   placeholderText: { fontSize: '0.85em' },
 }));
 
+function colorizeJson(json) {
+  return json.replace(
+    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
+    match => {
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) return `<span style="color:#79c0ff">${match}</span>`;
+        return `<span style="color:#a5d6ff">${match}</span>`;
+      }
+      if (/true|false/.test(match)) return `<span style="color:#ff7b72">${match}</span>`;
+      if (/null/.test(match)) return `<span style="color:#6e7681">${match}</span>`;
+      return `<span style="color:#f2cc60">${match}</span>`;
+    }
+  );
+}
+
+function FhirRawResult({ result, onClear }) {
+  const pretty = result.data ? JSON.stringify(result.data, null, 2) : result.error || '';
+  const isError = !!result.error;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+        <span style={{ fontSize: '0.75em', color: isError ? '#dc2626' : '#374151', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {isError ? '오류: ' : ''}{result.url}
+        </span>
+        <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginLeft: 12 }}>
+          <Button size="small" style={{ fontSize: '0.72em', color: '#6b7280', border: '1px solid #e5e7eb', padding: '2px 10px' }}
+            onClick={() => navigator.clipboard.writeText(pretty)}>Copy</Button>
+          <Button size="small" style={{ fontSize: '0.72em', color: '#6b7280', border: '1px solid #e5e7eb', padding: '2px 10px' }}
+            onClick={onClear}>닫기</Button>
+        </div>
+      </div>
+      <div style={{ flex: 1, overflow: 'auto', background: '#0d1117', padding: '16px 20px' }}>
+        <pre style={{ fontFamily: "'JetBrains Mono','Fira Code','Consolas',monospace", fontSize: '0.8em', lineHeight: 1.7, color: isError ? '#f87171' : '#e6edf3', whiteSpace: 'pre', margin: 0 }}
+          dangerouslySetInnerHTML={{ __html: isError ? result.error : colorizeJson(pretty) }} />
+      </div>
+    </div>
+  );
+}
+
 export default function FhirLayout() {
   const classes = useStyles();
 
@@ -52,6 +92,21 @@ export default function FhirLayout() {
   const [isAdmin, setIsAdmin]           = useState(false);
   const [loginOpen, setLoginOpen]       = useState(false);
   const [mainTab, setMainTab]           = useState(0); // 0=Terminology, 1=Activity
+
+  const FHIR_BASE = '/fhir';
+  const [fhirRequest, setFhirRequest] = useState({ base: FHIR_BASE, path: 'CodeSystem', params: [] });
+  const [fhirResult, setFhirResult]   = useState(null); // { data, url, error } | null
+
+  // 리소스 선택 시 RequestBar 자동 채우기
+  useEffect(() => {
+    if (selectedId) {
+      setFhirRequest({ base: FHIR_BASE, path: `${selectedType}/${selectedId}`, params: [] });
+      setFhirResult(null);
+    } else if (selectedType) {
+      setFhirRequest({ base: FHIR_BASE, path: selectedType, params: [] });
+      setFhirResult(null);
+    }
+  }, [selectedType, selectedId]); // eslint-disable-line
 
   const isEditing = editData !== null || isNew;
 
@@ -147,6 +202,15 @@ export default function FhirLayout() {
 
           {/* 오른쪽 패널: 편집 or 상세 or 안내 */}
           <div className={classes.detailPane}>
+            {/* FHIR Request Bar — 편집 중에는 숨김 */}
+            {!isEditing && (
+              <FhirRequestBar
+                request={fhirRequest}
+                onRequestChange={setFhirRequest}
+                onResult={(r) => { setFhirResult(r); if (r) setSelectedId(null); }}
+              />
+            )}
+
             {isEditing ? (
               <ResourceEditor
                 resourceType={selectedType}
@@ -154,6 +218,9 @@ export default function FhirLayout() {
                 onSaved={handleSaved}
                 onCancel={handleCancelEdit}
               />
+            ) : fhirResult ? (
+              /* RequestBar 실행 결과 raw viewer */
+              <FhirRawResult result={fhirResult} onClear={() => setFhirResult(null)} />
             ) : selectedId ? (
               <ResourceDetail
                 resourceType={selectedType}
@@ -167,7 +234,7 @@ export default function FhirLayout() {
               <div className={classes.placeholder}>
                 <span className={classes.placeholderIcon}>◈</span>
                 <Typography className={classes.placeholderText}>
-                  목록에서 리소스를 선택하세요
+                  목록에서 리소스를 선택하거나 위에서 FHIR 명령어를 실행하세요
                 </Typography>
               </div>
             )}
