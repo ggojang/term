@@ -74,8 +74,14 @@ function FhirRawResult({ result, onClear }) {
         </div>
       </div>
       <div style={{ flex: 1, overflow: 'auto', background: '#0d1117', padding: '16px 20px' }}>
-        <pre style={{ fontFamily: "'JetBrains Mono','Fira Code','Consolas',monospace", fontSize: '0.8em', lineHeight: 1.7, color: isError ? '#f87171' : '#e6edf3', whiteSpace: 'pre', margin: 0 }}
-          dangerouslySetInnerHTML={{ __html: isError ? result.error : colorizeJson(pretty) }} />
+        {/* 에러는 React text node로 렌더링 — dangerouslySetInnerHTML 사용 시 HTML 주입 방지 */}
+        {isError
+          ? <pre style={{ fontFamily: "'JetBrains Mono','Fira Code','Consolas',monospace", fontSize: '0.8em', lineHeight: 1.7, color: '#f87171', whiteSpace: 'pre-wrap', margin: 0 }}>
+              {result.error}
+            </pre>
+          : <pre style={{ fontFamily: "'JetBrains Mono','Fira Code','Consolas',monospace", fontSize: '0.8em', lineHeight: 1.7, color: '#e6edf3', whiteSpace: 'pre', margin: 0 }}
+              dangerouslySetInnerHTML={{ __html: colorizeJson(pretty) }} />
+        }
       </div>
     </div>
   );

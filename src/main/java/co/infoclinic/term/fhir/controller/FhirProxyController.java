@@ -65,8 +65,12 @@ public class FhirProxyController {
                     body = "{\"__raw__\":\"" + escaped + "\",\"__contentType__\":\"" + remoteContentType + "\"}";
                 }
                 headers.setContentType(MediaType.APPLICATION_JSON);
+                // 항상 200으로 반환 — 실제 status는 JSON body에 포함
+                // (4xx/5xx를 그대로 전달하면 axios가 catch로 보내 처리가 복잡해짐)
                 if (isError) {
-                    return ResponseEntity.status(status).headers(headers).body(body);
+                    String wrapped = "{\"__error__\":true,\"__status__\":" + status
+                        + ",\"__body__\":" + toJsonString(body) + "}";
+                    return ResponseEntity.ok().headers(headers).body(wrapped);
                 }
                 return ResponseEntity.ok().headers(headers).body(body);
             }
@@ -76,8 +80,14 @@ public class FhirProxyController {
         }
     }
 
-    private String jsonEscape(String s) {
+    private String toJsonString(String s) {
         if (s == null) return "null";
-        return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+        return "\"" + s.replace("\\", "\\\\")
+                       .replace("\"", "\\\"")
+                       .replace("\r", "\\r")
+                       .replace("\n", "\\n")
+                       .replace("\t", "\\t") + "\"";
     }
+
+    private String jsonEscape(String s) { return toJsonString(s); }
 }
