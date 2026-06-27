@@ -47,12 +47,23 @@ public class FhirProxyController {
             int status = conn.getResponseCode();
 
             boolean isError = status >= 400;
+            String remoteContentType = conn.getContentType(); // 원격 서버의 실제 Content-Type
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(
                         isError ? conn.getErrorStream() : conn.getInputStream(),
                         StandardCharsets.UTF_8))) {
                 String body = reader.lines().collect(Collectors.joining("\n"));
                 HttpHeaders headers = new HttpHeaders();
+                // 원격 Content-Type 전달; 없거나 알 수 없으면 JSON 기본값
+                if (remoteContentType != null && remoteContentType.contains("html")) {
+                    // HTML 응답은 plain text로 감싸서 JSON 파싱 오류 방지
+                    String escaped = body
+                        .replace("\\", "\\\\")
+                        .replace("\"", "\\\"")
+                        .replace("\r", "\\r")
+                        .replace("\n", "\\n");
+                    body = "{\"__raw__\":\"" + escaped + "\",\"__contentType__\":\"" + remoteContentType + "\"}";
+                }
                 headers.setContentType(MediaType.APPLICATION_JSON);
                 if (isError) {
                     return ResponseEntity.status(status).headers(headers).body(body);

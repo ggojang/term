@@ -184,13 +184,28 @@ export default function FhirRequestBar({ request, onRequestChange, onResult }) {
 
     axios.get(requestUrl)
       .then(res => {
-        const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
-        onResult({ data, url: fullUrl, error: null });
+        let data = res.data;
+        // 문자열이면 JSON 파싱 시도
+        if (typeof data === 'string') {
+          try { data = JSON.parse(data); } catch (_) { /* raw 문자열 그대로 사용 */ }
+        }
+        // 프록시가 HTML을 감싼 경우: __raw__ 필드를 오류로 표시
+        if (data && data.__raw__) {
+          onResult({ data: null, url: fullUrl, error: `원격 서버가 HTML을 반환했습니다 (${data.__contentType__ || 'unknown'}).\n\n${data.__raw__.replace(/\\n/g, '\n').replace(/\\r/g, '').slice(0, 2000)}` });
+        } else {
+          onResult({ data, url: fullUrl, error: null });
+        }
       })
       .catch(err => {
-        const msg = err.response?.data
-          ? JSON.stringify(err.response.data, null, 2)
-          : err.message;
+        const raw = err.response?.data;
+        let msg;
+        if (raw && typeof raw === 'object') {
+          msg = JSON.stringify(raw, null, 2);
+        } else if (typeof raw === 'string') {
+          msg = raw.slice(0, 2000);
+        } else {
+          msg = err.message;
+        }
         onResult({ data: null, url: fullUrl, error: msg });
       })
       .finally(() => setLoading(false));
