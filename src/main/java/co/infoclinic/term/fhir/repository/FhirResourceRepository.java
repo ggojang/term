@@ -12,7 +12,15 @@ import java.util.Optional;
 
 public interface FhirResourceRepository extends JpaRepository<FhirResource, FhirResourceId> {
 
-    Optional<FhirResource> findByResourceTypeAndId(String resourceType, String id);
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM fhir.resource WHERE resource_type = :resourceType AND id = :id", nativeQuery = true)
+    int deleteByResourceTypeAndId(@org.springframework.data.repository.query.Param("resourceType") String resourceType,
+                                   @org.springframework.data.repository.query.Param("id") String id);
+
+    @Query(value = "SELECT COUNT(*) FROM fhir.resource WHERE resource_type = :resourceType AND id = :id", nativeQuery = true)
+    int countByResourceTypeAndId(@org.springframework.data.repository.query.Param("resourceType") String resourceType,
+                                  @org.springframework.data.repository.query.Param("id") String id);
 
     @Query(value = "SELECT content FROM fhir.resource WHERE resource_type = :resourceType AND id = :id", nativeQuery = true)
     Optional<String> findContentByResourceTypeAndId(@org.springframework.data.repository.query.Param("resourceType") String resourceType,

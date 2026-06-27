@@ -177,11 +177,11 @@ public class FhirResourceService {
     }
 
     public void delete(String resourceType, String id) {
-        repo.findByResourceTypeAndId(resourceType, id).ifPresent(repo::delete);
+        repo.deleteByResourceTypeAndId(resourceType, id);
     }
 
     public boolean exists(String resourceType, String id) {
-        return repo.findByResourceTypeAndId(resourceType, id).isPresent();
+        return repo.countByResourceTypeAndId(resourceType, id) > 0;
     }
 
     private String str(Object o) { return o == null ? null : o.toString(); }
