@@ -93,17 +93,17 @@ export default function FhirLayout() {
   const [loginOpen, setLoginOpen]       = useState(false);
   const [mainTab, setMainTab]           = useState(0); // 0=Terminology, 1=Activity
 
-  const FHIR_BASE = '/fhir';
-  const [fhirRequest, setFhirRequest] = useState({ base: FHIR_BASE, path: 'CodeSystem', params: [] });
+  const FHIR_BASE = window.location.origin + '/fhir';
+  const [fhirRequest, setFhirRequest] = useState({ base: FHIR_BASE, segments: ['CodeSystem'], params: [] });
   const [fhirResult, setFhirResult]   = useState(null); // { data, url, error } | null
 
   // 리소스 선택 시 RequestBar 자동 채우기
   useEffect(() => {
     if (selectedId) {
-      setFhirRequest({ base: FHIR_BASE, path: `${selectedType}/${selectedId}`, params: [] });
+      setFhirRequest(prev => ({ ...prev, segments: [selectedType, selectedId], params: [] }));
       setFhirResult(null);
     } else if (selectedType) {
-      setFhirRequest({ base: FHIR_BASE, path: selectedType, params: [] });
+      setFhirRequest(prev => ({ ...prev, segments: [selectedType], params: [] }));
       setFhirResult(null);
     }
   }, [selectedType, selectedId]); // eslint-disable-line
