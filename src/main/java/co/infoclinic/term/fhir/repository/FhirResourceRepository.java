@@ -27,8 +27,12 @@ public interface FhirResourceRepository extends JpaRepository<FhirResource, Fhir
                                                                 @org.springframework.data.repository.query.Param("url") String url,
                                                                 @org.springframework.data.repository.query.Param("version") String version);
 
-    @Query(value = "SELECT id, url, name, title, status FROM fhir.resource WHERE resource_type = :resourceType ORDER BY name LIMIT 200", nativeQuery = true)
+    @Query(value = "SELECT id, url, name, title, status FROM fhir.resource WHERE resource_type = :resourceType ORDER BY name LIMIT 5000", nativeQuery = true)
     List<Object[]> findSummaryByResourceType(@org.springframework.data.repository.query.Param("resourceType") String resourceType);
+
+    @Query(value = "SELECT id, url, name, title, status FROM fhir.resource WHERE resource_type = :resourceType AND (name ILIKE :q OR url ILIKE :q OR title ILIKE :q) ORDER BY name LIMIT 200", nativeQuery = true)
+    List<Object[]> searchSummaryByResourceType(@org.springframework.data.repository.query.Param("resourceType") String resourceType,
+                                                @org.springframework.data.repository.query.Param("q") String q);
 
     @Query(value = "SELECT content FROM fhir.resource WHERE resource_type = :resourceType AND name ILIKE %:name% LIMIT 100", nativeQuery = true)
     List<String> searchContentByResourceTypeAndName(@org.springframework.data.repository.query.Param("resourceType") String resourceType,

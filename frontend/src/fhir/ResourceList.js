@@ -67,9 +67,10 @@ export default function ResourceList({ resourceType, isAdmin, onSelect, onNew })
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
 
-  const load = () => {
+  const load = (q) => {
     setLoading(true);
-    axios.get(`/fhir/${resourceType}`)
+    const params = q ? `?name=${encodeURIComponent(q)}` : '';
+    axios.get(`/fhir/${resourceType}${params}`)
       .then(res => {
         const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
         const entries = (data.entry || []).map(e => e.resource).filter(Boolean);
@@ -79,16 +80,15 @@ export default function ResourceList({ resourceType, isAdmin, onSelect, onNew })
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { setSearch(''); load(); }, [resourceType]); // eslint-disable-line
+  useEffect(() => { setSearch(''); load(''); }, [resourceType]); // eslint-disable-line
 
-  const filtered = items.filter(item => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (item.name || '').toLowerCase().includes(q)
-      || (item.title || '').toLowerCase().includes(q)
-      || (item.url || '').toLowerCase().includes(q)
-      || (item.id || '').toLowerCase().includes(q);
-  });
+  // 검색어 입력 후 500ms debounce로 백엔드 호출
+  useEffect(() => {
+    const t = setTimeout(() => load(search), 400);
+    return () => clearTimeout(t);
+  }, [search]); // eslint-disable-line
+
+  const filtered = items;
 
   return (
     <div className={classes.root}>

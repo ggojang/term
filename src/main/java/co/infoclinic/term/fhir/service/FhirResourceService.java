@@ -117,12 +117,20 @@ public class FhirResourceService {
     }
 
     public List<FhirResource> search(String resourceType, String name) {
-        if (name != null && !name.isEmpty()) {
-            return repo.searchContentByResourceTypeAndName(resourceType, name).stream()
-                    .map(c -> { FhirResource r = new FhirResource(); r.setContent(c); return r; })
-                    .collect(Collectors.toList());
-        }
-        return findAll(resourceType);
+        List<Object[]> rows = (name != null && !name.isEmpty())
+            ? repo.searchSummaryByResourceType(resourceType, "%" + name + "%")
+            : repo.findSummaryByResourceType(resourceType);
+        return rows.stream()
+                .map(row -> {
+                    FhirResource r = new FhirResource();
+                    r.setId(str(row[0]));
+                    r.setUrl(str(row[1]));
+                    r.setName(str(row[2]));
+                    r.setTitle(str(row[3]));
+                    r.setStatus(str(row[4]));
+                    return r;
+                })
+                .collect(Collectors.toList());
     }
 
     public void delete(String resourceType, String id) {
