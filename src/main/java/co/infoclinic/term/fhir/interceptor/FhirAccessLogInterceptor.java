@@ -3,13 +3,15 @@ package co.infoclinic.term.fhir.interceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 
 @Component
 public class FhirAccessLogInterceptor implements HandlerInterceptor {
@@ -18,7 +20,7 @@ public class FhirAccessLogInterceptor implements HandlerInterceptor {
     private static final String ATTR_START = "fhir.start";
 
     @Autowired
-    private JdbcTemplate jdbc;
+    private DataSource dataSource;
 
     @Override
     public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) {
@@ -46,11 +48,19 @@ public class FhirAccessLogInterceptor implements HandlerInterceptor {
             String query = req.getQueryString();
             if (query != null && query.length() > 1000) query = query.substring(0, 1000);
 
-            jdbc.update(
-                "INSERT INTO fhir.access_log (method, path, query, client_ip, user_agent, status, duration_ms) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                req.getMethod(), req.getRequestURI(), query, ip, ua, res.getStatus(), duration
-            );
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(
+                     "INSERT INTO fhir.access_log (method, path, query, client_ip, user_agent, status, duration_ms) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+                ps.setString(1, req.getMethod());
+                ps.setString(2, req.getRequestURI());
+                ps.setString(3, query);
+                ps.setString(4, ip);
+                ps.setString(5, ua);
+                ps.setInt   (6, res.getStatus());
+                ps.setInt   (7, duration);
+                ps.executeUpdate();
+            }
         } catch (Exception e) {
             log.warn("access_log insert failed: {}", e.getMessage());
         }
