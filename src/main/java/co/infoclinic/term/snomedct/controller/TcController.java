@@ -167,12 +167,30 @@ public class TcController {
         try (Connection conn = dataSource.getConnection()) {
 
             // 1순위: search_index
-            // & 포함·대문자 시작·공백 시작 등 KCD-9 오염값 제외, 표준 semantic tag만 추출
+            // SNOMED CT International 공식 semantic tag 화이트리스트 기반 조회
+            // (KCD-9 확장코드의 임상명이 오염되어 패턴 필터 대신 whitelist 사용)
             String sql1 = "SELECT semantic_tag, COUNT(*) AS cnt " +
                           "FROM term.search_index " +
-                          "WHERE semantic_tag IS NOT NULL AND semantic_tag <> '' " +
-                          "  AND semantic_tag NOT LIKE '%&%' " +
-                          "  AND semantic_tag ~ '^[a-z]' " +
+                          "WHERE semantic_tag IN (" +
+                          " 'administrative concept','assessment scale','attribute'," +
+                          " 'basic dose form','body structure'," +
+                          " 'cell','cell structure','clinical drug','context-dependent category'," +
+                          " 'core metadata concept','disposition','dose form'," +
+                          " 'environment','environment / location','ethnic group','event'," +
+                          " 'finding','foundation metadata concept','geographic location'," +
+                          " 'inactive concept','intended site','life style','link assertion'," +
+                          " 'linkage concept','medicinal product','medicinal product form'," +
+                          " 'metadata','morphologic abnormality','namespace concept'," +
+                          " 'navigational concept','observable entity','occupation','organism'," +
+                          " 'OWL metadata concept','person','physical force','physical object'," +
+                          " 'product','product name','qualifier value','racial group'," +
+                          " 'record artifact','release characteristic','religion/philosophy'," +
+                          " 'role','situation','SNOMED RT+CTV3','social concept'," +
+                          " 'special concept','specimen','staging scale','state of matter'," +
+                          " 'substance','supplier','transformation','tumor staging'," +
+                          " 'unit of presentation','virtual clinical drug','procedure'," +
+                          " 'disorder','regime/therapy'" +
+                          ") " +
                           "GROUP BY semantic_tag ORDER BY semantic_tag";
             try (PreparedStatement ps = conn.prepareStatement(sql1);
                  ResultSet rs = ps.executeQuery()) {
@@ -192,8 +210,26 @@ public class TcController {
                               "  WHERE type_id = '900000000000003001' AND active = 1 " +
                               "    AND term ~ '\\([^)]+\\)$'" +
                               ") sub " +
-                              "WHERE tag IS NOT NULL AND tag <> '' " +
-                              "  AND tag NOT LIKE '%&%' AND tag ~ '^[a-z]' " +
+                              "WHERE tag IN (" +
+                              " 'administrative concept','assessment scale','attribute'," +
+                              " 'basic dose form','body structure'," +
+                              " 'cell','cell structure','clinical drug','context-dependent category'," +
+                              " 'core metadata concept','disposition','dose form'," +
+                              " 'environment','environment / location','ethnic group','event'," +
+                              " 'finding','foundation metadata concept','geographic location'," +
+                              " 'inactive concept','intended site','life style','link assertion'," +
+                              " 'linkage concept','medicinal product','medicinal product form'," +
+                              " 'metadata','morphologic abnormality','namespace concept'," +
+                              " 'navigational concept','observable entity','occupation','organism'," +
+                              " 'OWL metadata concept','person','physical force','physical object'," +
+                              " 'product','product name','qualifier value','racial group'," +
+                              " 'record artifact','release characteristic','religion/philosophy'," +
+                              " 'role','situation','SNOMED RT+CTV3','social concept'," +
+                              " 'special concept','specimen','staging scale','state of matter'," +
+                              " 'substance','supplier','transformation','tumor staging'," +
+                              " 'unit of presentation','virtual clinical drug','procedure'," +
+                              " 'disorder','regime/therapy'" +
+                              ") " +
                               "GROUP BY tag ORDER BY tag";
                 try (PreparedStatement ps = conn.prepareStatement(sql2);
                      ResultSet rs = ps.executeQuery()) {
