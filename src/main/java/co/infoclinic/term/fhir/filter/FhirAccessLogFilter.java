@@ -52,24 +52,41 @@ public class FhirAccessLogFilter extends OncePerRequestFilter {
         ContentCachingRequestWrapper  reqW = new ContentCachingRequestWrapper(request);
         ContentCachingResponseWrapper resW = new ContentCachingResponseWrapper(response);
 
+        Throwable caught = null;
         try {
             chain.doFilter(reqW, resW);
+        } catch (Throwable t) {
+            caught = t;
         } finally {
             int duration = (int)(System.currentTimeMillis() - start);
 
             String reqBody = readBody(reqW.getContentAsByteArray(), reqW.getCharacterEncoding());
             String resBody = readBody(resW.getContentAsByteArray(), resW.getCharacterEncoding());
 
+            // 예외로 체인이 끊긴 경우 래퍼 버퍼가 비어 있으므로 예외 메시지를 기록
+            if (resBody == null && caught != null) {
+                resBody = "[EXCEPTION] " + caught.getClass().getName() + ": " + caught.getMessage();
+            }
+
             // 반드시 response를 원래 스트림으로 복사
             resW.copyBodyToResponse();
 
-            insertLog(request, resW.getStatus(), duration, reqBody, resBody);
+            int status = resW.getStatus();
+            if (caught != null && status == 200) status = 500;
+
+            insertLog(request, status, duration, reqBody, resBody);
 
             // 50건마다 정리 실행 (24h 보존 + 100MB 상한)
             if (COUNTER.incrementAndGet() % 50 == 0) {
                 cleanupAsync();
             }
         }
+
+        // 예외는 로깅 후 다시 던져 Tomcat이 에러 처리를 계속하도록 함
+        if (caught instanceof ServletException) throw (ServletException) caught;
+        if (caught instanceof IOException)      throw (IOException)      caught;
+        if (caught instanceof RuntimeException)  throw (RuntimeException)  caught;
+        if (caught != null)                      throw new ServletException(caught);
     }
 
     private String readBody(byte[] bytes, String encoding) {
