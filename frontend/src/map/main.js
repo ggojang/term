@@ -19,33 +19,14 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import SearchIcon from '@material-ui/icons/Search';
 import TuneIcon from '@material-ui/icons/Tune';
 
-// ── 전체 semantic tag 목록 ────────────────────────────────────────────────────
-const ALL_TAGS = [
-  'finding','disorder','procedure','event','regime/therapy','situation',
-  'administrative concept','assessment scale','attribute','basic dose form',
-  'body structure','cell','cell structure','clinical drug','context-dependent category',
-  'core metadata concept','disposition','dose form','environment','ethnic group',
-  'foundation metadata concept','geographic location','inactive concept',
-  'intended site','life style','link assertion','linkage concept',
-  'medicinal product form','medicinal product','metadata','morphologic abnormality',
-  'namespace concept','navigational concept','observable entity','occupation',
-  'organism','OWL metadata concept','person','physical force','physical object',
-  'product name','product','qualifier value','racial group','record artifact',
-  'release characteristic','religion/philosophy','role','SNOMED RT+CTV3',
-  'social concept','special concept','specimen','staging scale','state of matter',
-  'substance','supplier','transformation','tumor staging','unit of presentation',
-  'virtual clinical drug',
-];
-
-const PRESETS = {
+// ── Preset 정의 (이름만, 실제 태그 목록은 API에서 로드) ───────────────────────
+const PRESET_NAMES = {
   diagnosis: new Set(['finding','disorder','event','situation']),
   procedure: new Set(['procedure','regime/therapy','situation']),
-  all:       new Set(ALL_TAGS),
-  none:      new Set(),
 };
 
-function makeState(active) {
-  return ALL_TAGS.map(name => ({ name, state: active.has(name) }));
+function makeState(allTags, active) {
+  return allTags.map(name => ({ name, state: active.has(name) }));
 }
 
 // ── 스타일 ───────────────────────────────────────────────────────────────────
@@ -128,8 +109,19 @@ const BASE = '';
 export default function Main() {
   const classes = useStyles();
 
+  // semantic tag 목록 (API 로드)
+  const [allTags, setAllTags] = useState([]);
+
+  useEffect(() => {
+    axios.get('/tc/SNOMEDCT/semanticTags').then(res => {
+      const tags = (res.data || []).map(t => t.name).filter(Boolean);
+      setAllTags(tags);
+      setCheckState(makeState(tags, PRESET_NAMES.diagnosis));
+    }).catch(() => {});
+  }, []);
+
   // 필터 상태
-  const [checkState, setCheckState] = useState(makeState(PRESETS.diagnosis));
+  const [checkState, setCheckState] = useState([]);
   const [activePreset, setActivePreset] = useState('diagnosis');
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -144,7 +136,10 @@ export default function Main() {
   // preset 선택
   const applyPreset = (key) => {
     setActivePreset(key);
-    setCheckState(makeState(PRESETS[key]));
+    const active = key === 'all'  ? new Set(allTags)
+                 : key === 'none' ? new Set()
+                 : PRESET_NAMES[key] || new Set();
+    setCheckState(makeState(allTags, active));
   };
 
   // 개별 체크 변경
@@ -297,7 +292,7 @@ export default function Main() {
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         PaperProps={{ className: classes.popoverPaper }}>
         <div className={classes.popoverTitle}>
-          Semantic Tags — {activeTags.length} / {ALL_TAGS.length} selected
+          Semantic Tags — {activeTags.length} / {allTags.length} selected
         </div>
         <div className={classes.checkGrid}>
           {checkState.map(t => (

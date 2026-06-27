@@ -4,7 +4,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -150,6 +152,35 @@ public class TcController {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    /**
+     * GET /tc/SNOMEDCT/semanticTags
+     * search_index 테이블에서 distinct semantic_tag 목록을 알파벳 순으로 반환.
+     * 릴리즈가 추가될 때마다 search_index가 갱신되므로 항상 최신 목록 반영.
+     */
+    @ApiOperation(value = "SNOMED CT Semantic Tag 전체 목록 조회")
+    @RequestMapping(value = "/tc/SNOMEDCT/semanticTags", method = RequestMethod.GET,
+                    produces = "application/json")
+    public List<Map<String, Object>> getSemanticTags() {
+        List<Map<String, Object>> result = new ArrayList<>();
+        String sql = "SELECT semantic_tag, COUNT(*) AS cnt " +
+                     "FROM term.search_index " +
+                     "WHERE semantic_tag IS NOT NULL AND semantic_tag <> '' " +
+                     "GROUP BY semantic_tag ORDER BY semantic_tag";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("name",  rs.getString("semantic_tag"));
+                m.put("count", rs.getLong("cnt"));
+                result.add(m);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     private String toSemanticTag(String semanticType) {
