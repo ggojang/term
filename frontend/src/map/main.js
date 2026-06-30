@@ -94,12 +94,12 @@ const useStyles = makeStyles(() => ({
   searchInput: {
     flex: 1,
     '& .MuiOutlinedInput-root': {
-      background: '#1e2d40', borderRadius: 8,
-      '& fieldset': { borderColor: '#334155' },
-      '&:hover fieldset': { borderColor: '#60a5fa' },
-      '&.Mui-focused fieldset': { borderColor: '#60a5fa' },
+      background: '#fff', borderRadius: 8,
+      '& fieldset': { borderColor: '#cbd5e1' },
+      '&:hover fieldset': { borderColor: '#2f6fed' },
+      '&.Mui-focused fieldset': { borderColor: '#2f6fed' },
     },
-    '& input': { color: '#e2e8f0', fontSize: '0.88em', padding: '8px 12px' },
+    '& input': { color: '#111827 !important', background: 'transparent !important', fontSize: '0.88em', padding: '8px 12px' },
     '& .MuiInputAdornment-root svg': { color: '#64748b' },
   },
   chipRow: { display: 'flex', flexWrap: 'wrap', gap: 4, minHeight: 0 },
