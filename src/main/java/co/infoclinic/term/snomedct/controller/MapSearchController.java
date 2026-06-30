@@ -15,6 +15,7 @@ import java.util.Set;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -52,6 +53,7 @@ import io.swagger.annotations.ApiOperation;
  *   3. 동의어(언더스코어→공백 변환)를 SEARCH_INDEX에서 ILIKE 검색
  * ──────────────────────────────────────────────────────────────────────────
  */
+@CrossOrigin(origins = "*")
 @Api(tags = "VI-01. Map")
 @RestController
 public class MapSearchController {
