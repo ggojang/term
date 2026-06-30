@@ -200,10 +200,7 @@ export default function ActivityPanel() {
           variant="outlined" size="small" className={classes.filterInput} InputLabelProps={{ shrink: true }} style={{ width: 140 }} />
         <TextField type="date" label="To" value={filterTo} onChange={handleFilter(setFilterTo)}
           variant="outlined" size="small" className={classes.filterInput} InputLabelProps={{ shrink: true }} style={{ width: 140 }} />
-        <Tooltip title="새로고침">
-          <IconButton size="small" onClick={() => { load(); loadStats(); }}><RefreshIcon fontSize="small" /></IconButton>
-        </Tooltip>
-        <Typography variant="caption" style={{ color: '#94a3b8', marginLeft: 'auto' }}>
+        <Typography variant="caption" style={{ color: '#94a3b8', marginLeft: 'auto', marginRight: 4 }}>
           총 {total.toLocaleString()}건 · 행 클릭 시 요청/응답 내용 조회
         </Typography>
       </div>
@@ -261,16 +258,26 @@ export default function ActivityPanel() {
           </Table>
         </div>
 
-        <TablePagination
-          className={classes.pagination}
-          component="div"
-          count={total}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onChangePage={(_, p) => setPage(p)}
-          rowsPerPageOptions={[50]}
-          labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', borderTop: '1px solid #e5e7eb', flexShrink: 0 }}>
+          <TablePagination
+            className={classes.pagination}
+            style={{ border: 'none', flex: 1 }}
+            component="div"
+            count={total}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onChangePage={(_, p) => setPage(p)}
+            rowsPerPageOptions={[50]}
+            labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
+          />
+          <Tooltip title="새로고침">
+            <IconButton size="small" onClick={() => { load(); loadStats(); }}
+              style={{ marginRight: 12, color: '#475569', border: '1px solid #e2e8f0', borderRadius: 6, padding: '3px 10px', display: 'flex', gap: 4 }}>
+              <RefreshIcon style={{ fontSize: 15 }} />
+              <span style={{ fontSize: '0.72em', fontWeight: 600 }}>새로고침</span>
+            </IconButton>
+          </Tooltip>
+        </div>
       </div>
 
       {/* 상세 패널 */}
