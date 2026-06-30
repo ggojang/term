@@ -111,6 +111,7 @@ export default function ActivityPanel() {
   const [filterFrom, setFilterFrom]     = useState('');
   const [filterTo, setFilterTo]         = useState('');
   const [stats, setStats]               = useState(null);
+  const [loadError, setLoadError]       = useState(null);
 
   // 상세 패널
   const [selectedId, setSelectedId]     = useState(null);
@@ -128,9 +129,11 @@ export default function ActivityPanel() {
     if (filterIp)     q.set('ip', filterIp);
     if (filterFrom)   q.set('from', filterFrom);
     if (filterTo)     q.set('to', filterTo);
+    setLoadError(null);
     fetch(`/fhir/$access-log?${q}`)
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(data => { setRows(data.items || []); setTotal(data.total || 0); })
+      .catch(e => { console.error('[Activity] load failed:', e); setRows([]); setTotal(0); setLoadError(e.message); })
       .finally(() => setLoading(false));
   }, [page, rowsPerPage, filterMethod, filterPath, filterIp, filterFrom, filterTo]);
 
@@ -256,8 +259,11 @@ export default function ActivityPanel() {
               ))}
               {!loading && rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} style={{ textAlign: 'center', color: '#94a3b8', padding: 32, fontSize: '0.8em' }}>
-                    로그가 없습니다
+                  <TableCell colSpan={7} style={{ textAlign: 'center', padding: 32, fontSize: '0.8em' }}>
+                    {loadError
+                      ? <span style={{ color: '#dc2626' }}>로드 실패: {loadError} — 새로고침을 눌러 다시 시도하세요</span>
+                      : <span style={{ color: '#94a3b8' }}>로그가 없습니다</span>
+                    }
                   </TableCell>
                 </TableRow>
               )}
