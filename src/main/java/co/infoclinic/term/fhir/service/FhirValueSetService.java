@@ -276,7 +276,7 @@ public class FhirValueSetService {
                                        ValueSet.ValueSetExpansionComponent expansion, String system,
                                        String effectiveTime) {
         int from  = offset != null ? offset : 0;
-        int limit = count  != null ? count  : 100;
+        String limitSql = count != null ? " LIMIT " + count : "";
 
         // effectiveTime이 있으면 해당 릴리즈 기준, 없으면 현재(valid_to='99991231')
         String tcCond = effectiveTime != null
@@ -301,7 +301,7 @@ public class FhirValueSetService {
         expansion.setTotal(((Number) cq.getSingleResult()).intValue());
         if (offset != null) expansion.setOffset(offset);
 
-        String sql = base + " ORDER BY d.term LIMIT " + limit + " OFFSET " + from;
+        String sql = base + " ORDER BY d.term OFFSET " + from + limitSql;
         Query q = em.createNativeQuery(sql);
         q.setParameter("root", rootCode);
         if (filter != null) q.setParameter("filter", "%" + filter + "%");
@@ -343,10 +343,10 @@ public class FhirValueSetService {
     private void expandLoincLp(String filter, Integer offset, Integer count,
                                ValueSet.ValueSetExpansionComponent expansion, String system) {
         int from  = offset != null ? offset : 0;
-        int limit = count  != null ? count  : 100;
+        String limitSql = count != null ? " LIMIT " + count : "";
         String where = filter != null ? " WHERE part_number ILIKE :f OR part_display_name ILIKE :f OR part_name ILIKE :f" : "";
         String sql = "SELECT part_number, COALESCE(part_display_name, part_name) FROM loinc.lp" + where
-                + " ORDER BY part_number LIMIT " + limit + " OFFSET " + from;
+                + " ORDER BY part_number OFFSET " + from + limitSql;
         Query q = em.createNativeQuery(sql);
         if (filter != null) q.setParameter("f", "%" + filter + "%");
         String cntSql = "SELECT COUNT(*) FROM loinc.lp" + where;
@@ -364,10 +364,10 @@ public class FhirValueSetService {
     private void expandLoincLg(String filter, Integer offset, Integer count,
                                ValueSet.ValueSetExpansionComponent expansion, String system) {
         int from  = offset != null ? offset : 0;
-        int limit = count  != null ? count  : 100;
+        String limitSql = count != null ? " LIMIT " + count : "";
         String where = filter != null ? " WHERE lg_id ILIKE :f OR lg ILIKE :f" : "";
         String sql = "SELECT lg_id, lg FROM loinc.lg" + where
-                + " ORDER BY lg_id LIMIT " + limit + " OFFSET " + from;
+                + " ORDER BY lg_id OFFSET " + from + limitSql;
         Query q = em.createNativeQuery(sql);
         if (filter != null) q.setParameter("f", "%" + filter + "%");
         String cntSql = "SELECT COUNT(*) FROM loinc.lg" + where;
@@ -385,10 +385,10 @@ public class FhirValueSetService {
     private void expandLoincLl(String filter, Integer offset, Integer count,
                                ValueSet.ValueSetExpansionComponent expansion, String system) {
         int from  = offset != null ? offset : 0;
-        int limit = count  != null ? count  : 100;
+        String limitSql = count != null ? " LIMIT " + count : "";
         String where = filter != null ? " WHERE answer_list_id ILIKE :f OR answer_list_name ILIKE :f" : "";
         String sql = "SELECT DISTINCT ON (answer_list_id) answer_list_id, answer_list_name FROM loinc.la" + where
-                + " ORDER BY answer_list_id LIMIT " + limit + " OFFSET " + from;
+                + " ORDER BY answer_list_id OFFSET " + from + limitSql;
         Query q = em.createNativeQuery(sql);
         if (filter != null) q.setParameter("f", "%" + filter + "%");
         String cntSql = "SELECT COUNT(DISTINCT answer_list_id) FROM loinc.la" + where;
@@ -406,12 +406,12 @@ public class FhirValueSetService {
     private void expandLoincLa(String filter, Integer offset, Integer count,
                                ValueSet.ValueSetExpansionComponent expansion, String system) {
         int from  = offset != null ? offset : 0;
-        int limit = count  != null ? count  : 100;
+        String limitSql = count != null ? " LIMIT " + count : "";
         String where = filter != null
                 ? " WHERE answer_string_id IS NOT NULL AND answer_string_id <> '' AND (answer_string_id ILIKE :f OR display_text ILIKE :f)"
                 : " WHERE answer_string_id IS NOT NULL AND answer_string_id <> ''";
         String sql = "SELECT DISTINCT ON (answer_string_id) answer_string_id, display_text FROM loinc.la" + where
-                + " ORDER BY answer_string_id LIMIT " + limit + " OFFSET " + from;
+                + " ORDER BY answer_string_id OFFSET " + from + limitSql;
         Query q = em.createNativeQuery(sql);
         if (filter != null) q.setParameter("f", "%" + filter + "%");
         String cntSql = "SELECT COUNT(DISTINCT answer_string_id) FROM loinc.la" + where;
@@ -467,7 +467,7 @@ public class FhirValueSetService {
                                  ValueSet.ValueSetExpansionComponent expansion, String system,
                                  String effectiveTime) {
         int from  = offset != null ? offset : 0;
-        int limit = count  != null ? count  : 100;
+        String limitSql = count != null ? " LIMIT " + count : "";
 
         String where = filter != null
                 ? " WHERE d.term ILIKE :f OR c.concept_id ILIKE :f" : "";
@@ -476,7 +476,7 @@ public class FhirValueSetService {
                 " AND d.type_id = '900000000000003001' AND d.active = 1" +
                 " WHERE c.active = 1" +
                 (filter != null ? " AND (d.term ILIKE :f OR c.concept_id ILIKE :f)" : "") +
-                " ORDER BY c.concept_id LIMIT " + limit + " OFFSET " + from;
+                " ORDER BY c.concept_id OFFSET " + from + limitSql;
         Query q = em.createNativeQuery(sql);
         if (filter != null) q.setParameter("f", "%" + filter + "%");
 
@@ -502,7 +502,7 @@ public class FhirValueSetService {
     private void expandLoincAll(String filter, Integer offset, Integer count,
                                 ValueSet.ValueSetExpansionComponent expansion, String system) {
         int from  = offset != null ? offset : 0;
-        int limit = count  != null ? count  : 100;
+        String limitSql = count != null ? " LIMIT " + count : "";
 
         // LOINC 전체 = loinc + lp + lg + ll(answer_list) + la(answer) UNION
         String f = filter != null ? "%" + filter + "%" : null;
@@ -529,7 +529,7 @@ public class FhirValueSetService {
         expansion.setTotal(((Number) cq.getSingleResult()).intValue());
         if (offset != null) expansion.setOffset(offset);
 
-        String sql = "SELECT * FROM (" + unionSql + ") t ORDER BY code LIMIT " + limit + " OFFSET " + from;
+        String sql = "SELECT * FROM (" + unionSql + ") t ORDER BY code OFFSET " + from + limitSql;
         Query q = em.createNativeQuery(sql);
         if (filter != null) q.setParameter("f", f);
 
@@ -549,12 +549,12 @@ public class FhirValueSetService {
     private void expandKcdAll(String filter, Integer offset, Integer count,
                               ValueSet.ValueSetExpansionComponent expansion, String system) {
         int from  = offset != null ? offset : 0;
-        int limit = count  != null ? count  : 100;
+        String limitSql = count != null ? " LIMIT " + count : "";
 
         String where = filter != null
                 ? " WHERE code ILIKE :f OR korean_label ILIKE :f OR label ILIKE :f" : "";
         String sql = "SELECT code, korean_label, label FROM icd10.icd10_class" + where
-                + " ORDER BY code LIMIT " + limit + " OFFSET " + from;
+                + " ORDER BY code OFFSET " + from + limitSql;
         Query q = em.createNativeQuery(sql);
         if (filter != null) q.setParameter("f", "%" + filter + "%");
 
@@ -575,10 +575,10 @@ public class FhirValueSetService {
     private void expandAtcAll(String filter, Integer offset, Integer count,
                               ValueSet.ValueSetExpansionComponent expansion, String system) {
         int from  = offset != null ? offset : 0;
-        int limit = count  != null ? count  : 100;
+        String limitSql = count != null ? " LIMIT " + count : "";
         String where = filter != null ? " WHERE atc_code ILIKE :f OR atc_name ILIKE :f OR atc_hname ILIKE :f" : "";
         String sql = "SELECT atc_code, atc_hname, atc_name FROM term.hira_atc_master" + where
-                + " ORDER BY atc_code LIMIT " + limit + " OFFSET " + from;
+                + " ORDER BY atc_code OFFSET " + from + limitSql;
         Query q = em.createNativeQuery(sql);
         if (filter != null) q.setParameter("f", "%" + filter + "%");
         String cntSql = "SELECT COUNT(*) FROM term.hira_atc_master" + where;
@@ -596,10 +596,10 @@ public class FhirValueSetService {
     private void expandKdcodeAll(String filter, Integer offset, Integer count,
                                  ValueSet.ValueSetExpansionComponent expansion, String system) {
         int from  = offset != null ? offset : 0;
-        int limit = count  != null ? count  : 100;
+        String limitSql = count != null ? " LIMIT " + count : "";
         String where = filter != null ? " WHERE 표준코드 ILIKE :f OR 표준코드명칭 ILIKE :f" : "";
         String sql = "SELECT DISTINCT ON (표준코드) 표준코드, 표준코드명칭 FROM term.kdcode" + where
-                + " ORDER BY 표준코드, 적용개시일자 DESC LIMIT " + limit + " OFFSET " + from;
+                + " ORDER BY 표준코드, 적용개시일자 DESC OFFSET " + from + limitSql;
         Query q = em.createNativeQuery(sql);
         if (filter != null) q.setParameter("f", "%" + filter + "%");
         String cntSql = "SELECT COUNT(DISTINCT 표준코드) FROM term.kdcode" + where;
@@ -617,10 +617,10 @@ public class FhirValueSetService {
     private void expandHiraEdiProcedureAll(String filter, Integer offset, Integer count,
                                            ValueSet.ValueSetExpansionComponent expansion, String system) {
         int from  = offset != null ? offset : 0;
-        int limit = count  != null ? count  : 100;
+        String limitSql = count != null ? " LIMIT " + count : "";
         String where = filter != null ? " WHERE 수가코드 ILIKE :f OR 한글명 ILIKE :f" : "";
         String sql = "SELECT 수가코드, 한글명 FROM term.hira_행위_code" + where
-                + " ORDER BY 수가코드 LIMIT " + limit + " OFFSET " + from;
+                + " ORDER BY 수가코드 OFFSET " + from + limitSql;
         Query q = em.createNativeQuery(sql);
         if (filter != null) q.setParameter("f", "%" + filter + "%");
         String cntSql = "SELECT COUNT(*) FROM term.hira_행위_code" + where;
@@ -638,10 +638,10 @@ public class FhirValueSetService {
     private void expandHiraEdiMedicationAll(String filter, Integer offset, Integer count,
                                             ValueSet.ValueSetExpansionComponent expansion, String system) {
         int from  = offset != null ? offset : 0;
-        int limit = count  != null ? count  : 100;
+        String limitSql = count != null ? " LIMIT " + count : "";
         String where = filter != null ? " WHERE 표준코드 ILIKE :f OR 표준코드명칭 ILIKE :f" : "";
         String sql = "SELECT DISTINCT ON (표준코드) 표준코드, 표준코드명칭 FROM term.kdcode" + where
-                + " ORDER BY 표준코드, 적용개시일자 DESC LIMIT " + limit + " OFFSET " + from;
+                + " ORDER BY 표준코드, 적용개시일자 DESC OFFSET " + from + limitSql;
         Query q = em.createNativeQuery(sql);
         if (filter != null) q.setParameter("f", "%" + filter + "%");
         String cntSql = "SELECT COUNT(DISTINCT 표준코드) FROM term.kdcode" + where;
@@ -659,10 +659,10 @@ public class FhirValueSetService {
     private void expandHiraEdiMaterialAll(String filter, Integer offset, Integer count,
                                           ValueSet.ValueSetExpansionComponent expansion, String system) {
         int from  = offset != null ? offset : 0;
-        int limit = count  != null ? count  : 100;
+        String limitSql = count != null ? " LIMIT " + count : "";
         String where = filter != null ? " WHERE 코드 ILIKE :f OR 품명 ILIKE :f" : "";
         String sql = "SELECT 코드, 품명 FROM term.hira_치료재료_code" + where
-                + " ORDER BY 코드 LIMIT " + limit + " OFFSET " + from;
+                + " ORDER BY 코드 OFFSET " + from + limitSql;
         Query q = em.createNativeQuery(sql);
         if (filter != null) q.setParameter("f", "%" + filter + "%");
         String cntSql = "SELECT COUNT(*) FROM term.hira_치료재료_code" + where;
@@ -824,14 +824,14 @@ public class FhirValueSetService {
         if (offset != null) expansion.setOffset(offset);
 
         int from  = offset != null ? offset : 0;
-        int limit = count  != null ? count  : 100;
+        String limitSql = count != null ? " LIMIT " + count : "";
 
         if (path.isEmpty()) {
             // 전체 LOINC
             vs.setTitle("All LOINC codes");
             String sql = "SELECT code, long_common_name FROM loinc.loinc"
                     + (filter != null ? " WHERE code ILIKE :f OR long_common_name ILIKE :f OR display_name ILIKE :f" : "")
-                    + " ORDER BY code LIMIT " + limit + " OFFSET " + from;
+                    + " ORDER BY code OFFSET " + from + limitSql;
             Query q = em.createNativeQuery(sql);
             if (filter != null) q.setParameter("f", "%" + filter + "%");
             List<Object[]> rows = q.getResultList();
@@ -855,7 +855,7 @@ public class FhirValueSetService {
             String sql = "SELECT answer_string_id, display_text FROM loinc.la"
                     + " WHERE answer_list_id = :lid"
                     + (filter != null ? " AND (display_text ILIKE :f OR answer_string_id ILIKE :f)" : "")
-                    + " ORDER BY answer_string_id LIMIT " + limit + " OFFSET " + from;
+                    + " ORDER BY answer_string_id OFFSET " + from + limitSql;
             Query q = em.createNativeQuery(sql);
             q.setParameter("lid", path);
             if (filter != null) q.setParameter("f", "%" + filter + "%");
@@ -882,7 +882,7 @@ public class FhirValueSetService {
             String sql = "SELECT code, long_common_name FROM loinc.loinc"
                     + " WHERE class_name = :cls"
                     + (filter != null ? " AND (code ILIKE :f OR long_common_name ILIKE :f)" : "")
-                    + " ORDER BY code LIMIT " + limit + " OFFSET " + from;
+                    + " ORDER BY code OFFSET " + from + limitSql;
             Query q = em.createNativeQuery(sql);
             q.setParameter("cls", className);
             if (filter != null) q.setParameter("f", "%" + filter + "%");
@@ -910,7 +910,7 @@ public class FhirValueSetService {
                     + " FROM loinc.la_link l JOIN loinc.la a ON a.answer_list_id = l.answer_list_id"
                     + " WHERE l.loinc_number = :code"
                     + (filter != null ? " AND (a.display_text ILIKE :f OR a.answer_string_id ILIKE :f)" : "")
-                    + " ORDER BY a.answer_list_id, a.sequence_number LIMIT " + limit + " OFFSET " + from;
+                    + " ORDER BY a.answer_list_id, a.sequence_number OFFSET " + from + limitSql;
             Query q = em.createNativeQuery(sql);
             q.setParameter("code", loincCode);
             if (filter != null) q.setParameter("f", "%" + filter + "%");
