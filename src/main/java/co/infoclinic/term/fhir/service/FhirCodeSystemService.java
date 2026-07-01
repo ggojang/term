@@ -78,15 +78,39 @@ public class FhirCodeSystemService {
 
     public List<FhirResource> search(String name, String url) {
         if (url != null && !url.isEmpty()) {
-            return resourceSvc.findByUrl("CodeSystem", url)
+            // stub 포함하여 조회 (findByUrl은 stub을 우선 처리)
+            return findByUrl(url)
                     .map(json -> {
                         FhirResource r = new FhirResource();
                         r.setResourceType("CodeSystem"); r.setUrl(url); r.setContent(json);
-                        return Collections.singletonList(r);
+                        return Collections.<FhirResource>singletonList(r);
                     }).orElse(Collections.emptyList());
         }
-        return resourceSvc.search("CodeSystem", name);
+        // 전체 목록: DB 결과 + well-known stub 추가
+        List<FhirResource> results = new ArrayList<>(resourceSvc.search("CodeSystem", name));
+        if (name == null || name.isEmpty()) {
+            for (String[] stub : WELL_KNOWN_STUBS) {
+                String stubId = stub[0], stubUrl = stub[1];
+                boolean already = results.stream().anyMatch(r -> stubUrl.equals(r.getUrl()) || stubId.equals(r.getId()));
+                if (!already) {
+                    FhirResource r = new FhirResource();
+                    r.setId(stubId); r.setResourceType("CodeSystem"); r.setUrl(stubUrl);
+                    r.setContent(findById(stubId).orElse(null));
+                    results.add(0, r);
+                }
+            }
+        }
+        return results;
     }
+
+    private static final String[][] WELL_KNOWN_STUBS = {
+        {"snomed",      URL_SNOMED},
+        {"loinc",       URL_LOINC},
+        {"kcd9",        URL_KCD9},
+        {"kcd8",        URL_KCD8},
+        {"atc",         URL_ATC},
+        {"kpis-kdcode", URL_KPIS_KDCODE},
+    };
 
     public List<FhirResource> searchByIg(String igId, String name) {
         return resourceSvc.searchByIg("CodeSystem", igId, name);
