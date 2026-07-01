@@ -78,20 +78,24 @@ public class FhirValueSetService {
     public ValueSet expand(String idOrUrl, String filter, Integer offset, Integer count, String systemVersion) {
         String effectiveTime = parseSnomedEffectiveTime(systemVersion);
 
-        // SNOMED CT implicit ValueSet (ECL / refset)
-        if (idOrUrl != null && idOrUrl.startsWith(FhirCodeSystemService.URL_SNOMED)) {
-            return expandSnomedImplicit(idOrUrl, filter, offset, count, effectiveTime);
-        }
-
-        // LOINC implicit ValueSet
-        if (idOrUrl != null && idOrUrl.startsWith(FhirCodeSystemService.URL_LOINC + "/vs")) {
-            return expandLoincImplicit(idOrUrl, filter, offset, count);
-        }
-
+        // 저장된 ValueSet 먼저 조회 (canonical URL이 SNOMED/LOINC prefix를 포함할 수 있으므로 우선 처리)
         String json = null;
         if (idOrUrl != null) {
             json = resourceSvc.findById("ValueSet", idOrUrl)
                     .orElseGet(() -> resourceSvc.findByUrl("ValueSet", idOrUrl).orElse(null));
+        }
+
+        // 저장된 ValueSet이 없을 때만 implicit ValueSet으로 처리
+        if (json == null) {
+            // SNOMED CT implicit ValueSet (ECL / refset)
+            if (idOrUrl != null && idOrUrl.startsWith(FhirCodeSystemService.URL_SNOMED)) {
+                return expandSnomedImplicit(idOrUrl, filter, offset, count, effectiveTime);
+            }
+
+            // LOINC implicit ValueSet
+            if (idOrUrl != null && idOrUrl.startsWith(FhirCodeSystemService.URL_LOINC + "/vs")) {
+                return expandLoincImplicit(idOrUrl, filter, offset, count);
+            }
         }
         if (json == null) return buildOutcomeValueSet("ValueSet not found: " + idOrUrl);
 
