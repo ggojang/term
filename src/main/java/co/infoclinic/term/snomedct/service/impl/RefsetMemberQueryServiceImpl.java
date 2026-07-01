@@ -445,38 +445,12 @@ public class RefsetMemberQueryServiceImpl implements RefsetMemberQueryService {
 		// 참조세트 분류 아이디
 		String categoryId = null;
 		
-		// 루트~부모경로 목록(경로간 구분은 '~')
+		// 조상 ID 목록 (재귀 CTE — 루트 방향)
 		List<String> paths = tcSvc.getParentPathListByConceptId(refsetId, effectiveTime);
 
-		// 루트~부모경로 목록의 크기
-		int pathsSize = paths.size();
-		
-		if (pathsSize == 1) { // 루트~부모 경로가 있을 경우(참조세트 경우 부모경로는 하나)
-			// 루트~부모경로
-			String path = paths.get(0);
-			
-			// 루트~부모경로내에 900000000000455006 |Reference set (foundation metadata concept)| 컨셉 위치 확인
-			int refsetCnptIdx = path.indexOf(SNOMEDCTUtils.MetadataType.Referenceset);
-			// 위치가 존재하는 경우
-			if (refsetCnptIdx != -1) {
-				// 900000000000455006 |Reference set (foundation metadata concept)| 하위 컨셉 확인
-				int subtypeChkIdx = path.indexOf("~", refsetCnptIdx);
-				if (subtypeChkIdx == -1) { // 하위 컨셉이 없는 경우, 파라메터인 refsetId가 categoryId임.
-					categoryId = refsetId;
-				} else { // 하위 컨셉이 있는 경우
-					String remainderPath = path.substring(subtypeChkIdx + 1); // ~제거위함
-					if (remainderPath.contains("~")) {
-						categoryId = remainderPath.substring(0, remainderPath.indexOf("~"));
-					} else {
-						categoryId = remainderPath;
-					}
-				}
-			}
-		} else if (pathsSize == 0) { // TODO 루트~부모 경로가 없을 경우(존재하지 않는 아이디이거나 개발 중
-										// refsetId가 concept에 등록되어있지않아 발생하는
-										// 경우임.)
-			// Simpletype
-			//refsetTypeId = "446609009";
+		// 조상 중 Reference Set 루트(900000000000455006)가 포함되어 있으면 refsetId 직접 사용
+		if (paths.contains(SNOMEDCTUtils.MetadataType.Referenceset)) {
+			categoryId = refsetId;
 		}
 
 		if (categoryId != null) { // 레퍼런스세트 분류가 있는 경우

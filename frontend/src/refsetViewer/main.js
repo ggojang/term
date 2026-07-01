@@ -190,7 +190,7 @@ export default function Main({ refset }) {
 
   // 멤버 검색
   useEffect(() => {
-    if (!refset?.id || refset.desc !== 0) return;
+    if (!refset?.id || (refset.desc !== 0 && !refset.hasMember)) return;
 
     if (abortRef.current) abortRef.current.abort();
     const controller = new AbortController();
@@ -228,7 +228,7 @@ export default function Main({ refset }) {
   const handleChangePage = (_, p) => setPage(p);
   const handleChangeSize = e => { setSize(+e.target.value); setPage(0); };
 
-  const showTable = refset?.desc === 0;
+  const showTable = refset?.desc === 0 || refset?.hasMember === true;
 
   // 컬럼 헤더: descriptor로부터 얻거나, 첫 행 기준으로 fallback
   function getHeaders() {

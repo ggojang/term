@@ -73,17 +73,26 @@ export default function Left({ setRefset }) {
     setExpanded(nodeIds);
   }
 
+  function hasDescendantMember(id) {
+    const d = dataRef.current;
+    if (d.memberSet.has(id)) return true;
+    const kids = d.children[id];
+    if (!kids) return false;
+    return kids.some(cid => hasDescendantMember(cid));
+  }
+
   function renderNode(id) {
     const d = dataRef.current;
     const node = d.tree[id];
     if (!node) return null;
     const isLeaf = node.descendantCount === 0;
     const hasMember = d.memberSet.has(id);
+    const hasMemberInTree = hasMember || hasDescendantMember(id);
 
     const label = (
       <span
-        className={hasMember ? classes.hasMember : classes.normal}
-        onClick={() => setRefset({ name: node.term, id: node.conceptId, desc: isLeaf ? 0 : 1 })}
+        className={hasMemberInTree ? classes.hasMember : classes.normal}
+        onClick={() => setRefset({ name: node.term, id: node.conceptId, desc: isLeaf ? 0 : 1, hasMember })}
       >
         {node.term}{!isLeaf && ` (${node.descendantCount})`}
       </span>
