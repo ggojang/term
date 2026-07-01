@@ -249,11 +249,11 @@ public class FhirValueSetService {
                                        ValueSet.ValueSetExpansionComponent expansion, String system) {
         String sql = "SELECT c.concept_id, d.term FROM term.concept c " +
                 "JOIN term.description d ON d.concept_id = c.concept_id " +
-                "AND d.type_id = '900000000000003001' AND d.active = 1 " +
+                "  AND d.type_id = '900000000000003001' AND d.active = 1 " +
                 "WHERE c.active = 1 AND (" +
                 "  c.concept_id = :root OR EXISTS (" +
-                "    SELECT 1 FROM term.transitive_closure tc " +
-                "    WHERE tc.sub_type_id = c.concept_id AND tc.super_type_id = :root AND tc.active = 1" +
+                "    SELECT 1 FROM term.tc " +
+                "    WHERE tc.child_id = c.concept_id AND tc.parent_id = :root AND tc.valid_to = '99991231'" +
                 "  )" +
                 ")";
         if (filter != null) sql += " AND d.term ILIKE :filter";
