@@ -459,24 +459,44 @@ public class FhirValueSetService {
         int from  = offset != null ? offset : 0;
         int limit = count  != null ? count  : 100;
 
-        String where = filter != null ? " WHERE code ILIKE :f OR long_common_name ILIKE :f" : "";
-        String sql = "SELECT code, long_common_name FROM loinc.loinc" + where
-                + " ORDER BY code LIMIT " + limit + " OFFSET " + from;
-        Query q = em.createNativeQuery(sql);
-        if (filter != null) q.setParameter("f", "%" + filter + "%");
+        // LOINC 전체 = loinc + lp + lg + ll(answer_list) + la(answer) UNION
+        String f = filter != null ? "%" + filter + "%" : null;
+        String unionSql =
+            "SELECT code, long_common_name AS display FROM loinc.loinc"
+            + (filter != null ? " WHERE code ILIKE :f OR long_common_name ILIKE :f" : "")
+            + " UNION ALL "
+            + "SELECT part_number, COALESCE(part_display_name, part_name) FROM loinc.lp"
+            + (filter != null ? " WHERE part_number ILIKE :f OR part_display_name ILIKE :f OR part_name ILIKE :f" : "")
+            + " UNION ALL "
+            + "SELECT lg_id, lg FROM loinc.lg"
+            + (filter != null ? " WHERE lg_id ILIKE :f OR lg ILIKE :f" : "")
+            + " UNION ALL "
+            + "SELECT DISTINCT ON (answer_list_id) answer_list_id, answer_list_name FROM loinc.la"
+            + (filter != null ? " WHERE answer_list_id ILIKE :f OR answer_list_name ILIKE :f" : "")
+            + " UNION ALL "
+            + "SELECT DISTINCT ON (answer_string_id) answer_string_id, display_text FROM loinc.la"
+            + " WHERE answer_string_id IS NOT NULL AND answer_string_id <> ''"
+            + (filter != null ? " AND (answer_string_id ILIKE :f OR display_text ILIKE :f)" : "");
 
-        String cntSql = "SELECT COUNT(*) FROM loinc.loinc" + where;
+        String cntSql = "SELECT COUNT(*) FROM (" + unionSql + ") t";
         Query cq = em.createNativeQuery(cntSql);
-        if (filter != null) cq.setParameter("f", "%" + filter + "%");
+        if (filter != null) cq.setParameter("f", f);
         expansion.setTotal(((Number) cq.getSingleResult()).intValue());
         if (offset != null) expansion.setOffset(offset);
 
+        String sql = "SELECT * FROM (" + unionSql + ") t ORDER BY code LIMIT " + limit + " OFFSET " + from;
+        Query q = em.createNativeQuery(sql);
+        if (filter != null) q.setParameter("f", f);
+
         for (Object[] r : (List<Object[]>) q.getResultList()) {
-            String loincCode = (String) r[0];
+            String code = (String) r[0];
             ValueSet.ValueSetExpansionContainsComponent contains = expansion.addContains()
-                    .setSystem(system).setCode(loincCode)
+                    .setSystem(system).setCode(code)
                     .setDisplay(r[1] != null ? (String) r[1] : "");
-            addLoincKoreanDesignation(loincCode, contains);
+            // 일반 LOINC 코드에만 다국어 designation 추가
+            if (code != null && code.matches("^[0-9].*")) {
+                addLoincKoreanDesignation(code, contains);
+            }
         }
     }
 
