@@ -170,11 +170,20 @@ public class FhirValueSetService {
             return;
         }
 
-        // LOINC ValueSet (class 기반)
+        // LOINC ValueSet (filter 기반)
         if (FhirCodeSystemService.URL_LOINC.equals(system) && include.hasFilter()) {
             for (ValueSet.ConceptSetFilterComponent f : include.getFilter()) {
                 if ("class".equals(f.getProperty())) {
                     expandLoincByClass(f.getValue(), filter, offset, count, expansion, system);
+                    return;
+                }
+                if ("code".equals(f.getProperty()) && f.getOp() != null) {
+                    String regex = f.getValue() != null ? f.getValue().toUpperCase() : "";
+                    if (regex.startsWith("^LP"))      expandLoincLp(filter, offset, count, expansion, system);
+                    else if (regex.startsWith("^LG")) expandLoincLg(filter, offset, count, expansion, system);
+                    else if (regex.startsWith("^LL")) expandLoincLl(filter, offset, count, expansion, system);
+                    else if (regex.startsWith("^LA")) expandLoincLa(filter, offset, count, expansion, system);
+                    return;
                 }
             }
             return;
@@ -283,6 +292,92 @@ public class FhirValueSetService {
                     .setCode(loincCode)
                     .setDisplay((String) row[1]);
             addLoincKoreanDesignation(loincCode, contains);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandLoincLp(String filter, Integer offset, Integer count,
+                               ValueSet.ValueSetExpansionComponent expansion, String system) {
+        int from  = offset != null ? offset : 0;
+        int limit = count  != null ? count  : 100;
+        String where = filter != null ? " WHERE part_number ILIKE :f OR part_display_name ILIKE :f OR part_name ILIKE :f" : "";
+        String sql = "SELECT part_number, COALESCE(part_display_name, part_name) FROM loinc.lp" + where
+                + " ORDER BY part_number LIMIT " + limit + " OFFSET " + from;
+        Query q = em.createNativeQuery(sql);
+        if (filter != null) q.setParameter("f", "%" + filter + "%");
+        String cntSql = "SELECT COUNT(*) FROM loinc.lp" + where;
+        Query cq = em.createNativeQuery(cntSql);
+        if (filter != null) cq.setParameter("f", "%" + filter + "%");
+        expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+        if (offset != null) expansion.setOffset(offset);
+        for (Object[] r : (List<Object[]>) q.getResultList()) {
+            expansion.addContains().setSystem(system).setCode((String) r[0])
+                    .setDisplay(r[1] != null ? (String) r[1] : "");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandLoincLg(String filter, Integer offset, Integer count,
+                               ValueSet.ValueSetExpansionComponent expansion, String system) {
+        int from  = offset != null ? offset : 0;
+        int limit = count  != null ? count  : 100;
+        String where = filter != null ? " WHERE lg_id ILIKE :f OR lg ILIKE :f" : "";
+        String sql = "SELECT lg_id, lg FROM loinc.lg" + where
+                + " ORDER BY lg_id LIMIT " + limit + " OFFSET " + from;
+        Query q = em.createNativeQuery(sql);
+        if (filter != null) q.setParameter("f", "%" + filter + "%");
+        String cntSql = "SELECT COUNT(*) FROM loinc.lg" + where;
+        Query cq = em.createNativeQuery(cntSql);
+        if (filter != null) cq.setParameter("f", "%" + filter + "%");
+        expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+        if (offset != null) expansion.setOffset(offset);
+        for (Object[] r : (List<Object[]>) q.getResultList()) {
+            expansion.addContains().setSystem(system).setCode((String) r[0])
+                    .setDisplay(r[1] != null ? (String) r[1] : "");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandLoincLl(String filter, Integer offset, Integer count,
+                               ValueSet.ValueSetExpansionComponent expansion, String system) {
+        int from  = offset != null ? offset : 0;
+        int limit = count  != null ? count  : 100;
+        String where = filter != null ? " WHERE answer_list_id ILIKE :f OR answer_list_name ILIKE :f" : "";
+        String sql = "SELECT DISTINCT ON (answer_list_id) answer_list_id, answer_list_name FROM loinc.la" + where
+                + " ORDER BY answer_list_id LIMIT " + limit + " OFFSET " + from;
+        Query q = em.createNativeQuery(sql);
+        if (filter != null) q.setParameter("f", "%" + filter + "%");
+        String cntSql = "SELECT COUNT(DISTINCT answer_list_id) FROM loinc.la" + where;
+        Query cq = em.createNativeQuery(cntSql);
+        if (filter != null) cq.setParameter("f", "%" + filter + "%");
+        expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+        if (offset != null) expansion.setOffset(offset);
+        for (Object[] r : (List<Object[]>) q.getResultList()) {
+            expansion.addContains().setSystem(system).setCode((String) r[0])
+                    .setDisplay(r[1] != null ? (String) r[1] : "");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandLoincLa(String filter, Integer offset, Integer count,
+                               ValueSet.ValueSetExpansionComponent expansion, String system) {
+        int from  = offset != null ? offset : 0;
+        int limit = count  != null ? count  : 100;
+        String where = filter != null
+                ? " WHERE answer_string_id IS NOT NULL AND answer_string_id <> '' AND (answer_string_id ILIKE :f OR display_text ILIKE :f)"
+                : " WHERE answer_string_id IS NOT NULL AND answer_string_id <> ''";
+        String sql = "SELECT DISTINCT ON (answer_string_id) answer_string_id, display_text FROM loinc.la" + where
+                + " ORDER BY answer_string_id LIMIT " + limit + " OFFSET " + from;
+        Query q = em.createNativeQuery(sql);
+        if (filter != null) q.setParameter("f", "%" + filter + "%");
+        String cntSql = "SELECT COUNT(DISTINCT answer_string_id) FROM loinc.la" + where;
+        Query cq = em.createNativeQuery(cntSql);
+        if (filter != null) cq.setParameter("f", "%" + filter + "%");
+        expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+        if (offset != null) expansion.setOffset(offset);
+        for (Object[] r : (List<Object[]>) q.getResultList()) {
+            expansion.addContains().setSystem(system).setCode((String) r[0])
+                    .setDisplay(r[1] != null ? (String) r[1] : "");
         }
     }
 
