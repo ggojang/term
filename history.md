@@ -774,3 +774,17 @@ CREATE TABLE IF NOT EXISTS term.snomed_semantic_tag (
 | `loinc-answers` | `http://loinc.org/vs/la` | LOINC Answers (LA) |
 
 - commit: `f8abf4b`
+
+### LOINC LP/LG/LL/LA ValueSet $expand + Group 탭 LG→LOINC 트리 연결
+
+**수정** (`FhirValueSetService.java`):
+- `expandInclude`에서 LOINC filter `property=code, op=regex` 패턴 감지 추가
+- regex 값 접두사(^LP/^LG/^LL/^LA)로 분기하여 각 전용 expand 메서드 호출
+- `expandLoincLp/Lg/Ll/La` 메서드 추가 — filter/offset/count 지원
+
+**수정** (`HierarchyRepository.java`, `HierarchyServiceImpl.java`):
+- `findLoincCodesByLgId` 쿼리 추가 (`loinc.lg_terms` 기반)
+- LG 코드 클릭 시 `hierarchy_lg` 하위 LG 없으면 `lg_terms`에서 소속 LOINC 코드 반환
+- Group 트리: GROUP → 카테고리 → LG 코드 → LOINC 코드 전체 4단계 완성
+
+- commit: `173292e`
