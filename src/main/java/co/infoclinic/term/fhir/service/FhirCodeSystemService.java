@@ -30,8 +30,6 @@ public class FhirCodeSystemService {
     // Well-known canonical URLs
     public static final String URL_SNOMED           = "http://snomed.info/sct";
     public static final String URL_LOINC            = "http://loinc.org";
-    public static final String URL_LOINC_LP         = "http://loinc.org/lpf";
-    public static final String URL_LOINC_LG         = "http://loinc.org/lg";
     public static final String URL_KCD9             = "http://www.hl7korea.or.kr/CodeSystem/kostat-kcd-9";
     public static final String URL_KCD8             = "http://www.hl7korea.or.kr/CodeSystem/kostat-kcd-8";
     public static final String URL_ATC               = "http://www.whocc.no/atc";
@@ -61,8 +59,6 @@ public class FhirCodeSystemService {
     public Optional<String> findById(String id) {
         if ("snomed".equals(id))      return Optional.of(buildSnomedStub());
         if ("loinc".equals(id))       return Optional.of(buildLoincStub());
-        if ("loinc-lp".equals(id))    return Optional.of(buildLoincLpStub());
-        if ("loinc-lg".equals(id))    return Optional.of(buildLoincLgStub());
         if ("kcd9".equals(id))        return Optional.of(buildKcd9Stub());
         if ("kcd8".equals(id))        return Optional.of(buildKcd8Stub());
         if ("atc".equals(id))         return Optional.of(buildAtcStub());
@@ -73,8 +69,6 @@ public class FhirCodeSystemService {
     public Optional<String> findByUrl(String url) {
         if (URL_SNOMED.equals(url))      return Optional.of(buildSnomedStub());
         if (URL_LOINC.equals(url))       return Optional.of(buildLoincStub());
-        if (URL_LOINC_LP.equals(url))    return Optional.of(buildLoincLpStub());
-        if (URL_LOINC_LG.equals(url))    return Optional.of(buildLoincLgStub());
         if (URL_KCD9.equals(url))        return Optional.of(buildKcd9Stub());
         if (URL_KCD8.equals(url))        return Optional.of(buildKcd8Stub());
         if (URL_ATC.equals(url))         return Optional.of(buildAtcStub());
@@ -115,8 +109,6 @@ public class FhirCodeSystemService {
     private static final String[][] WELL_KNOWN_STUBS = {
         {"snomed",      URL_SNOMED},
         {"loinc",       URL_LOINC},
-        {"loinc-lp",    URL_LOINC_LP},
-        {"loinc-lg",    URL_LOINC_LG},
         {"kcd9",        URL_KCD9},
         {"kcd8",        URL_KCD8},
         {"atc",         URL_ATC},
@@ -155,6 +147,66 @@ public class FhirCodeSystemService {
         }
 
         if (URL_LOINC.equals(system)) {
+            // LP 코드 (예: LP14635-4) — LOINC Part
+            if (code != null && code.toUpperCase().startsWith("LP")) {
+                Query q = em.createNativeQuery(
+                    "SELECT part_name, part_display_name, part_type_name FROM loinc.lp WHERE part_number = :code LIMIT 1");
+                q.setParameter("code", code.toUpperCase());
+                List<Object[]> rows = q.getResultList();
+                if (rows.isEmpty()) return outcomeNotFound(out, system, code);
+                Object[] row = rows.get(0);
+                String display = row[1] != null ? (String) row[1] : (String) row[0];
+                out.addParameter().setName("name").setValue(new StringType("LOINC"));
+                out.addParameter().setName("display").setValue(new StringType(display != null ? display : ""));
+                out.addParameter().setName("system").setValue(new UriType(system));
+                out.addParameter().setName("code").setValue(new CodeType(code.toUpperCase()));
+                if (row[2] != null) {
+                    Parameters.ParametersParameterComponent prop = out.addParameter().setName("property");
+                    prop.addPart().setName("code").setValue(new CodeType("partType"));
+                    prop.addPart().setName("value").setValue(new StringType((String) row[2]));
+                }
+                return out;
+            }
+            // LG 코드 (예: LG8749-6) — LOINC Group
+            if (code != null && code.toUpperCase().startsWith("LG")) {
+                Query q = em.createNativeQuery(
+                    "SELECT lg FROM loinc.lg WHERE lg_id = :code LIMIT 1");
+                q.setParameter("code", code.toUpperCase());
+                List<String> rows = q.getResultList();
+                if (rows.isEmpty()) return outcomeNotFound(out, system, code);
+                out.addParameter().setName("name").setValue(new StringType("LOINC"));
+                out.addParameter().setName("display").setValue(new StringType(rows.get(0) != null ? rows.get(0) : ""));
+                out.addParameter().setName("system").setValue(new UriType(system));
+                out.addParameter().setName("code").setValue(new CodeType(code.toUpperCase()));
+                return out;
+            }
+            // LL 코드 (예: LL1000-0) — LOINC Answer List
+            if (code != null && code.toUpperCase().startsWith("LL")) {
+                Query q = em.createNativeQuery(
+                    "SELECT answer_list_name FROM loinc.la WHERE answer_list_id = :code LIMIT 1");
+                q.setParameter("code", code.toUpperCase());
+                List<String> rows = q.getResultList();
+                if (rows.isEmpty()) return outcomeNotFound(out, system, code);
+                out.addParameter().setName("name").setValue(new StringType("LOINC"));
+                out.addParameter().setName("display").setValue(new StringType(rows.get(0) != null ? rows.get(0) : ""));
+                out.addParameter().setName("system").setValue(new UriType(system));
+                out.addParameter().setName("code").setValue(new CodeType(code.toUpperCase()));
+                return out;
+            }
+            // LA 코드 (예: LA13825-7) — LOINC Answer
+            if (code != null && code.toUpperCase().startsWith("LA")) {
+                Query q = em.createNativeQuery(
+                    "SELECT display_text FROM loinc.la WHERE answer_string_id = :code LIMIT 1");
+                q.setParameter("code", code.toUpperCase());
+                List<String> rows = q.getResultList();
+                if (rows.isEmpty()) return outcomeNotFound(out, system, code);
+                out.addParameter().setName("name").setValue(new StringType("LOINC"));
+                out.addParameter().setName("display").setValue(new StringType(rows.get(0) != null ? rows.get(0) : ""));
+                out.addParameter().setName("system").setValue(new UriType(system));
+                out.addParameter().setName("code").setValue(new CodeType(code.toUpperCase()));
+                return out;
+            }
+            // 일반 LOINC 코드
             Query q = em.createNativeQuery(
                 "SELECT long_common_name, component FROM loinc.loinc WHERE code = :code LIMIT 1");
             q.setParameter("code", code);
@@ -167,40 +219,6 @@ public class FhirCodeSystemService {
             out.addParameter().setName("system").setValue(new UriType(system));
             out.addParameter().setName("code").setValue(new CodeType(code));
             addLoincDesignations(code, out);
-            return out;
-        }
-
-        if (URL_LOINC_LP.equals(system)) {
-            Query q = em.createNativeQuery(
-                "SELECT part_name, part_display_name, part_type_name FROM loinc.lp WHERE part_number = :code LIMIT 1");
-            q.setParameter("code", code);
-            List<Object[]> rows = q.getResultList();
-            if (rows.isEmpty()) return outcomeNotFound(out, system, code);
-            Object[] row = rows.get(0);
-            String display = row[1] != null ? (String) row[1] : (String) row[0];
-            out.addParameter().setName("name").setValue(new StringType("LOINC Parts"));
-            out.addParameter().setName("display").setValue(new StringType(display != null ? display : ""));
-            out.addParameter().setName("system").setValue(new UriType(system));
-            out.addParameter().setName("code").setValue(new CodeType(code));
-            if (row[2] != null) {
-                Parameters.ParametersParameterComponent prop = out.addParameter().setName("property");
-                prop.addPart().setName("code").setValue(new CodeType("partType"));
-                prop.addPart().setName("value").setValue(new StringType((String) row[2]));
-            }
-            return out;
-        }
-
-        if (URL_LOINC_LG.equals(system)) {
-            Query q = em.createNativeQuery(
-                "SELECT lg, status FROM loinc.lg WHERE lg_id = :code LIMIT 1");
-            q.setParameter("code", code);
-            List<Object[]> rows = q.getResultList();
-            if (rows.isEmpty()) return outcomeNotFound(out, system, code);
-            Object[] row = rows.get(0);
-            out.addParameter().setName("name").setValue(new StringType("LOINC Groups"));
-            out.addParameter().setName("display").setValue(new StringType(row[0] != null ? (String) row[0] : ""));
-            out.addParameter().setName("system").setValue(new UriType(system));
-            out.addParameter().setName("code").setValue(new CodeType(code));
             return out;
         }
 
@@ -324,26 +342,42 @@ public class FhirCodeSystemService {
             valid = !rows.isEmpty();
             if (valid) actualDisplay = rows.get(0);
         } else if (URL_LOINC.equals(system)) {
-            Query q = em.createNativeQuery(
-                "SELECT long_common_name FROM loinc.loinc WHERE code = :code LIMIT 1");
-            q.setParameter("code", code);
-            List<String> rows = q.getResultList();
-            valid = !rows.isEmpty();
-            if (valid) actualDisplay = rows.get(0);
-        } else if (URL_LOINC_LP.equals(system)) {
-            Query q = em.createNativeQuery(
-                "SELECT COALESCE(part_display_name, part_name) FROM loinc.lp WHERE part_number = :code LIMIT 1");
-            q.setParameter("code", code);
-            List<String> rows = q.getResultList();
-            valid = !rows.isEmpty();
-            if (valid) actualDisplay = rows.get(0);
-        } else if (URL_LOINC_LG.equals(system)) {
-            Query q = em.createNativeQuery(
-                "SELECT lg FROM loinc.lg WHERE lg_id = :code LIMIT 1");
-            q.setParameter("code", code);
-            List<String> rows = q.getResultList();
-            valid = !rows.isEmpty();
-            if (valid) actualDisplay = rows.get(0);
+            if (code != null && code.toUpperCase().startsWith("LP")) {
+                Query q = em.createNativeQuery(
+                    "SELECT COALESCE(part_display_name, part_name) FROM loinc.lp WHERE part_number = :code LIMIT 1");
+                q.setParameter("code", code.toUpperCase());
+                List<String> rows = q.getResultList();
+                valid = !rows.isEmpty();
+                if (valid) actualDisplay = rows.get(0);
+            } else if (code != null && code.toUpperCase().startsWith("LG")) {
+                Query q = em.createNativeQuery(
+                    "SELECT lg FROM loinc.lg WHERE lg_id = :code LIMIT 1");
+                q.setParameter("code", code.toUpperCase());
+                List<String> rows = q.getResultList();
+                valid = !rows.isEmpty();
+                if (valid) actualDisplay = rows.get(0);
+            } else if (code != null && code.toUpperCase().startsWith("LL")) {
+                Query q = em.createNativeQuery(
+                    "SELECT answer_list_name FROM loinc.la WHERE answer_list_id = :code LIMIT 1");
+                q.setParameter("code", code.toUpperCase());
+                List<String> rows = q.getResultList();
+                valid = !rows.isEmpty();
+                if (valid) actualDisplay = rows.get(0);
+            } else if (code != null && code.toUpperCase().startsWith("LA")) {
+                Query q = em.createNativeQuery(
+                    "SELECT display_text FROM loinc.la WHERE answer_string_id = :code LIMIT 1");
+                q.setParameter("code", code.toUpperCase());
+                List<String> rows = q.getResultList();
+                valid = !rows.isEmpty();
+                if (valid) actualDisplay = rows.get(0);
+            } else {
+                Query q = em.createNativeQuery(
+                    "SELECT long_common_name FROM loinc.loinc WHERE code = :code LIMIT 1");
+                q.setParameter("code", code);
+                List<String> rows = q.getResultList();
+                valid = !rows.isEmpty();
+                if (valid) actualDisplay = rows.get(0);
+            }
         } else if (URL_KCD9.equals(system) || URL_KCD8.equals(system)) {
             Icd10Class icd10 = icd10Repo.findByCode(code);
             valid = (icd10 != null);
@@ -540,32 +574,6 @@ public class FhirCodeSystemService {
         cs.setStatus(Enumerations.PublicationStatus.ACTIVE);
         cs.setContent(CodeSystem.CodeSystemContentMode.NOTPRESENT);
         cs.setPublisher("Regenstrief Institute, Inc.");
-        return FhirResourceService.FHIR_CTX.newJsonParser().setPrettyPrint(true).encodeResourceToString(cs);
-    }
-
-    private String buildLoincLpStub() {
-        CodeSystem cs = new CodeSystem();
-        cs.setId("loinc-lp");
-        cs.setUrl(URL_LOINC_LP);
-        cs.setName("LOINCParts");
-        cs.setTitle("LOINC Parts (LP)");
-        cs.setStatus(Enumerations.PublicationStatus.ACTIVE);
-        cs.setContent(CodeSystem.CodeSystemContentMode.NOTPRESENT);
-        cs.setPublisher("Regenstrief Institute, Inc.");
-        cs.setDescription("LOINC Part codes (LP) representing components, properties, time aspects, systems, scale types, and method types.");
-        return FhirResourceService.FHIR_CTX.newJsonParser().setPrettyPrint(true).encodeResourceToString(cs);
-    }
-
-    private String buildLoincLgStub() {
-        CodeSystem cs = new CodeSystem();
-        cs.setId("loinc-lg");
-        cs.setUrl(URL_LOINC_LG);
-        cs.setName("LOINCGroups");
-        cs.setTitle("LOINC Groups (LG)");
-        cs.setStatus(Enumerations.PublicationStatus.ACTIVE);
-        cs.setContent(CodeSystem.CodeSystemContentMode.NOTPRESENT);
-        cs.setPublisher("Regenstrief Institute, Inc.");
-        cs.setDescription("LOINC Group codes (LG) representing clinically meaningful groupings of LOINC terms.");
         return FhirResourceService.FHIR_CTX.newJsonParser().setPrettyPrint(true).encodeResourceToString(cs);
     }
 
