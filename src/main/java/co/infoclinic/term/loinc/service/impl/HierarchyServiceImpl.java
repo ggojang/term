@@ -91,9 +91,13 @@ public class HierarchyServiceImpl implements HierarchyService {
 			return convertToDTOList(hierRepo.findChildrenByCode("LP432695-7"));
 		}
 
-		// LG 코드 → hierarchy_lg 테이블 (GROUP 트리)
+		// LG 코드 → hierarchy_lg 하위 LG가 있으면 반환, 없으면 lg_terms에서 LOINC 코드 반환
 		if (code.matches("^LG[0-9].*")) {
-			return convertToDTOList(hierRepo.findChildrenInLGHierarchy(code));
+			List<Hierarchy> lgChildren = hierRepo.findChildrenInLGHierarchy(code);
+			if (!lgChildren.isEmpty()) {
+				return convertToDTOList(lgChildren);
+			}
+			return convertToDTOList(hierRepo.findLoincCodesByLgId(code));
 		}
 
 		// LP/LA/LL 코드 또는 숫자 LOINC 코드 → hierarchy 테이블

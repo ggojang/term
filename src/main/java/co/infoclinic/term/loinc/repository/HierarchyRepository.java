@@ -38,6 +38,16 @@ public interface HierarchyRepository extends JpaRepository<Hierarchy, Long> , Hi
 			 "WHERE UPPER(PARENT) = UPPER(?1) " +
 			 "ORDER BY NAME", nativeQuery=true)
 	List<Hierarchy> findChildrenInLGHierarchy(String parent);
+
+	@Query(value=
+			 "SELECT ROW_NUMBER() OVER () AS seq, " +
+			 "t.loinc_number AS code, t.long_common_name AS name, t.long_common_name AS preferred_name, " +
+			 "t.lg_id AS parent, t.lg_id AS path, " +
+			 "0 AS children_count, 0 AS descendant_count, 0 AS sequence, 0 AS type " +
+			 "FROM loinc.lg_terms t " +
+			 "WHERE t.lg_id = ?1 " +
+			 "ORDER BY t.loinc_number", nativeQuery=true)
+	List<Hierarchy> findLoincCodesByLgId(String lgId);
 	
 	
 	/**
