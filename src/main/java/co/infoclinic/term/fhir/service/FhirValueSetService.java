@@ -160,10 +160,13 @@ public class FhirValueSetService {
             return;
         }
 
-        // SNOMED CT 계층 포함
+        // SNOMED CT 계층 포함 — property="concept" op="is-a" (FHIR R4 표준) 또는 property="is-a" (레거시)
         if (FhirCodeSystemService.URL_SNOMED.equals(system) && include.hasFilter()) {
             for (ValueSet.ConceptSetFilterComponent f : include.getFilter()) {
-                if ("is-a".equals(f.getProperty())) {
+                boolean isIsA = "is-a".equals(f.getProperty())
+                        || ("concept".equals(f.getProperty()) && f.getOp() != null
+                            && "is-a".equals(f.getOp().toCode()));
+                if (isIsA) {
                     expandSnomedHierarchy(f.getValue(), filter, offset, count, expansion, system);
                 }
             }
