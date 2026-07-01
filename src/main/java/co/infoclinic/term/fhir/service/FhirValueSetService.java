@@ -279,26 +279,34 @@ public class FhirValueSetService {
         String limitSql = count != null ? " LIMIT " + count : "";
 
         // effectiveTime이 있으면 해당 릴리즈 기준, 없으면 현재(valid_to='99991231')
-        String tcCond = effectiveTime != null
-                ? "tc.valid_from <= '" + effectiveTime + "' AND tc.valid_to >= '" + effectiveTime + "'"
-                : "tc.valid_to = '99991231'";
+        String tcCond;
+        String tcCondT; // JOIN alias t용
+        if (effectiveTime != null) {
+            tcCond  = "valid_from <= '" + effectiveTime + "' AND valid_to >= '" + effectiveTime + "'";
+            tcCondT = "t.valid_from <= '" + effectiveTime + "' AND t.valid_to >= '" + effectiveTime + "'";
+        } else {
+            tcCond  = "valid_to = '99991231'";
+            tcCondT = "t.valid_to = '99991231'";
+        }
 
-        String base = "SELECT DISTINCT c.concept_id, d.term FROM term.concept c " +
+        // term.tc는 직접 부모-자식만 저장 → 재귀 CTE로 전체 하위 계층 탐색
+        String base = "WITH RECURSIVE descendants AS (" +
+                "  SELECT child_id FROM term.tc WHERE parent_id = :root AND " + tcCond +
+                "  UNION" +
+                "  SELECT t.child_id FROM term.tc t JOIN descendants d ON t.parent_id = d.child_id AND " + tcCondT +
+                ")" +
+                " SELECT DISTINCT c.concept_id, d.term FROM term.concept c " +
                 "JOIN term.description d ON d.concept_id = c.concept_id " +
                 "  AND d.type_id = '900000000000003001' AND d.active = 1 " +
-                "WHERE c.active = 1 AND (" +
-                "  c.concept_id = :root OR EXISTS (" +
-                "    SELECT 1 FROM term.tc " +
-                "    WHERE tc.child_id = c.concept_id AND tc.parent_id = :root AND " + tcCond +
-                "  )" +
-                ")";
+                "WHERE c.active = 1 AND (c.concept_id = :root OR c.concept_id IN (SELECT child_id FROM descendants))";
         if (filter != null) base += " AND d.term ILIKE :filter";
 
         String cntSql = "SELECT COUNT(*) FROM (" + base + ") t";
         Query cq = em.createNativeQuery(cntSql);
         cq.setParameter("root", rootCode);
         if (filter != null) cq.setParameter("filter", "%" + filter + "%");
-        expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+        int partialTotal = ((Number) cq.getSingleResult()).intValue();
+        expansion.setTotal((expansion.hasTotal() ? expansion.getTotal() : 0) + partialTotal);
         if (offset != null) expansion.setOffset(offset);
 
         String sql = base + " ORDER BY d.term OFFSET " + from + limitSql;
@@ -306,11 +314,19 @@ public class FhirValueSetService {
         q.setParameter("root", rootCode);
         if (filter != null) q.setParameter("filter", "%" + filter + "%");
 
+        java.util.Set<String> existing = expansion.getContains().stream()
+                .map(ValueSet.ValueSetExpansionContainsComponent::getCode)
+                .collect(java.util.stream.Collectors.toSet());
+
         for (Object[] row : (List<Object[]>) q.getResultList()) {
-            expansion.addContains()
-                    .setSystem(system)
-                    .setCode(String.valueOf(row[0]))
-                    .setDisplay((String) row[1]);
+            String code = String.valueOf(row[0]);
+            if (!existing.contains(code)) {
+                expansion.addContains()
+                        .setSystem(system)
+                        .setCode(code)
+                        .setDisplay((String) row[1]);
+                existing.add(code);
+            }
         }
     }
 
