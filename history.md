@@ -744,3 +744,33 @@ CREATE TABLE IF NOT EXISTS term.snomed_semantic_tag (
 - `catch (Throwable t)`로 예외를 잡아 `[EXCEPTION] 클래스명: 메시지` 형식으로 `response_body`에 저장
 - `finally` 블록 이후 예외를 재던져 Tomcat 에러 처리는 정상 계속
 - commit: `8d7bd3d`
+
+---
+
+## 2026-07-01
+
+### LOINC LP/LG/LL/LA 코드 조회 지원 및 ValueSet 등록
+
+**배경**: HL7 FHIR R4 공식 스펙 기준 LP/LG/LL/LA 코드는 모두 `http://loinc.org` 단일 시스템 사용. 이전에 추가한 비공식 URL(`http://loinc.org/lpf`, `http://loinc.org/lg`) 제거.
+
+**DB 구조 확인** (`loinc` 스키마):
+| 코드 | 테이블 | 건수 | 조회 컬럼 |
+|------|--------|------|-----------|
+| LP | `loinc.lp` | 74,087건 | `part_number`, `part_display_name` |
+| LG | `loinc.lg` | 7,519건 | `lg_id`, `lg` |
+| LL | `loinc.la` | 4,955건 (고유) | `answer_list_id`, `answer_list_name` |
+| LA | `loinc.la` | 22,146건 (고유) | `answer_string_id`, `display_text` |
+
+**수정** (`FhirCodeSystemService.java`):
+- `$lookup` / `$validate-code`: `http://loinc.org` 분기 내 코드 접두사로 LP/LG/LL/LA 테이블 분기 조회
+- 비공식 URL 상수(`URL_LOINC_LP`, `URL_LOINC_LG`) 및 관련 stub 메서드 제거
+
+**ValueSet 등록** (`fhir.resource` 테이블 INSERT):
+| id | url | title |
+|----|-----|-------|
+| `loinc-parts` | `http://loinc.org/vs/lp` | LOINC Parts (LP) |
+| `loinc-groups` | `http://loinc.org/vs/lg` | LOINC Groups (LG) |
+| `loinc-answer-lists` | `http://loinc.org/vs/ll` | LOINC Answer Lists (LL) |
+| `loinc-answers` | `http://loinc.org/vs/la` | LOINC Answers (LA) |
+
+- commit: `f8abf4b`
