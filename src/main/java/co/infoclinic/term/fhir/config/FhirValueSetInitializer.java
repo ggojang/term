@@ -58,6 +58,24 @@ public class FhirValueSetInitializer implements ApplicationListener<ContextRefre
         },
     };
 
+    // filter 또는 multi-include가 필요한 ValueSet JSON (전체 내용)
+    private static final String[] FULL_JSON_VALUE_SETS = {
+        // LOINC 전체 (loinc + LP + LG + LL + LA)
+        "{\"resourceType\":\"ValueSet\",\"id\":\"loinc-all\",\"url\":\"http://loinc.org/vs\",\"version\":\"2.80\",\"name\":\"LOINCCodes\",\"title\":\"LOINC Codes\",\"status\":\"active\",\"description\":\"LOINC 전체 코드 집합 (일반 LOINC + LP Parts + LG Groups + LL Answer Lists + LA Answers)\",\"publisher\":\"Regenstrief Institute, Inc.\",\"compose\":{\"include\":[{\"system\":\"http://loinc.org\"}]}}",
+        // LOINC Parts (LP)
+        "{\"resourceType\":\"ValueSet\",\"id\":\"loinc-parts\",\"url\":\"http://loinc.org/vs/lp\",\"version\":\"2.80\",\"name\":\"LOINCParts\",\"title\":\"LOINC Parts (LP)\",\"status\":\"active\",\"description\":\"LOINC Part codes (LP)\",\"publisher\":\"Regenstrief Institute, Inc.\",\"compose\":{\"include\":[{\"system\":\"http://loinc.org\",\"filter\":[{\"property\":\"code\",\"op\":\"regex\",\"value\":\"^LP[0-9]\"}]}]}}",
+        // LOINC Groups (LG)
+        "{\"resourceType\":\"ValueSet\",\"id\":\"loinc-groups\",\"url\":\"http://loinc.org/vs/lg\",\"version\":\"2.80\",\"name\":\"LOINCGroups\",\"title\":\"LOINC Groups (LG)\",\"status\":\"active\",\"description\":\"LOINC Group codes (LG)\",\"publisher\":\"Regenstrief Institute, Inc.\",\"compose\":{\"include\":[{\"system\":\"http://loinc.org\",\"filter\":[{\"property\":\"code\",\"op\":\"regex\",\"value\":\"^LG[0-9]\"}]}]}}",
+        // LOINC Answer Lists (LL)
+        "{\"resourceType\":\"ValueSet\",\"id\":\"loinc-answer-lists\",\"url\":\"http://loinc.org/vs/ll\",\"version\":\"2.80\",\"name\":\"LOINCAnswerLists\",\"title\":\"LOINC Answer Lists (LL)\",\"status\":\"active\",\"description\":\"LOINC Answer List codes (LL)\",\"publisher\":\"Regenstrief Institute, Inc.\",\"compose\":{\"include\":[{\"system\":\"http://loinc.org\",\"filter\":[{\"property\":\"code\",\"op\":\"regex\",\"value\":\"^LL[0-9]\"}]}]}}",
+        // LOINC Answers (LA)
+        "{\"resourceType\":\"ValueSet\",\"id\":\"loinc-answers\",\"url\":\"http://loinc.org/vs/la\",\"version\":\"2.80\",\"name\":\"LOINCAnswers\",\"title\":\"LOINC Answers (LA)\",\"status\":\"active\",\"description\":\"LOINC Answer codes (LA)\",\"publisher\":\"Regenstrief Institute, Inc.\",\"compose\":{\"include\":[{\"system\":\"http://loinc.org\",\"filter\":[{\"property\":\"code\",\"op\":\"regex\",\"value\":\"^LA[0-9]\"}]}]}}",
+        // SNOMED CT Clinical Findings
+        "{\"resourceType\":\"ValueSet\",\"id\":\"snomed-clinical-finding\",\"url\":\"http://snomed.info/sct/900000000000207008/version/20250101/ValueSet/clinical-finding\",\"version\":\"1.0.0\",\"name\":\"SNOMEDCTClinicalFindings\",\"title\":\"SNOMED CT Clinical Findings\",\"status\":\"active\",\"description\":\"SNOMED CT Clinical finding(404684003) 하위 개념 전체\",\"compose\":{\"include\":[{\"system\":\"http://snomed.info/sct\",\"filter\":[{\"property\":\"concept\",\"op\":\"is-a\",\"value\":\"404684003\"}]}]}}",
+        // Reason for Encounter
+        "{\"resourceType\":\"ValueSet\",\"id\":\"reason-for-encounter\",\"url\":\"http://snomed.info/sct/900000000000207008/version/20250101/ValueSet/reason-for-encounter\",\"version\":\"1.0.0\",\"name\":\"ReasonForEncounter\",\"title\":\"Reason for Encounter (SNOMED CT)\",\"status\":\"active\",\"description\":\"진료 사유 — SNOMED CT Clinical finding(404684003), Situation with explicit context(243796009), Event(272379006)\",\"compose\":{\"include\":[{\"system\":\"http://snomed.info/sct\",\"filter\":[{\"property\":\"concept\",\"op\":\"is-a\",\"value\":\"404684003\"}]},{\"system\":\"http://snomed.info/sct\",\"filter\":[{\"property\":\"concept\",\"op\":\"is-a\",\"value\":\"243796009\"}]},{\"system\":\"http://snomed.info/sct\",\"filter\":[{\"property\":\"concept\",\"op\":\"is-a\",\"value\":\"272379006\"}]}]}}",
+    };
+
     private boolean initialized = false;
 
     @Override
@@ -78,6 +96,14 @@ public class FhirValueSetInitializer implements ApplicationListener<ContextRefre
                 log.info("  등록: {}", url);
             } catch (Exception e) {
                 log.warn("  ValueSet 등록 실패 ({}): {}", vs[0], e.getMessage());
+            }
+        }
+        for (String json : FULL_JSON_VALUE_SETS) {
+            try {
+                valueSetSvc.save(json);
+                log.info("  등록: {}", json.substring(json.indexOf("\"url\":\"") + 7, json.indexOf("\"", json.indexOf("\"url\":\"") + 7)));
+            } catch (Exception e) {
+                log.warn("  ValueSet 등록 실패: {}", e.getMessage());
             }
         }
         log.info("FHIR ValueSet 초기 등록 완료");
