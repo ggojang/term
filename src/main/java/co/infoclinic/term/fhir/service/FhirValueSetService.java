@@ -247,7 +247,10 @@ public class FhirValueSetService {
     @SuppressWarnings("unchecked")
     private void expandSnomedHierarchy(String rootCode, String filter, Integer offset, Integer count,
                                        ValueSet.ValueSetExpansionComponent expansion, String system) {
-        String sql = "SELECT c.concept_id, d.term FROM term.concept c " +
+        int from  = offset != null ? offset : 0;
+        int limit = count  != null ? count  : 100;
+
+        String base = "SELECT DISTINCT c.concept_id, d.term FROM term.concept c " +
                 "JOIN term.description d ON d.concept_id = c.concept_id " +
                 "  AND d.type_id = '900000000000003001' AND d.active = 1 " +
                 "WHERE c.active = 1 AND (" +
@@ -256,18 +259,21 @@ public class FhirValueSetService {
                 "    WHERE tc.child_id = c.concept_id AND tc.parent_id = :root AND tc.valid_to = '99991231'" +
                 "  )" +
                 ")";
-        if (filter != null) sql += " AND d.term ILIKE :filter";
-        sql += " ORDER BY d.term";
-        if (count != null) sql += " LIMIT " + count;
-        if (offset != null) sql += " OFFSET " + offset;
+        if (filter != null) base += " AND d.term ILIKE :filter";
 
+        String cntSql = "SELECT COUNT(*) FROM (" + base + ") t";
+        Query cq = em.createNativeQuery(cntSql);
+        cq.setParameter("root", rootCode);
+        if (filter != null) cq.setParameter("filter", "%" + filter + "%");
+        expansion.setTotal(((Number) cq.getSingleResult()).intValue());
+        if (offset != null) expansion.setOffset(offset);
+
+        String sql = base + " ORDER BY d.term LIMIT " + limit + " OFFSET " + from;
         Query q = em.createNativeQuery(sql);
         q.setParameter("root", rootCode);
         if (filter != null) q.setParameter("filter", "%" + filter + "%");
 
-        List<Object[]> rows = q.getResultList();
-        expansion.setTotal(rows.size());
-        for (Object[] row : rows) {
+        for (Object[] row : (List<Object[]>) q.getResultList()) {
             expansion.addContains()
                     .setSystem(system)
                     .setCode(String.valueOf(row[0]))
