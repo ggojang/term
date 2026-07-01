@@ -80,8 +80,9 @@ public class FhirValueSetController {
     public String expandById(@PathVariable String id,
                              @RequestParam(required = false) String filter,
                              @RequestParam(required = false) Integer offset,
-                             @RequestParam(required = false) Integer count) {
-        ValueSet result = svc.expand(id, filter, offset, count);
+                             @RequestParam(required = false) Integer count,
+                             @RequestParam(name = "system-version", required = false) String systemVersion) {
+        ValueSet result = svc.expand(id, filter, offset, count, systemVersion);
         return encode(result);
     }
 
@@ -90,8 +91,9 @@ public class FhirValueSetController {
     public String expand(@RequestParam(required = false) String url,
                          @RequestParam(required = false) String filter,
                          @RequestParam(required = false) Integer offset,
-                         @RequestParam(required = false) Integer count) {
-        ValueSet result = svc.expand(url, filter, offset, count);
+                         @RequestParam(required = false) Integer count,
+                         @RequestParam(name = "system-version", required = false) String systemVersion) {
+        ValueSet result = svc.expand(url, filter, offset, count, systemVersion);
         return encode(result);
     }
 

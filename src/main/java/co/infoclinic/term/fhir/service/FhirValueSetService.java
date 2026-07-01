@@ -72,12 +72,15 @@ public class FhirValueSetService {
 
     /**
      * $expand: ValueSet을 펼쳐서 포함되는 코드 목록 반환
+     * systemVersion: FHIR R4 system-version 파라미터 (예: http://snomed.info/sct|http://snomed.info/sct/900000000000207008/version/20250101)
      */
     @SuppressWarnings("unchecked")
-    public ValueSet expand(String idOrUrl, String filter, Integer offset, Integer count) {
+    public ValueSet expand(String idOrUrl, String filter, Integer offset, Integer count, String systemVersion) {
+        String effectiveTime = parseSnomedEffectiveTime(systemVersion);
+
         // SNOMED CT implicit ValueSet (ECL / refset)
         if (idOrUrl != null && idOrUrl.startsWith(FhirCodeSystemService.URL_SNOMED)) {
-            return expandSnomedImplicit(idOrUrl, filter, offset, count);
+            return expandSnomedImplicit(idOrUrl, filter, offset, count, effectiveTime);
         }
 
         // LOINC implicit ValueSet
@@ -97,6 +100,11 @@ public class FhirValueSetService {
         ValueSet.ValueSetExpansionComponent expansion = new ValueSet.ValueSetExpansionComponent();
         expansion.setIdentifier(vs.getUrl());
         expansion.setTimestamp(new java.util.Date());
+        if (effectiveTime != null) {
+            expansion.addParameter().setName("system-version")
+                    .setValue(new StringType(FhirCodeSystemService.URL_SNOMED + "|"
+                            + FhirCodeSystemService.URL_SNOMED + "/900000000000207008/version/" + effectiveTime));
+        }
 
         if (vs.hasCompose()) {
             for (ValueSet.ConceptSetComponent include : vs.getCompose().getInclude()) {
@@ -108,7 +116,7 @@ public class FhirValueSetService {
                     continue;
                 }
                 String system = include.getSystem();
-                expandInclude(system, include, filter, offset, count, expansion);
+                expandInclude(system, include, filter, offset, count, expansion, effectiveTime);
             }
         }
 
@@ -116,10 +124,25 @@ public class FhirValueSetService {
         return vs;
     }
 
+    /**
+     * system-version 파라미터에서 SNOMED CT effectiveTime(8자리) 추출
+     * 예: "http://snomed.info/sct|http://snomed.info/sct/900000000000207008/version/20250101" → "20250101"
+     */
+    private String parseSnomedEffectiveTime(String systemVersion) {
+        if (systemVersion == null || systemVersion.isEmpty()) return null;
+        String prefix = FhirCodeSystemService.URL_SNOMED + "|";
+        if (!systemVersion.startsWith(prefix)) return null;
+        String versionUri = systemVersion.substring(prefix.length());
+        int idx = versionUri.lastIndexOf("/version/");
+        if (idx < 0) return null;
+        String et = versionUri.substring(idx + 9).trim();
+        return et.isEmpty() ? null : et;
+    }
+
     @SuppressWarnings("unchecked")
     private void expandInclude(String system, ValueSet.ConceptSetComponent include,
                                String filter, Integer offset, Integer count,
-                               ValueSet.ValueSetExpansionComponent expansion) {
+                               ValueSet.ValueSetExpansionComponent expansion, String effectiveTime) {
 
         // 직접 열거된 코드
         if (include.hasConcept()) {
@@ -167,7 +190,7 @@ public class FhirValueSetService {
                         || ("concept".equals(f.getProperty()) && f.getOp() != null
                             && "is-a".equals(f.getOp().toCode()));
                 if (isIsA) {
-                    expandSnomedHierarchy(f.getValue(), filter, offset, count, expansion, system);
+                    expandSnomedHierarchy(f.getValue(), filter, offset, count, expansion, system, effectiveTime);
                 }
             }
             return;
@@ -194,7 +217,7 @@ public class FhirValueSetService {
 
         // SNOMED CT 전체 조회 (concept/filter 없이 system=http://snomed.info/sct 만 선언된 경우)
         if (FhirCodeSystemService.URL_SNOMED.equals(system)) {
-            expandSnomedAll(filter, offset, count, expansion, system);
+            expandSnomedAll(filter, offset, count, expansion, system, effectiveTime);
             return;
         }
 
@@ -246,9 +269,15 @@ public class FhirValueSetService {
 
     @SuppressWarnings("unchecked")
     private void expandSnomedHierarchy(String rootCode, String filter, Integer offset, Integer count,
-                                       ValueSet.ValueSetExpansionComponent expansion, String system) {
+                                       ValueSet.ValueSetExpansionComponent expansion, String system,
+                                       String effectiveTime) {
         int from  = offset != null ? offset : 0;
         int limit = count  != null ? count  : 100;
+
+        // effectiveTime이 있으면 해당 릴리즈 기준, 없으면 현재(valid_to='99991231')
+        String tcCond = effectiveTime != null
+                ? "tc.valid_from <= '" + effectiveTime + "' AND tc.valid_to >= '" + effectiveTime + "'"
+                : "tc.valid_to = '99991231'";
 
         String base = "SELECT DISTINCT c.concept_id, d.term FROM term.concept c " +
                 "JOIN term.description d ON d.concept_id = c.concept_id " +
@@ -256,7 +285,7 @@ public class FhirValueSetService {
                 "WHERE c.active = 1 AND (" +
                 "  c.concept_id = :root OR EXISTS (" +
                 "    SELECT 1 FROM term.tc " +
-                "    WHERE tc.child_id = c.concept_id AND tc.parent_id = :root AND tc.valid_to = '99991231'" +
+                "    WHERE tc.child_id = c.concept_id AND tc.parent_id = :root AND " + tcCond +
                 "  )" +
                 ")";
         if (filter != null) base += " AND d.term ILIKE :filter";
@@ -431,7 +460,8 @@ public class FhirValueSetService {
 
     @SuppressWarnings("unchecked")
     private void expandSnomedAll(String filter, Integer offset, Integer count,
-                                 ValueSet.ValueSetExpansionComponent expansion, String system) {
+                                 ValueSet.ValueSetExpansionComponent expansion, String system,
+                                 String effectiveTime) {
         int from  = offset != null ? offset : 0;
         int limit = count  != null ? count  : 100;
 
@@ -664,7 +694,7 @@ public class FhirValueSetService {
                 }
                 continue;
             }
-            expandInclude(include.getSystem(), include, filter, offset, count, expansion);
+            expandInclude(include.getSystem(), include, filter, offset, count, expansion, null);
         }
     }
 
@@ -747,7 +777,7 @@ public class FhirValueSetService {
         }
 
         // $expand 후 코드 포함 여부 확인
-        ValueSet expanded = expand(idOrUrl, null, null, null);
+        ValueSet expanded = expand(idOrUrl, null, null, null, null);
         if (expanded.hasExpansion()) {
             for (ValueSet.ValueSetExpansionContainsComponent c : expanded.getExpansion().getContains()) {
                 if (code.equals(c.getCode()) && (system == null || system.equals(c.getSystem()))) {
@@ -909,8 +939,9 @@ public class FhirValueSetService {
      *   http://snomed.info/sct?fhir_vs=refset/450976002
      *   http://snomed.info/sct?fhir_vs  (전체)
      */
-    private ValueSet expandSnomedImplicit(String url, String filter, Integer offset, Integer count) {
-        String effectiveTime = schemeSvc.getEffectiveTime(schemeSvc.getLatestVersion());
+    private ValueSet expandSnomedImplicit(String url, String filter, Integer offset, Integer count,
+                                          String effectiveTime) {
+        if (effectiveTime == null) effectiveTime = schemeSvc.getEffectiveTime(schemeSvc.getLatestVersion());
 
         // fhir_vs 파라미터 추출
         String fhirVs = null;
