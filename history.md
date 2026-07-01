@@ -721,6 +721,21 @@ CREATE TABLE IF NOT EXISTS term.snomed_semantic_tag (
 
 ---
 
+## 2026-07-01: RefSet Viewer 멤버 조회 및 조상 노드 bold 표시 수정
+
+**원인 1**: `left.js`에서 non-leaf 노드(자식 있음)를 클릭 시 `desc: 1`로 전달 → `main.js`가 `refset.desc !== 0`이면 멤버 조회/테이블 표시 차단. 447562003처럼 하위 분류가 있으면서 member도 있는 refset은 결과가 안 나왔음.
+**수정**: `hasMember` 플래그를 `setRefset`에 포함해 전달. `main.js`에서 `desc === 0 || hasMember`이면 테이블 표시 및 멤버 조회 허용.
+
+**원인 2**: 백엔드 `getMemberList`에서 `tcSvc.getParentPathListByConceptId`가 조상 ID 목록을 반환하는데, 코드가 `pathsSize == 1`인 경우(경로 문자열 1개)만 처리. 조상이 여러 개인 refset(447562003 등)은 `categoryId`가 null이 되어 빈 결과 반환.
+**수정**: `paths.contains("900000000000455006")`이면 `categoryId = refsetId`로 설정. 조상 수와 무관하게 RefSet 계층이면 멤버 조회 가능.
+
+**원인 3**: 조상 노드(중간 노드)는 자신이 `memberSet`에 없으므로 자손에 member가 있어도 bold 처리 안 됨.
+**수정**: `hasDescendantMember` 재귀 함수 추가. 자신이나 자손 중 하나라도 memberSet에 있으면 bold black 표시.
+
+- commit: `da08804`
+
+---
+
 ## 2026-06-27: Activity 탭 — 500 에러 시 응답 body 누락 수정
 
 **원인**: 500 에러 발생 시 Spring이 `NestedServletException`을 던지면 `chain.doFilter()`가 예외로 종료. Tomcat이 에러 HTML을 직접 response stream에 쓰므로 `ContentCachingResponseWrapper` 버퍼에는 아무것도 없어 `response_body`가 null이었음.
