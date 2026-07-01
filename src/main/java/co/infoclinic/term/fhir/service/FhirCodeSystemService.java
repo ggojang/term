@@ -88,16 +88,19 @@ public class FhirCodeSystemService {
         }
         // 전체 목록: DB 결과 + well-known stub 추가
         List<FhirResource> results = new ArrayList<>(resourceSvc.search("CodeSystem", name));
-        if (name == null || name.isEmpty()) {
-            for (String[] stub : WELL_KNOWN_STUBS) {
-                String stubId = stub[0], stubUrl = stub[1];
-                boolean already = results.stream().anyMatch(r -> stubUrl.equals(r.getUrl()) || stubId.equals(r.getId()));
-                if (!already) {
-                    FhirResource r = new FhirResource();
-                    r.setId(stubId); r.setResourceType("CodeSystem"); r.setUrl(stubUrl);
-                    r.setContent(findById(stubId).orElse(null));
-                    results.add(0, r);
-                }
+        String nameLower = (name != null) ? name.toLowerCase() : "";
+        for (String[] stub : WELL_KNOWN_STUBS) {
+            String stubId = stub[0], stubUrl = stub[1];
+            // name 검색어가 있으면 stub id/url에 포함되는 경우만 추가
+            if (!nameLower.isEmpty() && !stubId.contains(nameLower) && !stubUrl.toLowerCase().contains(nameLower)) {
+                continue;
+            }
+            boolean already = results.stream().anyMatch(r -> stubUrl.equals(r.getUrl()) || stubId.equals(r.getId()));
+            if (!already) {
+                FhirResource r = new FhirResource();
+                r.setId(stubId); r.setResourceType("CodeSystem"); r.setUrl(stubUrl);
+                r.setContent(findById(stubId).orElse(null));
+                results.add(0, r);
             }
         }
         return results;
