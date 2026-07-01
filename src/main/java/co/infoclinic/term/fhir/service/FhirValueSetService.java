@@ -247,13 +247,15 @@ public class FhirValueSetService {
     @SuppressWarnings("unchecked")
     private void expandSnomedHierarchy(String rootCode, String filter, Integer offset, Integer count,
                                        ValueSet.ValueSetExpansionComponent expansion, String system) {
-        String sql = "SELECT c.id, d.term FROM term.concept c " +
-                "JOIN term.description d ON d.concept_id = c.id " +
-                "AND d.type_id = '900000000000003001' AND d.active = true " +
-                "WHERE c.id = :root OR EXISTS (" +
-                "  SELECT 1 FROM term.transitive_closure tc " +
-                "  WHERE tc.sub_type_id = c.id AND tc.super_type_id = :root AND tc.active = true" +
-                ") AND c.active = true";
+        String sql = "SELECT c.concept_id, d.term FROM term.concept c " +
+                "JOIN term.description d ON d.concept_id = c.concept_id " +
+                "AND d.type_id = '900000000000003001' AND d.active = 1 " +
+                "WHERE c.active = 1 AND (" +
+                "  c.concept_id = :root OR EXISTS (" +
+                "    SELECT 1 FROM term.transitive_closure tc " +
+                "    WHERE tc.sub_type_id = c.concept_id AND tc.super_type_id = :root AND tc.active = 1" +
+                "  )" +
+                ")";
         if (filter != null) sql += " AND d.term ILIKE :filter";
         sql += " ORDER BY d.term";
         if (count != null) sql += " LIMIT " + count;
