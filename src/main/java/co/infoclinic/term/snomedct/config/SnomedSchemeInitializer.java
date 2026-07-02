@@ -56,7 +56,7 @@ public class SnomedSchemeInitializer implements ApplicationListener<ContextRefre
     }
 
     private void ensureScheme(String date) {
-        String id = "SNOMEDCT-v" + date;
+        String id = "SNOMEDCT-INT-v" + date;
         if (schemeRepo.findOne(id) == null) {
             Scheme s = new Scheme(id, "SNOMEDCT-Int", "SNOMEDCT v" + date,
                                   "v" + date, "SNOMED International", date, null);
