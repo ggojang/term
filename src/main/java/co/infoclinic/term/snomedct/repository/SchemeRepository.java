@@ -30,12 +30,15 @@ public interface SchemeRepository extends JpaRepository<Scheme, String> {
 
 
 	/**
-	 * International Edition 최신 Scheme (EXTENSION_NAME IS NULL)
+	 * International Edition 최신 Scheme — referenceset_active에 실제 데이터가 있는 버전만 반환
 	 */
-	@Query(value = "SELECT * " +
-				   "FROM term.SCHEME " +
-				   "WHERE EXTENSION_NAME IS NULL " +
-				   "ORDER BY TO_DATE(SUBSTRING(VERSION, 2), 'YYYYMMDD') DESC " +
+	@Query(value = "SELECT s.* FROM term.SCHEME s " +
+				   "WHERE s.EXTENSION_NAME IS NULL " +
+				   "AND EXISTS (" +
+				   "  SELECT 1 FROM term.referenceset_active ra " +
+				   "  WHERE ra.version = CONCAT('INT-', REPLACE(s.VERSION, 'v', ''))" +
+				   ") " +
+				   "ORDER BY TO_DATE(SUBSTRING(s.VERSION, 2), 'YYYYMMDD') DESC " +
 				   "LIMIT 1", nativeQuery = true)
 	Scheme findLatest();
 
