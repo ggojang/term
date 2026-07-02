@@ -320,7 +320,7 @@ public class SnomedDeltaLoader {
     // ─────────────────────────────────────────────────────────────────────────
 
     private static void insertScheme(Connection conn, String releaseDate) throws Exception {
-        String id      = "SNOMEDCT-v" + releaseDate;
+        String id      = "SNOMEDCT-INT-v" + releaseDate;
         String edition = "SNOMEDCT v" + releaseDate;
         String version = "v" + releaseDate;
         String sql = "INSERT INTO term.scheme (ID, NAME, EDITION, VERSION, AUTHORITY, DATE) " +

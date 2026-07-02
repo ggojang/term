@@ -387,7 +387,7 @@ public class SnomedRf2Loader {
 
     private static void insertScheme(Connection conn, Path zipPath) throws SQLException {
         String date    = extractReleaseDate(zipPath);
-        String id      = "SNOMEDCT-v" + date;
+        String id      = "SNOMEDCT-INT-v" + date;
         String edition = "SNOMEDCT v" + date;
         String version = "v" + date;
         String sql = "INSERT INTO term.scheme (ID, NAME, EDITION, VERSION, AUTHORITY, DATE) " +
