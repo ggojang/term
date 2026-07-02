@@ -186,10 +186,10 @@ export default function App() {
   document.title = 'InfoClinic STOM Browser';
 
   useEffect(() => {
-    if (value >= 0 && value < 3) setMsg('International Edition 2026.06.01');
+    if (value >= 0 && value < 3) setMsg('International Edition 2026.07.01');
     else if (value === 3) setMsg('Version 2.82 (2026-02-24)');
     else if (value === 4) setMsg('Release 2025.12.23');
-    else if (value === 5) setMsg('2026.06.01 기준');
+    else if (value === 5) setMsg('2026.07.01 기준');
     else if (value === 6) setMsg('FHIR R4 · Terminology Server')
     else setMsg('');
   }, [value]);
