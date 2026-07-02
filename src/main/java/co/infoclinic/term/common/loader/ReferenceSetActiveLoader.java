@@ -34,19 +34,19 @@ public class ReferenceSetActiveLoader {
     private static final String JDBC_USER     = "postgres";
     private static final String JDBC_PASSWORD = "julab123!";
 
-    /** 적재 기준 버전 (effective_time <= 이 값인 최신 행 선택) */
-    private static final String VERSION_DATE  = "20260601";
-
-    /** VERSION 컬럼 값 */
-    private static final String VERSION_VALUE = "INT-" + VERSION_DATE;
-
     /**
      * 실행 옵션:
-     *   (인수 없음)       전체 실행 (TRUNCATE → INSERT → UPDATE)
-     *   --update-only    UPDATE 단계만 실행 (INSERT 완료 후 중단된 경우 재개용)
+     *   (인수 없음)              전체 실행 (버전 날짜 자동 결정: inferred_relationship MAX)
+     *   YYYYMMDD                버전 날짜 지정 후 전체 실행
+     *   YYYYMMDD --update-only  UPDATE 단계만 실행 (INSERT 완료 후 중단된 경우 재개용)
      */
     public static void main(String[] args) throws Exception {
-        boolean updateOnly = args.length > 0 && "--update-only".equals(args[0]);
+        String versionDate = null;
+        boolean updateOnly = false;
+        for (String arg : args) {
+            if ("--update-only".equals(arg)) updateOnly = true;
+            else if (arg.matches("\\d{8}")) versionDate = arg;
+        }
         try (Connection conn = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD)) {
             conn.setAutoCommit(false);
             try (Statement s = conn.createStatement()) {
@@ -54,18 +54,56 @@ public class ReferenceSetActiveLoader {
             }
             if (updateOnly) {
                 System.out.println("[INFO] --update-only 모드: UPDATE 단계만 실행합니다.");
-                new ReferenceSetActiveLoader().runUpdates(conn);
+                new ReferenceSetActiveLoader(resolveVersionDate(conn, versionDate)).runUpdates(conn);
             } else {
-                load(conn);
+                load(conn, versionDate);
             }
             conn.commit();
         }
         System.out.println("[INFO] REFERENCESET_ACTIVE 적재 완료.");
     }
 
-    public static void load(Connection conn) throws Exception {
-        new ReferenceSetActiveLoader().doLoad(conn);
+    /** SnomedDeltaLoader에서 직접 호출 (versionDate=null이면 DB에서 자동 결정) */
+    public static void load(Connection conn, String versionDate) throws Exception {
+        new ReferenceSetActiveLoader(resolveVersionDate(conn, versionDate)).doLoad(conn);
     }
+
+    /** 하위 호환: versionDate 없이 호출 */
+    public static void load(Connection conn) throws Exception {
+        load(conn, null);
+    }
+
+    private static String resolveVersionDate(Connection conn, String versionDate) throws Exception {
+        if (versionDate != null && !versionDate.isEmpty()) return versionDate;
+        try (Statement s = conn.createStatement();
+             java.sql.ResultSet rs = s.executeQuery(
+                 "SELECT MAX(effective_time) FROM term.inferred_relationship")) {
+            if (rs.next()) {
+                String et = rs.getString(1);
+                if (et != null && !et.isEmpty()) {
+                    System.out.println("[INFO] VERSION_DATE 자동 결정: " + et);
+                    return et;
+                }
+            }
+        }
+        throw new IllegalStateException("VERSION_DATE 자동 결정 실패 — 인수로 YYYYMMDD를 지정하세요.");
+    }
+
+    private final String VERSION_DATE;
+    private final String VERSION_VALUE;
+
+    public ReferenceSetActiveLoader() {
+        this("20260601");
+    }
+
+    public ReferenceSetActiveLoader(String versionDate) {
+        this.VERSION_DATE  = versionDate;
+        this.VERSION_VALUE = "INT-" + versionDate;
+        this.BASE_EXPRS    = "'" + this.VERSION_VALUE + "', r.referenceset_id, r.effective_time, r.module_id, '', " +
+                             "r.refset_id, '', r.referenced_component_id, r.active, ''";
+    }
+
+    private final String BASE_EXPRS;
 
     // =========================================================================
     // DISTINCT ON 기반 INSERT 헬퍼
@@ -87,7 +125,7 @@ public class ReferenceSetActiveLoader {
      *
      * idx_referenceset_r_id_rs_id_etime (refset_id, referenceset_id, effective_time) 사용.
      */
-    private static String buildInsertSql(String insertCols, String selectExprs, String refsetFilter) {
+    private String buildInsertSql(String insertCols, String selectExprs, String refsetFilter) {
         return
             "INSERT INTO term.referenceset_active\n  (" + insertCols + ")\n" +
             "SELECT " + selectExprs + "\n" +
@@ -107,11 +145,6 @@ public class ReferenceSetActiveLoader {
     private static final String BASE_COLS =
         "version, uuid, effective_time, module_id, module_name, refset_id, refset_name, " +
         "referenced_component_id, referenced_component_active, referenced_component_name";
-
-    // 공통 SELECT 식 접두부 (version값, uuid, et, module_id, 빈 module_name, refset_id, 빈 refset_name, rc_id, active, 빈 rc_name)
-    private static final String BASE_EXPRS =
-        "'" + VERSION_VALUE + "', r.referenceset_id, r.effective_time, r.module_id, '', " +
-        "r.refset_id, '', r.referenced_component_id, r.active, ''";
 
     // =========================================================================
 

@@ -21,7 +21,10 @@ public class LatestRefsetMember {
 	
 	@EmbeddedId
 	private LatestRefsetMemberId id;
-	
+
+	@Column
+	private String version;
+
 	@Column
 	private String effectiveTime;
 

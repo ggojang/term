@@ -788,3 +788,70 @@ CREATE TABLE IF NOT EXISTS term.snomed_semantic_tag (
 - Group 트리: GROUP → 카테고리 → LG 코드 → LOINC 코드 전체 4단계 완성
 
 - commit: `173292e`
+
+## 2026-07-01: FHIR $expand SNOMED CT system-version 파라미터 지원
+
+**배경**: FHIR R4 공식 `$expand` 파라미터 `system-version`을 사용해 SNOMED CT 릴리즈별 코드 집합 구분 필요.
+
+**공식 형식** (FHIR R4 Terminology spec):
+```
+system-version=http://snomed.info/sct|http://snomed.info/sct/900000000000207008/version/20250101
+```
+
+**구현**:
+- `FhirValueSetController.java`: `expandById`, `expand` 메서드에 `@RequestParam(name="system-version")` 추가
+- `FhirValueSetService.java`:
+  - `expand()` 시그니처에 `systemVersion` 파라미터 추가
+  - `parseSnomedEffectiveTime()`: version URI 마지막 세그먼트 추출 (`/version/YYYYMMDD`)
+  - `expandSnomedHierarchy()`: effectiveTime이 있으면 `tc.valid_from <= et AND tc.valid_to >= et`, 없으면 `valid_to='99991231'`
+  - `expandSnomedImplicit()`: 외부에서 받은 effectiveTime 사용 (null이면 최신 버전)
+  - expansion에 `parameter[system-version]` echo
+- 검증: v20250101 → 247건, v20200731 → 55건으로 릴리즈별 건수 차이 확인
+
+- commit: `efaab49`
+
+---
+
+## SNOMED CT 20260701 Delta 적재 준비 (2026-07-02)
+
+### referenceset_active PK 변경
+- PK `(version, uuid)` → `uuid` 단독으로 변경
+  - `LatestRefsetMemberId.java`: `version` 필드 제거, `uuid`만 PK
+  - `LatestRefsetMember.java`: `@Column private String version` 일반 컬럼으로 추가
+- DB DDL (원격 서버에서 직접 실행 필요):
+  ```sql
+  ALTER TABLE term.referenceset_active DROP CONSTRAINT referenceset_active_pkey;
+  ALTER TABLE term.referenceset_active ADD PRIMARY KEY (uuid);
+  CREATE INDEX IF NOT EXISTS idx_referenceset_active_version ON term.referenceset_active(version);
+  ```
+
+### SnomedDeltaLoader.java 신규 작성
+- 위치: `src/main/java/co/infoclinic/term/common/loader/SnomedDeltaLoader.java`
+- Delta ZIP 하나로 전체 증분 적재를 처리:
+  1. concept, description, description_tp → INSERT (이력 테이블)
+  2. inferred_relationship, stated_relationship → INSERT (이력 테이블)
+  3. inferred_relationship_snap → DELETE old + INSERT new (스냅샷 최신화)
+  4. referenceset → INSERT ON CONFLICT (referenceset_id) DO UPDATE
+  5. scheme → v20260701 행 INSERT
+  6. TransitiveClosureLoader.load(conn, "20260701") 호출
+  7. ReferenceSetActiveLoader.load(conn, "20260701") 호출
+  8. referenceset에서 MRCM 파일 추출 후 MrcmAttributeRangeLoader 호출
+
+### ReferenceSetActiveLoader.java 수정
+- `VERSION_DATE` / `VERSION_VALUE`를 static 상수 → instance 필드로 변경
+- `main()`: `YYYYMMDD` CLI 인수 지원, 미지정 시 DB에서 `MAX(effective_time)` 자동 결정
+- `load(conn, versionDate)` 오버로드 추가 (SnomedDeltaLoader에서 호출)
+
+### 실행 순서 (원격 서버)
+```bash
+# 1. DB DDL (PK 변경) — 한 번만
+psql -U postgres -d term -c "..."
+
+# 2. Delta 적재 (빌드 후)
+java -cp target/...:postgresql.jar \
+  co.infoclinic.term.common.loader.SnomedDeltaLoader \
+  release_files/SnomedCT_InternationalRF2_PRODUCTION_20260701T120000Z_1.zip
+
+# 3. SearchIndexLoader 수동 실행
+java -cp ... co.infoclinic.term.common.loader.SearchIndexLoader
+```

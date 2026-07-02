@@ -16,10 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LatestRefsetMemberId implements Serializable {
-	// default serial version id, required for serializable classes.
 	private static final long serialVersionUID = 1L;
-
-	private String version;
 
 	private String uuid;
 }
